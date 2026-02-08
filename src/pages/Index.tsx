@@ -21,38 +21,12 @@ import {
   Search,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-
-type RagStatus = "green" | "amber" | "red";
-
-interface Dealer {
-  name: string;
-  score: number;
-  rag: RagStatus;
-  lastAudit: string;
-  trend: string;
-}
-
-const dealers: Dealer[] = [
-  { name: "Redline Specialist Cars", score: 68, rag: "amber", lastAudit: "12 Jan 2026", trend: "down" },
-  { name: "Stratstone BMW", score: 92, rag: "green", lastAudit: "28 Jan 2026", trend: "stable" },
-  { name: "Apex Motors", score: 45, rag: "red", lastAudit: "05 Dec 2025", trend: "down" },
-  { name: "Arnold Clark", score: 88, rag: "green", lastAudit: "20 Jan 2026", trend: "up" },
-  { name: "Sytner Group", score: 91, rag: "green", lastAudit: "18 Jan 2026", trend: "stable" },
-  { name: "Lookers Mercedes", score: 76, rag: "amber", lastAudit: "10 Jan 2026", trend: "up" },
-];
-
-const activities = [
-  { text: "Redline Specialist Cars dropped to Amber", time: "2 hours ago", type: "amber" as const },
-  { text: "Apex Motors flagged as Critical", time: "5 hours ago", type: "red" as const },
-  { text: "Arnold Clark completed annual audit", time: "1 day ago", type: "green" as const },
-  { text: "Stratstone BMW renewed FCA authorisation", time: "2 days ago", type: "green" as const },
-  { text: "New DBS check alert for Lookers Mercedes", time: "3 days ago", type: "amber" as const },
-];
+import { dealers, activities, portfolioStats } from "@/data/dealers";
 
 const portfolioData = [
-  { name: "Safe", value: 98, color: "hsl(142, 71%, 45%)" },
-  { name: "Warning", value: 35, color: "hsl(38, 92%, 50%)" },
-  { name: "Critical", value: 9, color: "hsl(0, 84%, 60%)" },
+  { name: "Safe", value: portfolioStats.green, color: "hsl(142, 71%, 45%)" },
+  { name: "Warning", value: portfolioStats.amber, color: "hsl(38, 92%, 50%)" },
+  { name: "Critical", value: portfolioStats.red, color: "hsl(0, 84%, 60%)" },
 ];
 
 const TrendIcon = ({ trend }: { trend: string }) => {
@@ -130,19 +104,19 @@ const Index = () => {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-foreground">142</span>
+                  <span className="text-lg font-bold text-foreground">{portfolioStats.total}</span>
                 </div>
               </div>
               {/* Legend */}
               <div className="flex flex-col gap-1.5 text-xs">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rag-green" /> 98 Safe
+                  <span className="w-2.5 h-2.5 rounded-full bg-rag-green" /> {portfolioStats.green} Safe
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rag-amber" /> 35 Warning
+                  <span className="w-2.5 h-2.5 rounded-full bg-rag-amber" /> {portfolioStats.amber} Warning
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rag-red" /> 9 Critical
+                  <span className="w-2.5 h-2.5 rounded-full bg-rag-red" /> {portfolioStats.red} Critical
                 </span>
               </div>
             </div>
@@ -155,7 +129,7 @@ const Index = () => {
               Critical Alerts
             </div>
             <div className="flex items-end gap-2">
-              <span className="text-4xl font-bold text-rag-red">9</span>
+              <span className="text-4xl font-bold text-rag-red">{portfolioStats.red}</span>
               <span className="text-sm text-muted-foreground mb-1">dealers require attention</span>
             </div>
           </div>
@@ -167,7 +141,7 @@ const Index = () => {
               Avg Risk Score
             </div>
             <div className="flex items-end gap-1">
-              <span className="text-4xl font-bold text-foreground">78</span>
+              <span className="text-4xl font-bold text-foreground">{portfolioStats.avgScore}</span>
               <span className="text-lg text-muted-foreground mb-0.5">/100</span>
             </div>
           </div>
