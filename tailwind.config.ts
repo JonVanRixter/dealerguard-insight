@@ -13,12 +13,16 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        surface: "hsl(var(--surface))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -47,6 +51,23 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        rag: {
+          green: {
+            DEFAULT: "hsl(var(--rag-green))",
+            bg: "hsl(var(--rag-green-bg))",
+            text: "hsl(var(--rag-green-text))",
+          },
+          amber: {
+            DEFAULT: "hsl(var(--rag-amber))",
+            bg: "hsl(var(--rag-amber-bg))",
+            text: "hsl(var(--rag-amber-text))",
+          },
+          red: {
+            DEFAULT: "hsl(var(--rag-red))",
+            bg: "hsl(var(--rag-red-bg))",
+            text: "hsl(var(--rag-red-text))",
+          },
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -56,6 +77,7 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+          muted: "hsl(var(--sidebar-muted))",
         },
       },
       borderRadius: {
