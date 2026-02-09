@@ -130,7 +130,7 @@ const Index = () => {
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Portfolio Health with Donut Chart */}
-          <div className="bg-card rounded-xl border border-border p-5">
+          <div className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in" style={{ animationDelay: "0ms", animationFillMode: "forwards" }}>
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
               <ShieldCheck className="w-4 h-4" />
               Portfolio Health
@@ -177,7 +177,7 @@ const Index = () => {
           </div>
 
           {/* Critical Alerts */}
-          <div className="bg-card rounded-xl border border-border p-5">
+          <div className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in" style={{ animationDelay: "150ms", animationFillMode: "forwards" }}>
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
               <AlertTriangle className="w-4 h-4" />
               Critical Alerts
@@ -189,7 +189,7 @@ const Index = () => {
           </div>
 
           {/* Avg Risk Score */}
-          <div className="bg-card rounded-xl border border-border p-5">
+          <div className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in" style={{ animationDelay: "300ms", animationFillMode: "forwards" }}>
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
               <Activity className="w-4 h-4" />
               Avg Risk Score
