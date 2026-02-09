@@ -3,6 +3,7 @@ import {
   Building2,
   Bell,
   FileBarChart,
+  GitCompare,
   Settings,
   X,
 } from "lucide-react";
@@ -14,6 +15,7 @@ const navItems = [
   { title: "Dealer Portfolio", url: "/dealers", icon: Building2 },
   { title: "Alerts", url: "/alerts", icon: Bell },
   { title: "Reports", url: "/reports", icon: FileBarChart },
+  { title: "Comparison", url: "/comparison", icon: GitCompare },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 

@@ -8,6 +8,7 @@ import DealerDetail from "./pages/DealerDetail";
 import Dealers from "./pages/Dealers";
 import Alerts from "./pages/Alerts";
 import Reports from "./pages/Reports";
+import Comparison from "./pages/Comparison";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/dealers" element={<Dealers />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/comparison" element={<Comparison />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/dealer/:name" element={<DealerDetail />} />
           <Route path="*" element={<NotFound />} />
