@@ -7,20 +7,18 @@ interface ComparisonKPIsProps {
 }
 
 export function ComparisonKPIs({ data }: ComparisonKPIsProps) {
-  const avgDifference =
-    data.sectionBenchmarks.reduce((sum, s) => sum + s.difference, 0) /
-    data.sectionBenchmarks.length;
-
   const sectionsAbove = data.sectionBenchmarks.filter((s) => s.difference > 0).length;
   const sectionsBelow = data.sectionBenchmarks.filter((s) => s.difference < 0).length;
 
+  const comparisonLabel = data.mode === "dealer" ? data.comparisonName : "Portfolio Avg";
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* Dealer Score */}
+      {/* Dealer A Score */}
       <div className="bg-card rounded-xl border border-border p-5">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
           <Target className="w-4 h-4" />
-          Dealer Score
+          {data.dealerName.split(" ").slice(0, 2).join(" ")}
         </div>
         <div className="flex items-center gap-3">
           <span className="text-3xl font-bold text-foreground">{data.dealerScore}%</span>
@@ -28,11 +26,11 @@ export function ComparisonKPIs({ data }: ComparisonKPIsProps) {
         </div>
       </div>
 
-      {/* vs Portfolio */}
+      {/* Comparison Score */}
       <div className="bg-card rounded-xl border border-border p-5">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
           <BarChart3 className="w-4 h-4" />
-          vs Portfolio Avg
+          vs {comparisonLabel.split(" ").slice(0, 2).join(" ")}
         </div>
         <div className="flex items-end gap-2">
           <span className="text-3xl font-bold text-foreground">
@@ -48,15 +46,15 @@ export function ComparisonKPIs({ data }: ComparisonKPIsProps) {
           )}
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          Portfolio avg: {data.portfolioAvgScore}%
+          {comparisonLabel}: {data.comparisonScore}%
         </p>
       </div>
 
-      {/* Sections Above Average */}
+      {/* Sections Above */}
       <div className="bg-card rounded-xl border border-border p-5">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
           <Award className="w-4 h-4" />
-          Sections Above Avg
+          Sections Ahead
         </div>
         <span className="text-3xl font-bold text-rag-green">{sectionsAbove}</span>
         <span className="text-lg text-muted-foreground ml-1">
@@ -64,11 +62,11 @@ export function ComparisonKPIs({ data }: ComparisonKPIsProps) {
         </span>
       </div>
 
-      {/* Sections Below Average */}
+      {/* Sections Below */}
       <div className="bg-card rounded-xl border border-border p-5">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
           <TrendingDown className="w-4 h-4" />
-          Sections Below Avg
+          Sections Behind
         </div>
         <span
           className={`text-3xl font-bold ${
