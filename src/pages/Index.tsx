@@ -11,6 +11,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import {
   TrendingDown,
   TrendingUp,
   Minus,
@@ -22,6 +31,8 @@ import {
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { dealers, activities, portfolioStats } from "@/data/dealers";
+
+const ITEMS_PER_PAGE = 10;
 
 const portfolioData = [
   { name: "Safe", value: portfolioStats.green, color: "hsl(142, 71%, 45%)" },
@@ -52,6 +63,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filteredDealers = useMemo(() => {
     return dealers.filter((dealer) => {
@@ -63,6 +75,42 @@ const Index = () => {
       return matchesSearch && matchesStatus;
     });
   }, [searchQuery, statusFilter]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredDealers.length / ITEMS_PER_PAGE);
+  const validCurrentPage = Math.min(currentPage, Math.max(1, totalPages));
+  
+  const paginatedDealers = useMemo(() => {
+    const startIndex = (validCurrentPage - 1) * ITEMS_PER_PAGE;
+    return filteredDealers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredDealers, validCurrentPage]);
+
+  // Reset page when filters change
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (validCurrentPage > 3) pages.push("ellipsis");
+      for (let i = Math.max(2, validCurrentPage - 1); i <= Math.min(totalPages - 1, validCurrentPage + 1); i++) {
+        pages.push(i);
+      }
+      if (validCurrentPage < totalPages - 2) pages.push("ellipsis");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   return (
     <DashboardLayout>
@@ -160,11 +208,11 @@ const Index = () => {
                   <Input
                     placeholder="Search dealers..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     className="pl-9 h-9 bg-background"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={handleStatusChange}>
                   <SelectTrigger className="w-full sm:w-40 h-9 bg-background">
                     <SelectValue placeholder="Filter by status" />
                   </SelectTrigger>
@@ -189,8 +237,8 @@ const Index = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredDealers.length > 0 ? (
-                    filteredDealers.map((dealer) => (
+                  {paginatedDealers.length > 0 ? (
+                    paginatedDealers.map((dealer) => (
                       <tr
                         key={dealer.name}
                         onClick={() => navigate(`/dealer/${encodeURIComponent(dealer.name)}`)}
@@ -213,6 +261,45 @@ const Index = () => {
                 </tbody>
               </table>
             </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-5 py-4 border-t border-border flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Showing {((validCurrentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(validCurrentPage * ITEMS_PER_PAGE, filteredDealers.length)} of {filteredDealers.length} dealers
+                </p>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className={validCurrentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                    {getPageNumbers().map((page, idx) => (
+                      <PaginationItem key={idx}>
+                        {page === "ellipsis" ? (
+                          <PaginationEllipsis />
+                        ) : (
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={validCurrentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        )}
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className={validCurrentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </div>
 
           {/* Recent Activity */}
