@@ -34,6 +34,7 @@ import {
   Activity,
   ChevronDown,
   ChevronRight,
+  Download,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { dealers, portfolioStats } from "@/data/dealers";
@@ -186,6 +187,27 @@ const Dealers = () => {
     return pages;
   };
 
+  const exportCsv = () => {
+    const headers = ["Dealer Name", "Score", "RAG Status", "CSS Score", "Region", "Last Audit", "Trend"];
+    const rows = sortedDealers.map((d) => [
+      d.name,
+      d.score,
+      d.rag.toUpperCase(),
+      (dealerCssScores.get(d.name) ?? 0).toFixed(1),
+      d.region,
+      d.lastAudit,
+      d.trend,
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `dealer-portfolio-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const SortHeader = ({ label, sortKeyVal }: { label: string; sortKeyVal: SortKey }) => (
     <th
       className="text-left px-3 py-3 font-medium cursor-pointer hover:text-foreground select-none"
@@ -290,7 +312,11 @@ const Dealers = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 items-center">
+                <Button variant="outline" size="sm" onClick={exportCsv} className="gap-1.5">
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:inline">Export CSV</span>
+                </Button>
                 <Button
                   variant={viewMode === "table" ? "default" : "outline"}
                   size="sm"
