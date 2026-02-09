@@ -44,6 +44,8 @@ export type Database = {
           animations: boolean
           compact_mode: boolean
           created_at: string
+          css_oversight_threshold: number
+          css_reward_threshold: number
           date_format: string
           digest_frequency: string
           email_audit_reminders: boolean
@@ -68,6 +70,8 @@ export type Database = {
           animations?: boolean
           compact_mode?: boolean
           created_at?: string
+          css_oversight_threshold?: number
+          css_reward_threshold?: number
           date_format?: string
           digest_frequency?: string
           email_audit_reminders?: boolean
@@ -92,6 +96,8 @@ export type Database = {
           animations?: boolean
           compact_mode?: boolean
           created_at?: string
+          css_oversight_threshold?: number
+          css_reward_threshold?: number
           date_format?: string
           digest_frequency?: string
           email_audit_reminders?: boolean
