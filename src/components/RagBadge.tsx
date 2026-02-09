@@ -2,10 +2,11 @@ import { cn } from "@/lib/utils";
 
 type RagStatus = "green" | "amber" | "red";
 
-interface RagBadgeProps {
+export interface RagBadgeProps {
   status: RagStatus;
   label?: string;
   className?: string;
+  size?: "sm" | "default";
 }
 
 const statusConfig: Record<RagStatus, { bg: string; text: string; defaultLabel: string }> = {
@@ -14,12 +15,13 @@ const statusConfig: Record<RagStatus, { bg: string; text: string; defaultLabel: 
   red: { bg: "bg-rag-red-bg", text: "text-rag-red-text", defaultLabel: "RED" },
 };
 
-export function RagBadge({ status, label, className }: RagBadgeProps) {
+export function RagBadge({ status, label, className, size = "default" }: RagBadgeProps) {
   const config = statusConfig[status];
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold",
+        "inline-flex items-center rounded-full font-semibold",
+        size === "sm" ? "px-1.5 py-0.5 text-[10px]" : "px-2.5 py-0.5 text-xs",
         config.bg,
         config.text,
         className
