@@ -12,11 +12,13 @@ import { KeyActionsTable } from "@/components/dealer/KeyActionsTable";
 import { CustomerSentimentCard } from "@/components/dealer/CustomerSentimentCard";
 import { ReportSummaryCard } from "@/components/dealer/ReportSummaryCard";
 import { generateComplianceReportPDF } from "@/utils/pdfExport";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 const DealerDetail = () => {
   const { name } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { settings } = useUserSettings();
   const dealerName = name ? decodeURIComponent(name) : "Unknown Dealer";
 
   // Find the dealer in our data to get the index for consistent audit generation
@@ -129,6 +131,8 @@ const DealerDetail = () => {
             score={audit.customerSentimentScore}
             trend={audit.customerSentimentTrend}
             categories={audit.sentimentCategories}
+            oversightThreshold={settings.css_oversight_threshold}
+            rewardThreshold={settings.css_reward_threshold}
           />
           <div className="lg:col-span-2">
             <ReportSummaryCard

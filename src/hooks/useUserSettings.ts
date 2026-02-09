@@ -22,6 +22,8 @@ export interface UserSettings {
   theme: string;
   compact_mode: boolean;
   animations: boolean;
+  css_oversight_threshold: number;
+  css_reward_threshold: number;
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
@@ -43,6 +45,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   theme: "system",
   compact_mode: false,
   animations: true,
+  css_oversight_threshold: 4.0,
+  css_reward_threshold: 8.5,
 };
 
 export function useUserSettings() {
@@ -87,6 +91,8 @@ export function useUserSettings() {
           theme: data.theme,
           compact_mode: data.compact_mode,
           animations: data.animations,
+          css_oversight_threshold: Number(data.css_oversight_threshold),
+          css_reward_threshold: Number(data.css_reward_threshold),
         });
       }
       setLoading(false);
