@@ -8,7 +8,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-  ReferenceLine,
 } from "recharts";
 
 interface ComparisonBarChartProps {
@@ -16,10 +15,13 @@ interface ComparisonBarChartProps {
 }
 
 export function ComparisonBarChart({ data }: ComparisonBarChartProps) {
+  const dealerLabel = data.dealerName.split(" ").slice(0, 2).join(" ");
+  const comparisonLabel = data.mode === "dealer" ? data.comparisonName.split(" ").slice(0, 2).join(" ") : "Portfolio Avg";
+
   const chartData = data.sectionBenchmarks.map((section) => ({
     name: section.shortName,
-    Dealer: section.dealerPassRate,
-    Portfolio: section.portfolioPassRate,
+    [dealerLabel]: section.dealerPassRate,
+    [comparisonLabel]: section.comparisonPassRate,
     difference: section.difference,
   }));
 
@@ -39,8 +41,7 @@ export function ComparisonBarChart({ data }: ComparisonBarChartProps) {
               diff > 0 ? "text-rag-green" : diff < 0 ? "text-rag-red" : "text-muted-foreground"
             }`}
           >
-            Difference: {diff > 0 ? "+" : ""}
-            {diff}%
+            Difference: {diff > 0 ? "+" : ""}{diff}%
           </p>
         </div>
       );
@@ -68,12 +69,12 @@ export function ComparisonBarChart({ data }: ComparisonBarChartProps) {
             <Tooltip content={<CustomTooltip />} />
             <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" />
             <Bar
-              dataKey="Dealer"
+              dataKey={dealerLabel}
               fill="hsl(var(--primary))"
               radius={[4, 4, 0, 0]}
             />
             <Bar
-              dataKey="Portfolio"
+              dataKey={comparisonLabel}
               fill="hsl(var(--muted-foreground))"
               radius={[4, 4, 0, 0]}
             />
