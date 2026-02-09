@@ -7,8 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { GitCompare, Users, BarChart3 } from "lucide-react";
+import { GitCompare, Users, BarChart3, Download } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 interface ComparisonHeaderProps {
   mode: ComparisonMode;
@@ -18,6 +19,8 @@ interface ComparisonHeaderProps {
   selectedDealer2: string;
   onDealer2Change: (dealer: string) => void;
   dealers: Dealer[];
+  onExportPDF?: () => void;
+  canExport?: boolean;
 }
 
 function DealerSelect({
@@ -69,6 +72,8 @@ export function ComparisonHeader({
   selectedDealer2,
   onDealer2Change,
   dealers,
+  onExportPDF,
+  canExport,
 }: ComparisonHeaderProps) {
   return (
     <div className="space-y-4">
@@ -82,18 +87,26 @@ export function ComparisonHeader({
           </p>
         </div>
 
-        <Tabs value={mode} onValueChange={(v) => onModeChange(v as ComparisonMode)}>
-          <TabsList>
-            <TabsTrigger value="portfolio" className="gap-1.5">
-              <BarChart3 className="w-3.5 h-3.5" />
-              vs Portfolio
-            </TabsTrigger>
-            <TabsTrigger value="dealer" className="gap-1.5">
-              <Users className="w-3.5 h-3.5" />
-              vs Dealer
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center gap-2">
+          <Tabs value={mode} onValueChange={(v) => onModeChange(v as ComparisonMode)}>
+            <TabsList>
+              <TabsTrigger value="portfolio" className="gap-1.5">
+                <BarChart3 className="w-3.5 h-3.5" />
+                vs Portfolio
+              </TabsTrigger>
+              <TabsTrigger value="dealer" className="gap-1.5">
+                <Users className="w-3.5 h-3.5" />
+                vs Dealer
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          {canExport && (
+            <Button variant="outline" size="sm" onClick={onExportPDF} className="gap-1.5">
+              <Download className="w-3.5 h-3.5" />
+              Export PDF
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
