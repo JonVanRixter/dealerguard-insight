@@ -2,7 +2,7 @@ import { TrendingUp, TrendingDown, AlertTriangle, Sparkles } from "lucide-react"
 import { topImprovers, topDecliners, portfolioTrend } from "@/data/trendData";
 import { RagBadge } from "@/components/RagBadge";
 import { useNavigate } from "react-router-dom";
-import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
+import { AreaChart, Area, ResponsiveContainer, Tooltip } from "recharts";
 
 const navigateToDealer = (navigate: ReturnType<typeof useNavigate>, name: string) =>
   navigate(`/dealer/${encodeURIComponent(name)}`);
@@ -57,12 +57,19 @@ export function TrendHighlightsWidget() {
           </div>
           <div className="h-16 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={portfolioTrend}>
-                <Line
+              <AreaChart data={portfolioTrend}>
+                <defs>
+                  <linearGradient id="sparklineGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Area
                   type="monotone"
                   dataKey="avgScore"
                   stroke="hsl(var(--primary))"
                   strokeWidth={2}
+                  fill="url(#sparklineGradient)"
                   dot={false}
                 />
                 <Tooltip
@@ -79,7 +86,7 @@ export function TrendHighlightsWidget() {
                     return null;
                   }}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
