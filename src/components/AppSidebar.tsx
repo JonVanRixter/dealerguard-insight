@@ -6,7 +6,7 @@ import {
   Settings,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo-light.png";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
