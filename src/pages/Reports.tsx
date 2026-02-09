@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval, isWithinInterval } from "date-fns";
+import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from "date-fns";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { dealers, portfolioStats } from "@/data/dealers";
 import { generateDealerAudit, AUDIT_SECTIONS } from "@/data/auditFramework";
@@ -30,7 +30,6 @@ import {
   Cell,
   LineChart,
   Line,
-  Legend,
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
@@ -39,16 +38,18 @@ import {
 } from "recharts";
 import {
   TrendingUp,
-  TrendingDown,
   Users,
   ShieldCheck,
   AlertTriangle,
   BarChart3,
   CalendarIcon,
   Calendar as CalendarRange,
+  Download,
 } from "lucide-react";
 import { RagBadge } from "@/components/RagBadge";
 import { cn } from "@/lib/utils";
+import { generateReportsAnalyticsPDF } from "@/utils/reportsPdfExport";
+import { useToast } from "@/hooks/use-toast";
 
 // RAG colors
 const RAG_COLORS = {
@@ -70,6 +71,8 @@ const DATE_PRESETS = [
 type DatePreset = typeof DATE_PRESETS[number]["value"];
 
 const Reports = () => {
+  const { toast } = useToast();
+  
   // Date range state
   const [datePreset, setDatePreset] = useState<DatePreset>("6m");
   const [startDate, setStartDate] = useState<Date | undefined>(subMonths(new Date(), 6));
@@ -223,6 +226,36 @@ const Reports = () => {
   const totalRed = sectionAnalytics.reduce((sum, s) => sum + s.red, 0);
   const overallPassRate = Math.round((totalGreen / totalControls) * 100);
 
+  // Handle PDF export
+  const handleExportPDF = () => {
+    try {
+      generateReportsAnalyticsPDF({
+        dateRange,
+        portfolioStats,
+        overallPassRate,
+        totalAlerts: totalAmber + totalRed,
+        sectionAnalytics,
+        trendData,
+        topRiskDealers: topRiskDealers.map((d) => ({
+          name: d.name,
+          score: d.score,
+          rag: d.rag,
+          lastAudit: d.lastAudit,
+        })),
+      });
+      toast({
+        title: "PDF Exported",
+        description: "Your portfolio analytics report has been downloaded.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "There was an error generating the PDF.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -252,7 +285,7 @@ const Reports = () => {
           </div>
 
           {/* Date Range Controls */}
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
             <Select value={datePreset} onValueChange={(v) => setDatePreset(v as DatePreset)}>
               <SelectTrigger className="w-full sm:w-40 h-9 bg-background">
                 <CalendarRange className="w-4 h-4 mr-2" />
@@ -319,6 +352,17 @@ const Reports = () => {
                 </Popover>
               </div>
             )}
+
+            {/* Export Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+              className="h-9 gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export PDF
+            </Button>
           </div>
         </div>
 
