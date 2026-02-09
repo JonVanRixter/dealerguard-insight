@@ -6,6 +6,7 @@ export interface Dealer {
   rag: RagStatus;
   lastAudit: string;
   trend: "up" | "down" | "stable";
+  region: string;
 }
 
 const dealerPrefixes = [
@@ -101,6 +102,7 @@ function generateDealer(index: number): Dealer {
     rag,
     lastAudit: generateAuditDate(index),
     trend,
+    region: locations[index % locations.length],
   };
 }
 
