@@ -3,107 +3,65 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import { Save, Bell, Mail, MessageSquare, AlertTriangle } from "lucide-react";
+import type { UserSettings } from "@/hooks/useUserSettings";
 
-interface NotificationPreference {
-  id: string;
+interface NotificationSettingsProps {
+  settings: UserSettings;
+  onSave: (updates: Partial<UserSettings>) => Promise<void>;
+  saving: boolean;
+}
+
+interface NotifRow {
+  key: string;
   label: string;
   description: string;
-  email: boolean;
-  inApp: boolean;
+  emailKey: keyof UserSettings;
+  inappKey: keyof UserSettings;
   icon: React.ReactNode;
 }
 
-export function NotificationSettings() {
-  const { toast } = useToast();
-  const [digestFrequency, setDigestFrequency] = useState("daily");
-  const [notifications, setNotifications] = useState<NotificationPreference[]>([
-    {
-      id: "critical-alerts",
-      label: "Critical Alerts (Red RAG)",
-      description: "Immediate notification when a dealer moves to critical status",
-      email: true,
-      inApp: true,
-      icon: <AlertTriangle className="w-4 h-4 text-rag-red" />,
-    },
-    {
-      id: "warning-alerts",
-      label: "Warning Alerts (Amber RAG)",
-      description: "Notification when a dealer drops to warning status",
-      email: true,
-      inApp: true,
-      icon: <AlertTriangle className="w-4 h-4 text-rag-amber" />,
-    },
-    {
-      id: "audit-reminders",
-      label: "Audit Due Reminders",
-      description: "Reminder before dealer audits are due",
-      email: true,
-      inApp: true,
-      icon: <Bell className="w-4 h-4 text-muted-foreground" />,
-    },
-    {
-      id: "action-updates",
-      label: "Action Item Updates",
-      description: "Updates when remediation actions are completed or overdue",
-      email: false,
-      inApp: true,
-      icon: <MessageSquare className="w-4 h-4 text-muted-foreground" />,
-    },
-    {
-      id: "weekly-summary",
-      label: "Weekly Portfolio Summary",
-      description: "Weekly digest of portfolio compliance status",
-      email: true,
-      inApp: false,
-      icon: <Mail className="w-4 h-4 text-muted-foreground" />,
-    },
-    {
-      id: "score-changes",
-      label: "Significant Score Changes",
-      description: "Alert when dealer scores change by more than 10 points",
-      email: false,
-      inApp: true,
-      icon: <Bell className="w-4 h-4 text-muted-foreground" />,
-    },
-  ]);
+const ROWS: NotifRow[] = [
+  { key: "critical", label: "Critical Alerts (Red RAG)", description: "Immediate notification when a dealer moves to critical status", emailKey: "email_critical", inappKey: "inapp_critical", icon: <AlertTriangle className="w-4 h-4 text-rag-red" /> },
+  { key: "warning", label: "Warning Alerts (Amber RAG)", description: "Notification when a dealer drops to warning status", emailKey: "email_warning", inappKey: "inapp_warning", icon: <AlertTriangle className="w-4 h-4 text-rag-amber" /> },
+  { key: "audit", label: "Audit Due Reminders", description: "Reminder before dealer audits are due", emailKey: "email_audit_reminders", inappKey: "inapp_audit_reminders", icon: <Bell className="w-4 h-4 text-muted-foreground" /> },
+  { key: "summary", label: "Weekly Portfolio Summary", description: "Weekly digest of portfolio compliance status", emailKey: "email_weekly_summary", inappKey: "inapp_weekly_summary", icon: <Mail className="w-4 h-4 text-muted-foreground" /> },
+];
 
-  const toggleNotification = (id: string, type: "email" | "inApp") => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, [type]: !n[type] } : n))
-    );
+export function NotificationSettings({ settings, onSave, saving }: NotificationSettingsProps) {
+  const [local, setLocal] = useState({ ...settings });
+
+  const toggle = (key: keyof UserSettings) => {
+    setLocal((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleSave = () => {
-    toast({
-      title: "Notifications Updated",
-      description: "Your notification preferences have been saved.",
+    onSave({
+      email_critical: local.email_critical,
+      email_warning: local.email_warning,
+      email_audit_reminders: local.email_audit_reminders,
+      email_weekly_summary: local.email_weekly_summary,
+      inapp_critical: local.inapp_critical,
+      inapp_warning: local.inapp_warning,
+      inapp_audit_reminders: local.inapp_audit_reminders,
+      inapp_weekly_summary: local.inapp_weekly_summary,
+      digest_frequency: local.digest_frequency,
     });
   };
 
   return (
     <div className="space-y-6">
-      {/* Digest Settings */}
       <div className="bg-card rounded-xl border border-border p-6">
         <h3 className="text-sm font-semibold text-foreground mb-4">Digest Settings</h3>
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex-1">
-            <Label htmlFor="digest">Email Digest Frequency</Label>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              How often to receive a summary of all alerts
-            </p>
+            <Label>Email Digest Frequency</Label>
+            <p className="text-xs text-muted-foreground mt-0.5">How often to receive a summary of all alerts</p>
           </div>
-          <Select value={digestFrequency} onValueChange={setDigestFrequency}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue />
-            </SelectTrigger>
+          <Select value={local.digest_frequency} onValueChange={(v) => setLocal({ ...local, digest_frequency: v })}>
+            <SelectTrigger className="w-full sm:w-48"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="realtime">Real-time</SelectItem>
               <SelectItem value="hourly">Hourly</SelectItem>
@@ -115,47 +73,31 @@ export function NotificationSettings() {
         </div>
       </div>
 
-      {/* Notification Preferences */}
       <div className="bg-card rounded-xl border border-border">
         <div className="px-6 py-4 border-b border-border">
           <h3 className="text-sm font-semibold text-foreground">Notification Preferences</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Choose how you want to be notified for each event type
-          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">Choose how you want to be notified</p>
         </div>
-        
         <div className="divide-y divide-border">
-          {/* Header */}
           <div className="px-6 py-3 bg-muted/30 flex items-center text-xs font-medium text-muted-foreground">
             <div className="flex-1">Event Type</div>
             <div className="w-20 text-center">Email</div>
             <div className="w-20 text-center">In-App</div>
           </div>
-          
-          {/* Notification rows */}
-          {notifications.map((notification) => (
-            <div
-              key={notification.id}
-              className="px-6 py-4 flex items-center hover:bg-muted/20 transition-colors"
-            >
+          {ROWS.map((row) => (
+            <div key={row.key} className="px-6 py-4 flex items-center hover:bg-muted/20 transition-colors">
               <div className="flex-1 flex items-start gap-3">
-                <div className="mt-0.5">{notification.icon}</div>
+                <div className="mt-0.5">{row.icon}</div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">{notification.label}</p>
-                  <p className="text-xs text-muted-foreground">{notification.description}</p>
+                  <p className="text-sm font-medium text-foreground">{row.label}</p>
+                  <p className="text-xs text-muted-foreground">{row.description}</p>
                 </div>
               </div>
               <div className="w-20 flex justify-center">
-                <Switch
-                  checked={notification.email}
-                  onCheckedChange={() => toggleNotification(notification.id, "email")}
-                />
+                <Switch checked={local[row.emailKey] as boolean} onCheckedChange={() => toggle(row.emailKey)} />
               </div>
               <div className="w-20 flex justify-center">
-                <Switch
-                  checked={notification.inApp}
-                  onCheckedChange={() => toggleNotification(notification.id, "inApp")}
-                />
+                <Switch checked={local[row.inappKey] as boolean} onCheckedChange={() => toggle(row.inappKey)} />
               </div>
             </div>
           ))}
@@ -163,9 +105,9 @@ export function NotificationSettings() {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} className="gap-2">
+        <Button onClick={handleSave} disabled={saving} className="gap-2">
           <Save className="w-4 h-4" />
-          Save Preferences
+          {saving ? "Saving…" : "Save Preferences"}
         </Button>
       </div>
     </div>

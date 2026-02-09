@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
@@ -6,8 +5,19 @@ import { NotificationSettings } from "@/components/settings/NotificationSettings
 import { AlertThresholds } from "@/components/settings/AlertThresholds";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { User, Bell, Sliders, Monitor } from "lucide-react";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 const Settings = () => {
+  const { settings, saveSettings, loading, saving } = useUserSettings();
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64 text-muted-foreground">Loading settings…</div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -39,19 +49,16 @@ const Settings = () => {
           </TabsList>
 
           <TabsContent value="general" className="space-y-6">
-            <GeneralSettings />
+            <GeneralSettings settings={settings} onSave={saveSettings} saving={saving} />
           </TabsContent>
-
           <TabsContent value="notifications" className="space-y-6">
-            <NotificationSettings />
+            <NotificationSettings settings={settings} onSave={saveSettings} saving={saving} />
           </TabsContent>
-
           <TabsContent value="thresholds" className="space-y-6">
-            <AlertThresholds />
+            <AlertThresholds settings={settings} onSave={saveSettings} saving={saving} />
           </TabsContent>
-
           <TabsContent value="display" className="space-y-6">
-            <DisplaySettings />
+            <DisplaySettings settings={settings} onSave={saveSettings} saving={saving} />
           </TabsContent>
         </Tabs>
       </div>
