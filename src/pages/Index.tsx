@@ -32,6 +32,7 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { dealers, activities, portfolioStats } from "@/data/dealers";
 import { TrendHighlightsWidget } from "@/components/dashboard/TrendHighlightsWidget";
+import { useAnimatedCounter } from "@/hooks/useAnimatedCounter";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -65,6 +66,10 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+
+  const animatedTotal = useAnimatedCounter(portfolioStats.total);
+  const animatedRed = useAnimatedCounter(portfolioStats.red);
+  const animatedAvgScore = useAnimatedCounter(portfolioStats.avgScore);
 
   const filteredDealers = useMemo(() => {
     return dealers.filter((dealer) => {
@@ -153,7 +158,7 @@ const Index = () => {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-foreground">{portfolioStats.total}</span>
+                  <span className="text-lg font-bold text-foreground">{animatedTotal}</span>
                 </div>
               </div>
               {/* Legend */}
@@ -178,7 +183,7 @@ const Index = () => {
               Critical Alerts
             </div>
             <div className="flex items-end gap-2">
-              <span className="text-4xl font-bold text-rag-red">{portfolioStats.red}</span>
+              <span className="text-4xl font-bold text-rag-red">{animatedRed}</span>
               <span className="text-sm text-muted-foreground mb-1">dealers require attention</span>
             </div>
           </div>
@@ -190,7 +195,7 @@ const Index = () => {
               Avg Risk Score
             </div>
             <div className="flex items-end gap-1">
-              <span className="text-4xl font-bold text-foreground">{portfolioStats.avgScore}</span>
+              <span className="text-4xl font-bold text-foreground">{animatedAvgScore}</span>
               <span className="text-lg text-muted-foreground mb-0.5">/100</span>
             </div>
           </div>
