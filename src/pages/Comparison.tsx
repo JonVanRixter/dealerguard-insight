@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { dealers, portfolioStats } from "@/data/dealers";
 import { generateDealerAudit } from "@/data/auditFramework";
@@ -7,6 +7,7 @@ import { ComparisonKPIs } from "@/components/comparison/ComparisonKPIs";
 import { ComparisonRadar } from "@/components/comparison/ComparisonRadar";
 import { ComparisonBarChart } from "@/components/comparison/ComparisonBarChart";
 import { ComparisonTable } from "@/components/comparison/ComparisonTable";
+import { generateComparisonPDF } from "@/utils/comparisonPdfExport";
 
 export type ComparisonMode = "portfolio" | "dealer";
 
@@ -135,6 +136,12 @@ const Comparison = () => {
     };
   }, [selectedDealer, selectedDealer2, mode, portfolioSectionAverages]);
 
+  const handleExportPDF = useCallback(() => {
+    if (benchmarkData) {
+      generateComparisonPDF(benchmarkData);
+    }
+  }, [benchmarkData]);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -146,6 +153,8 @@ const Comparison = () => {
           selectedDealer2={selectedDealer2}
           onDealer2Change={setSelectedDealer2}
           dealers={dealers}
+          onExportPDF={handleExportPDF}
+          canExport={!!benchmarkData}
         />
 
         {benchmarkData && (
