@@ -26,14 +26,19 @@ import {
   AlertTriangle,
   Activity,
   ShieldCheck,
+  ShieldAlert,
+  Award,
   Clock,
   Search,
 } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { dealers, activities, portfolioStats } from "@/data/dealers";
+import { generateDealerAudit } from "@/data/auditFramework";
 import { TrendHighlightsWidget } from "@/components/dashboard/TrendHighlightsWidget";
 import { useAnimatedCounter } from "@/hooks/useAnimatedCounter";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -68,7 +73,17 @@ const Index = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const { settings } = useUserSettings();
 
+  // Precompute CSS scores for all dealers
+  const dealerCssScores = useMemo(() => {
+    const map = new Map<string, number>();
+    dealers.forEach((dealer, index) => {
+      const audit = generateDealerAudit(dealer.name, index);
+      map.set(dealer.name, audit.customerSentimentScore);
+    });
+    return map;
+  }, []);
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
     return () => clearTimeout(timer);
@@ -169,7 +184,7 @@ const Index = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} />
+                    <RechartsTooltip content={<CustomTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -253,32 +268,61 @@ const Index = () => {
                     <th className="text-left px-5 py-3 font-medium">Dealer Name</th>
                     <th className="text-left px-3 py-3 font-medium">Score</th>
                     <th className="text-left px-3 py-3 font-medium">Status</th>
-                    <th className="text-left px-3 py-3 font-medium hidden sm:table-cell">Last Audit</th>
-                    <th className="text-center px-3 py-3 font-medium">Trend</th>
+                     <th className="text-left px-3 py-3 font-medium hidden sm:table-cell">Last Audit</th>
+                     <th className="text-center px-3 py-3 font-medium">Trend</th>
+                     <th className="text-center px-3 py-3 font-medium">CSS</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedDealers.length > 0 ? (
-                    paginatedDealers.map((dealer, index) => (
-                      <tr
-                        key={dealer.name}
-                        onClick={() => navigate(`/dealer/${encodeURIComponent(dealer.name)}`)}
-                        className="border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors opacity-0 animate-fade-in"
-                        style={{ animationDelay: `${index * 50}ms`, animationFillMode: "forwards" }}
-                      >
-                        <td className="px-5 py-3.5 font-medium text-foreground">{dealer.name}</td>
-                        <td className="px-3 py-3.5 text-foreground font-semibold">{dealer.score}</td>
-                        <td className="px-3 py-3.5"><RagBadge status={dealer.rag} /></td>
-                        <td className="px-3 py-3.5 text-muted-foreground hidden sm:table-cell">{dealer.lastAudit}</td>
-                        <td className="px-3 py-3.5 text-center"><TrendIcon trend={dealer.trend} /></td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">
-                        No dealers found matching your criteria.
-                      </td>
-                    </tr>
+                     paginatedDealers.map((dealer, index) => {
+                       const cssScore = dealerCssScores.get(dealer.name) ?? 0;
+                       const isOversight = cssScore < settings.css_oversight_threshold;
+                       const isReward = cssScore >= settings.css_reward_threshold;
+                       return (
+                         <tr
+                           key={dealer.name}
+                           onClick={() => navigate(`/dealer/${encodeURIComponent(dealer.name)}`)}
+                           className="border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors opacity-0 animate-fade-in"
+                           style={{ animationDelay: `${index * 50}ms`, animationFillMode: "forwards" }}
+                         >
+                           <td className="px-5 py-3.5 font-medium text-foreground">{dealer.name}</td>
+                           <td className="px-3 py-3.5 text-foreground font-semibold">{dealer.score}</td>
+                           <td className="px-3 py-3.5"><RagBadge status={dealer.rag} /></td>
+                           <td className="px-3 py-3.5 text-muted-foreground hidden sm:table-cell">{dealer.lastAudit}</td>
+                           <td className="px-3 py-3.5 text-center"><TrendIcon trend={dealer.trend} /></td>
+                           <td className="px-3 py-3.5 text-center">
+                             {isOversight ? (
+                               <Tooltip>
+                                 <TooltipTrigger>
+                                   <ShieldAlert className="w-4 h-4 text-rag-red inline-block" />
+                                 </TooltipTrigger>
+                                 <TooltipContent>
+                                   <p className="text-xs">CSS {cssScore.toFixed(1)} — Enhanced Oversight</p>
+                                 </TooltipContent>
+                               </Tooltip>
+                             ) : isReward ? (
+                               <Tooltip>
+                                 <TooltipTrigger>
+                                   <Award className="w-4 h-4 text-accent inline-block" />
+                                 </TooltipTrigger>
+                                 <TooltipContent>
+                                   <p className="text-xs">CSS {cssScore.toFixed(1)} — Positive Reward</p>
+                                 </TooltipContent>
+                               </Tooltip>
+                             ) : (
+                               <span className="text-xs text-muted-foreground">{cssScore.toFixed(1)}</span>
+                             )}
+                           </td>
+                         </tr>
+                       );
+                     })
+                   ) : (
+                     <tr>
+                       <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">
+                         No dealers found matching your criteria.
+                       </td>
+                     </tr>
                   )}
                 </tbody>
               </table>
