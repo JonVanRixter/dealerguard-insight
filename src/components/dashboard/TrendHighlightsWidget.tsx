@@ -2,6 +2,7 @@ import { TrendingUp, TrendingDown, AlertTriangle, Sparkles } from "lucide-react"
 import { topImprovers, topDecliners, portfolioTrend } from "@/data/trendData";
 import { RagBadge } from "@/components/RagBadge";
 import { useNavigate } from "react-router-dom";
+import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
 
 const navigateToDealer = (navigate: ReturnType<typeof useNavigate>, name: string) =>
   navigate(`/dealer/${encodeURIComponent(name)}`);
@@ -34,23 +35,52 @@ export function TrendHighlightsWidget() {
       </div>
 
       <div className="divide-y divide-border">
-        {/* Portfolio momentum */}
-        <div className="px-5 py-3.5 flex items-center gap-3">
-          <div className={`p-1.5 rounded-md ${scoreDelta >= 0 ? "bg-rag-green-bg" : "bg-rag-red-bg"}`}>
-            {scoreDelta >= 0 ? (
-              <TrendingUp className="w-4 h-4 text-rag-green" />
-            ) : (
-              <TrendingDown className="w-4 h-4 text-rag-red" />
-            )}
+        {/* Sparkline + Portfolio momentum */}
+        <div className="px-5 py-3.5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className={`p-1.5 rounded-md ${scoreDelta >= 0 ? "bg-rag-green-bg" : "bg-rag-red-bg"}`}>
+              {scoreDelta >= 0 ? (
+                <TrendingUp className="w-4 h-4 text-rag-green" />
+              ) : (
+                <TrendingDown className="w-4 h-4 text-rag-red" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm text-foreground leading-snug">
+                Portfolio avg {scoreDelta >= 0 ? "up" : "down"}{" "}
+                <span className="font-semibold">{Math.abs(scoreDelta)}pts</span> this month
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {latest.avgScore}% avg score · {latest.greenCount} green, {latest.redCount} red
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="text-sm text-foreground leading-snug">
-              Portfolio avg {scoreDelta >= 0 ? "up" : "down"}{" "}
-              <span className="font-semibold">{Math.abs(scoreDelta)}pts</span> this month
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {latest.avgScore}% avg score · {latest.greenCount} green, {latest.redCount} red
-            </p>
+          <div className="h-16 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={portfolioTrend}>
+                <Line
+                  type="monotone"
+                  dataKey="avgScore"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload?.length) {
+                      const d = payload[0].payload;
+                      return (
+                        <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-xs">
+                          <p className="font-medium text-foreground">{d.month}</p>
+                          <p className="text-muted-foreground">Avg: {d.avgScore}%</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
