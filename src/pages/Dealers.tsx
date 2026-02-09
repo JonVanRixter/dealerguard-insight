@@ -65,6 +65,7 @@ const Dealers = () => {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [expandedRegions, setExpandedRegions] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<"table" | "region">("table");
+  const [quickFilter, setQuickFilter] = useState<"all" | "oversight" | "reward" | "green" | "amber" | "red">("all");
 
   // Precompute CSS scores
   const dealerCssScores = useMemo(() => {
@@ -83,9 +84,13 @@ const Dealers = () => {
       const matchesSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
       const matchesStatus = statusFilter === "all" || d.rag === statusFilter;
       const matchesRegion = regionFilter === "all" || d.region === regionFilter;
-      return matchesSearch && matchesStatus && matchesRegion;
+      if (!matchesSearch || !matchesStatus || !matchesRegion) return false;
+      if (quickFilter === "oversight") return (dealerCssScores.get(d.name) ?? 10) < settings.css_oversight_threshold;
+      if (quickFilter === "reward") return (dealerCssScores.get(d.name) ?? 0) >= settings.css_reward_threshold;
+      if (quickFilter === "green" || quickFilter === "amber" || quickFilter === "red") return d.rag === quickFilter;
+      return true;
     });
-  }, [searchQuery, statusFilter, regionFilter]);
+  }, [searchQuery, statusFilter, regionFilter, quickFilter, dealerCssScores, settings]);
 
   const sortedDealers = useMemo(() => {
     const sorted = [...filteredDealers].sort((a, b) => {
@@ -234,16 +239,19 @@ const Dealers = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-card rounded-xl border border-border p-5">
+          <div
+            onClick={() => { setQuickFilter(quickFilter === "all" ? "all" : "all"); setCurrentPage(1); }}
+            className="bg-card rounded-xl border border-border p-5 cursor-default"
+          >
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <Users className="w-4 h-4" />
               Total Dealers
             </div>
             <span className="text-3xl font-bold text-foreground">{portfolioStats.total}</span>
             <div className="flex gap-2 mt-2 text-xs">
-              <span className="text-rag-green">{portfolioStats.green} Green</span>
-              <span className="text-rag-amber">{portfolioStats.amber} Amber</span>
-              <span className="text-rag-red">{portfolioStats.red} Red</span>
+              <button onClick={(e) => { e.stopPropagation(); setQuickFilter(quickFilter === "green" ? "all" : "green"); setViewMode("table"); setCurrentPage(1); }} className={`hover:underline ${quickFilter === "green" ? "font-bold underline" : ""} text-rag-green`}>{portfolioStats.green} Green</button>
+              <button onClick={(e) => { e.stopPropagation(); setQuickFilter(quickFilter === "amber" ? "all" : "amber"); setViewMode("table"); setCurrentPage(1); }} className={`hover:underline ${quickFilter === "amber" ? "font-bold underline" : ""} text-rag-amber`}>{portfolioStats.amber} Amber</button>
+              <button onClick={(e) => { e.stopPropagation(); setQuickFilter(quickFilter === "red" ? "all" : "red"); setViewMode("table"); setCurrentPage(1); }} className={`hover:underline ${quickFilter === "red" ? "font-bold underline" : ""} text-rag-red`}>{portfolioStats.red} Red</button>
             </div>
           </div>
 
@@ -256,22 +264,28 @@ const Dealers = () => {
             <span className="text-lg text-muted-foreground ml-1">/ 10</span>
           </div>
 
-          <div className="bg-card rounded-xl border border-border p-5">
+          <div
+            onClick={() => { setQuickFilter(quickFilter === "oversight" ? "all" : "oversight"); setViewMode("table"); setCurrentPage(1); }}
+            className={`bg-card rounded-xl border p-5 cursor-pointer transition-colors hover:bg-muted/50 ${quickFilter === "oversight" ? "border-rag-red ring-1 ring-rag-red/30" : "border-border"}`}
+          >
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <ShieldAlert className="w-4 h-4 text-rag-red" />
               Oversight Flagged
             </div>
             <span className="text-3xl font-bold text-rag-red">{oversightCount}</span>
-            <p className="text-xs text-muted-foreground mt-1">Below {settings.css_oversight_threshold.toFixed(1)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Below {settings.css_oversight_threshold.toFixed(1)}{quickFilter === "oversight" ? " · Filtering" : ""}</p>
           </div>
 
-          <div className="bg-card rounded-xl border border-border p-5">
+          <div
+            onClick={() => { setQuickFilter(quickFilter === "reward" ? "all" : "reward"); setViewMode("table"); setCurrentPage(1); }}
+            className={`bg-card rounded-xl border p-5 cursor-pointer transition-colors hover:bg-muted/50 ${quickFilter === "reward" ? "border-accent ring-1 ring-accent/30" : "border-border"}`}
+          >
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <Award className="w-4 h-4 text-accent" />
               Reward Eligible
             </div>
             <span className="text-3xl font-bold text-accent">{rewardCount}</span>
-            <p className="text-xs text-muted-foreground mt-1">Above {settings.css_reward_threshold.toFixed(1)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Above {settings.css_reward_threshold.toFixed(1)}{quickFilter === "reward" ? " · Filtering" : ""}</p>
           </div>
         </div>
 
