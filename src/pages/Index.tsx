@@ -244,11 +244,12 @@ const Index = () => {
                 </thead>
                 <tbody>
                   {paginatedDealers.length > 0 ? (
-                    paginatedDealers.map((dealer) => (
+                    paginatedDealers.map((dealer, index) => (
                       <tr
                         key={dealer.name}
                         onClick={() => navigate(`/dealer/${encodeURIComponent(dealer.name)}`)}
-                        className="border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors"
+                        className="border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors opacity-0 animate-fade-in"
+                        style={{ animationDelay: `${index * 50}ms`, animationFillMode: "forwards" }}
                       >
                         <td className="px-5 py-3.5 font-medium text-foreground">{dealer.name}</td>
                         <td className="px-3 py-3.5 text-foreground font-semibold">{dealer.score}</td>
