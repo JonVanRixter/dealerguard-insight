@@ -128,6 +128,7 @@ const DealerDetail = () => {
           <CustomerSentimentCard
             score={audit.customerSentimentScore}
             trend={audit.customerSentimentTrend}
+            categories={audit.sentimentCategories}
           />
           <div className="lg:col-span-2">
             <ReportSummaryCard

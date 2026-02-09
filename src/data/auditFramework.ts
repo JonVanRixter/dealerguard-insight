@@ -39,12 +39,19 @@ export interface KeyAction {
   notes: string;
 }
 
+export interface SentimentCategory {
+  label: string;
+  score: number;
+  trend: number;
+}
+
 export interface DealerAudit {
   dealerName: string;
   overallRag: RagStatus;
   overallScore: number;
   customerSentimentScore: number;
   customerSentimentTrend: number;
+  sentimentCategories: SentimentCategory[];
   lastAuditDate: string;
   sections: AuditSection[];
   keyActions: KeyAction[];
@@ -590,12 +597,24 @@ export function generateDealerAudit(dealerName: string, dealerIndex: number): De
   const baseCSS = 6.0 + (seed % 35) / 10;
   const cssTrend = ((seed % 10) - 5) / 10; // -0.5 to +0.5
   
+  // Generate sentiment sub-categories
+  const repScore = Math.round((baseCSS + ((seed % 7) - 3) / 10) * 10) / 10;
+  const visScore = Math.round((baseCSS + ((seed % 5) - 2) / 10) * 10) / 10;
+  const perfScore = Math.round((baseCSS + ((seed % 9) - 4) / 10) * 10) / 10;
+
+  const sentimentCategories: SentimentCategory[] = [
+    { label: "Reputation", score: Math.min(10, Math.max(0, repScore)), trend: Math.round(((seed % 12) - 6) / 10 * 10) / 10 },
+    { label: "Visibility", score: Math.min(10, Math.max(0, visScore)), trend: Math.round(((seed % 8) - 4) / 10 * 10) / 10 },
+    { label: "Performance", score: Math.min(10, Math.max(0, perfScore)), trend: Math.round(((seed % 6) - 3) / 10 * 10) / 10 },
+  ];
+
   return {
     dealerName,
     overallRag,
     overallScore,
     customerSentimentScore: Math.round(baseCSS * 10) / 10,
     customerSentimentTrend: Math.round(cssTrend * 10) / 10,
+    sentimentCategories,
     lastAuditDate: "05 Feb 2026",
     sections,
     keyActions: generateKeyActions(sections, dealerIndex),
