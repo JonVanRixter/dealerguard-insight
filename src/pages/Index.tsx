@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { RagBadge } from "@/components/RagBadge";
@@ -33,6 +33,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { dealers, activities, portfolioStats } from "@/data/dealers";
 import { TrendHighlightsWidget } from "@/components/dashboard/TrendHighlightsWidget";
 import { useAnimatedCounter } from "@/hooks/useAnimatedCounter";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -66,6 +67,12 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 600);
+    return () => clearTimeout(timer);
+  }, []);
 
   const animatedTotal = useAnimatedCounter(portfolioStats.total);
   const animatedRed = useAnimatedCounter(portfolioStats.red);
@@ -117,6 +124,14 @@ const Index = () => {
     }
     return pages;
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <DashboardSkeleton />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
