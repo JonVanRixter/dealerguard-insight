@@ -14,7 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          amber_threshold: number
+          animations: boolean
+          compact_mode: boolean
+          created_at: string
+          date_format: string
+          digest_frequency: string
+          email_audit_reminders: boolean
+          email_critical: boolean
+          email_warning: boolean
+          email_weekly_summary: boolean
+          green_threshold: number
+          id: string
+          inapp_audit_reminders: boolean
+          inapp_critical: boolean
+          inapp_warning: boolean
+          inapp_weekly_summary: boolean
+          overdue_actions_trigger: number
+          region: string
+          score_drop_trigger: number
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amber_threshold?: number
+          animations?: boolean
+          compact_mode?: boolean
+          created_at?: string
+          date_format?: string
+          digest_frequency?: string
+          email_audit_reminders?: boolean
+          email_critical?: boolean
+          email_warning?: boolean
+          email_weekly_summary?: boolean
+          green_threshold?: number
+          id?: string
+          inapp_audit_reminders?: boolean
+          inapp_critical?: boolean
+          inapp_warning?: boolean
+          inapp_weekly_summary?: boolean
+          overdue_actions_trigger?: number
+          region?: string
+          score_drop_trigger?: number
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amber_threshold?: number
+          animations?: boolean
+          compact_mode?: boolean
+          created_at?: string
+          date_format?: string
+          digest_frequency?: string
+          email_audit_reminders?: boolean
+          email_critical?: boolean
+          email_warning?: boolean
+          email_weekly_summary?: boolean
+          green_threshold?: number
+          id?: string
+          inapp_audit_reminders?: boolean
+          inapp_critical?: boolean
+          inapp_warning?: boolean
+          inapp_weekly_summary?: boolean
+          overdue_actions_trigger?: number
+          region?: string
+          score_drop_trigger?: number
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
