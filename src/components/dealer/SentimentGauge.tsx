@@ -49,16 +49,6 @@ export function SentimentGauge({ score, size = "default" }: SentimentGaugeProps)
           strokeLinecap="butt"
         />
 
-        {/* Emoji faces */}
-        <text x="30" y="80" fontSize={emojiSize} textAnchor="middle">
-          😟
-        </text>
-        <text x="100" y="18" fontSize={emojiSize} textAnchor="middle">
-          😐
-        </text>
-        <text x="170" y="80" fontSize={emojiSize} textAnchor="middle">
-          😊
-        </text>
 
         {/* Needle */}
         <g transform={`rotate(${needleAngle}, 100, 100)`}>
