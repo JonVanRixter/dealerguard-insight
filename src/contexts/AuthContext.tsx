@@ -11,12 +11,32 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signOut: () => Promise<void>;
+  devBypass: () => void;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// ⚠️ TEMPORARY DEV BYPASS – remove before production
+const DEV_BYPASS_ENABLED = true;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const devBypass = () => {
+    if (!DEV_BYPASS_ENABLED) return;
+    const fakeUser = { id: "dev-bypass-user", email: "dev@test.local" } as User;
+    setUser(fakeUser);
+    setSession({} as Session);
+  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -53,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, devBypass }}>
       {children}
     </AuthContext.Provider>
   );
