@@ -11,6 +11,7 @@ import { AuditSectionCard } from "@/components/dealer/AuditSectionCard";
 import { KeyActionsTable } from "@/components/dealer/KeyActionsTable";
 import { CustomerSentimentCard } from "@/components/dealer/CustomerSentimentCard";
 import { ReportSummaryCard } from "@/components/dealer/ReportSummaryCard";
+import { generateComplianceReportPDF } from "@/utils/pdfExport";
 
 const DealerDetail = () => {
   const { name } = useParams();
@@ -38,10 +39,19 @@ const DealerDetail = () => {
   };
 
   const handleDownloadReport = () => {
-    toast({
-      title: "Report Downloading",
-      description: "Your compliance report is being generated and will download shortly.",
-    });
+    try {
+      generateComplianceReportPDF(audit, fcaRef);
+      toast({
+        title: "Report Downloaded",
+        description: `Compliance report for ${dealerName} has been generated and downloaded.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "There was an error generating the PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Alert banner config based on overall RAG
