@@ -3,6 +3,9 @@ import { topImprovers, topDecliners, portfolioTrend } from "@/data/trendData";
 import { RagBadge } from "@/components/RagBadge";
 import { useNavigate } from "react-router-dom";
 
+const navigateToDealer = (navigate: ReturnType<typeof useNavigate>, name: string) =>
+  navigate(`/dealer/${encodeURIComponent(name)}`);
+
 export function TrendHighlightsWidget() {
   const navigate = useNavigate();
   const latest = portfolioTrend[portfolioTrend.length - 1];
@@ -52,7 +55,7 @@ export function TrendHighlightsWidget() {
         </div>
 
         {/* Top improver */}
-        <div className="px-5 py-3.5 flex items-center gap-3">
+        <div onClick={() => navigateToDealer(navigate, topGainer.dealerName)} className="px-5 py-3.5 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors">
           <div className="p-1.5 rounded-md bg-rag-green-bg">
             <TrendingUp className="w-4 h-4 text-rag-green" />
           </div>
@@ -68,7 +71,7 @@ export function TrendHighlightsWidget() {
         </div>
 
         {/* Top decliner */}
-        <div className="px-5 py-3.5 flex items-center gap-3">
+        <div onClick={() => navigateToDealer(navigate, topDecliner.dealerName)} className="px-5 py-3.5 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors">
           <div className="p-1.5 rounded-md bg-rag-red-bg">
             <TrendingDown className="w-4 h-4 text-rag-red" />
           </div>
@@ -85,7 +88,7 @@ export function TrendHighlightsWidget() {
 
         {/* Red alerts */}
         {redAlerts.map((dealer, i) => (
-          <div key={i} className="px-5 py-3.5 flex items-center gap-3">
+          <div key={i} onClick={() => navigateToDealer(navigate, dealer.dealerName)} className="px-5 py-3.5 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="p-1.5 rounded-md bg-rag-red-bg">
               <AlertTriangle className="w-4 h-4 text-rag-red" />
             </div>
