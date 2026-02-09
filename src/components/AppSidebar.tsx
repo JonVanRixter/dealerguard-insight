@@ -4,6 +4,7 @@ import {
   Bell,
   FileBarChart,
   GitCompare,
+  TrendingUp,
   Settings,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -15,6 +16,7 @@ const navItems = [
   { title: "Alerts", url: "/alerts", icon: Bell },
   { title: "Reports", url: "/reports", icon: FileBarChart },
   { title: "Comparison", url: "/comparison", icon: GitCompare },
+  { title: "Trends", url: "/trends", icon: TrendingUp },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
