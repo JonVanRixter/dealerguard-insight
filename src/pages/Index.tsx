@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { dealers, activities, portfolioStats } from "@/data/dealers";
+import { TrendHighlightsWidget } from "@/components/dashboard/TrendHighlightsWidget";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -302,33 +303,39 @@ const Index = () => {
             )}
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-card rounded-xl border border-border">
-            <div className="px-5 py-4 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Recent Activity</h3>
-            </div>
-            <div className="divide-y divide-border">
-              {activities.map((activity, i) => (
-                <div key={i} className="px-5 py-3.5 flex gap-3">
-                  <div className="mt-0.5">
-                    <span
-                      className={`block w-2 h-2 rounded-full ${
-                        activity.type === "green"
-                          ? "bg-rag-green"
-                          : activity.type === "amber"
-                          ? "bg-rag-amber"
-                          : "bg-rag-red"
-                      }`}
-                    />
+          {/* Right column */}
+          <div className="space-y-6">
+            {/* Trend Highlights */}
+            <TrendHighlightsWidget />
+
+            {/* Recent Activity */}
+            <div className="bg-card rounded-xl border border-border">
+              <div className="px-5 py-4 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground">Recent Activity</h3>
+              </div>
+              <div className="divide-y divide-border">
+                {activities.map((activity, i) => (
+                  <div key={i} className="px-5 py-3.5 flex gap-3">
+                    <div className="mt-0.5">
+                      <span
+                        className={`block w-2 h-2 rounded-full ${
+                          activity.type === "green"
+                            ? "bg-rag-green"
+                            : activity.type === "amber"
+                            ? "bg-rag-amber"
+                            : "bg-rag-red"
+                        }`}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm text-foreground leading-snug">{activity.text}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {activity.time}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm text-foreground leading-snug">{activity.text}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {activity.time}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
