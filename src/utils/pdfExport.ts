@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { DealerAudit, AuditSection, KeyAction } from "@/data/auditFramework";
 import { getDealerRechecks, RecheckItem } from "@/utils/recheckSchedule";
+import { detectDuplicates, MATCH_TYPE_LABELS } from "@/utils/duplicateDetection";
 
 // Extend jsPDF type for autoTable
 declare module "jspdf" {
@@ -292,6 +293,54 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
             data.cell.styles.textColor = [245, 158, 11];
             data.cell.styles.fontStyle = "bold";
           }
+        }
+      },
+    });
+
+    yPosition = doc.lastAutoTable.finalY + 15;
+  }
+
+  // === DUPLICATE FLAGS ===
+  const allDuplicates = detectDuplicates();
+  const dealerDuplicates = allDuplicates.filter((g) =>
+    g.dealers.some((d) => d.name === audit.dealerName)
+  );
+  if (dealerDuplicates.length > 0) {
+    checkPageBreak(50);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text("Duplicate Flags", 14, yPosition);
+    yPosition += 6;
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(RAG_COLORS.amber.r, RAG_COLORS.amber.g, RAG_COLORS.amber.b);
+    doc.text(`${dealerDuplicates.length} potential duplicate${dealerDuplicates.length > 1 ? "s" : ""} detected — review recommended`, 14, yPosition + 4);
+    yPosition += 10;
+
+    const dupData = dealerDuplicates.map((g) => [
+      MATCH_TYPE_LABELS[g.matchType],
+      g.matchValue,
+      g.dealers.filter((d) => d.name !== audit.dealerName).map((d) => d.name).join(", "),
+    ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Match Type", "Shared Value", "Matching Dealer(s)"]],
+      body: dupData,
+      theme: "striped",
+      headStyles: { fillColor: [51, 65, 85], fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 75 },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 0) {
+          data.cell.styles.textColor = [245, 158, 11];
+          data.cell.styles.fontStyle = "bold";
         }
       },
     });
