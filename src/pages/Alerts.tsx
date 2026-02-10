@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { RagBadge } from "@/components/RagBadge";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,10 +28,12 @@ import {
   ExternalLink,
   Filter,
   Zap,
+  CalendarCheck,
 } from "lucide-react";
 import { dealers } from "@/data/dealers";
 import { generateDealerAudit, AUDIT_SECTIONS, ControlCheck, AuditSection } from "@/data/auditFramework";
 import { RagStatus } from "@/data/dealers";
+import { getOverdueRechecks } from "@/utils/recheckSchedule";
 
 interface Alert {
   id: string;
@@ -147,6 +150,9 @@ const Alerts = () => {
   const criticalCount = allAlerts.filter((a) => a.riskRating === "red").length;
   const warningCount = allAlerts.filter((a) => a.riskRating === "amber").length;
 
+  // Overdue re-checks
+  const overdueRechecks = useMemo(() => getOverdueRechecks(), []);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -159,7 +165,7 @@ const Alerts = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <ShieldAlert className="w-4 h-4 text-rag-red" />
@@ -176,6 +182,15 @@ const Alerts = () => {
           </div>
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+              <CalendarCheck className="w-4 h-4 text-rag-red" />
+              Overdue Re-Checks
+            </div>
+            <span className={`text-3xl font-bold ${overdueRechecks.length > 0 ? "text-rag-red" : "text-foreground"}`}>
+              {overdueRechecks.length}
+            </span>
+          </div>
+          <div className="bg-card rounded-xl border border-border p-5">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <Filter className="w-4 h-4" />
               Showing
             </div>
@@ -183,6 +198,61 @@ const Alerts = () => {
             <span className="text-sm text-muted-foreground ml-1">of {allAlerts.length}</span>
           </div>
         </div>
+
+        {/* Overdue Re-Checks Banner */}
+        {overdueRechecks.length > 0 && (
+          <div className="bg-card rounded-xl border border-border">
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CalendarCheck className="w-4 h-4 text-rag-red" />
+                <h3 className="text-sm font-semibold text-foreground">Overdue Re-Checks</h3>
+              </div>
+              <Badge variant="destructive" className="text-xs">
+                {overdueRechecks.length} overdue
+              </Badge>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="text-left px-5 py-3 font-medium">Dealer</th>
+                    <th className="text-left px-3 py-3 font-medium">Re-Check</th>
+                    <th className="text-left px-3 py-3 font-medium">Due Date</th>
+                    <th className="text-center px-3 py-3 font-medium">Days Overdue</th>
+                    <th className="text-center px-3 py-3 font-medium w-20">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overdueRechecks.slice(0, 10).map((item) => (
+                    <tr
+                      key={`${item.dealerName}-${item.recheckMonth}`}
+                      className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="px-5 py-3.5 font-medium text-foreground">{item.dealerName}</td>
+                      <td className="px-3 py-3.5 text-muted-foreground">{item.recheckMonth}-month</td>
+                      <td className="px-3 py-3.5 text-muted-foreground">
+                        {item.recheckDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      </td>
+                      <td className="px-3 py-3.5 text-center">
+                        <Badge variant="destructive" className="text-xs">{item.daysOverdue}d</Badge>
+                      </td>
+                      <td className="px-3 py-3.5 text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/dealer/${encodeURIComponent(item.dealerName)}`)}
+                          className="h-8 px-2"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-card rounded-xl border border-border">

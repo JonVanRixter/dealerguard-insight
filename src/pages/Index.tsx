@@ -44,6 +44,7 @@ import { SectionComplianceChart } from "@/components/dashboard/SectionCompliance
 import { RegionalSummaryTable } from "@/components/dashboard/RegionalSummaryTable";
 import { PortfolioTrendMini } from "@/components/dashboard/PortfolioTrendMini";
 import { TopRiskDealers } from "@/components/dashboard/TopRiskDealers";
+import { RecheckWidget } from "@/components/dashboard/RecheckWidget";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -388,6 +389,9 @@ const Index = () => {
 
           {/* Right column */}
           <div className="space-y-6">
+            {/* Re-Check Schedule */}
+            <RecheckWidget />
+
             {/* Trend Highlights */}
             <TrendHighlightsWidget />
 
