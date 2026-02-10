@@ -13,6 +13,7 @@ import { CustomerSentimentCard } from "@/components/dealer/CustomerSentimentCard
 import { ReportSummaryCard } from "@/components/dealer/ReportSummaryCard";
 import { generateComplianceReportPDF } from "@/utils/pdfExport";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { AiAuditSummary } from "@/components/dealer/AiAuditSummary";
 
 const DealerDetail = () => {
   const { name } = useParams();
@@ -146,6 +147,9 @@ const DealerDetail = () => {
             />
           </div>
         </div>
+
+        {/* AI Executive Summary */}
+        <AiAuditSummary audit={audit} />
 
         {/* Key Actions */}
         <KeyActionsTable actions={audit.keyActions} />
