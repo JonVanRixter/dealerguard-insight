@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { RagBadge } from "@/components/RagBadge";
@@ -11,7 +11,8 @@ import { AuditSectionCard } from "@/components/dealer/AuditSectionCard";
 import { KeyActionsTable } from "@/components/dealer/KeyActionsTable";
 import { CustomerSentimentCard } from "@/components/dealer/CustomerSentimentCard";
 import { ReportSummaryCard } from "@/components/dealer/ReportSummaryCard";
-import { generateComplianceReportPDF } from "@/utils/pdfExport";
+import { generateComplianceReportPDF, type PassportCheckEntry } from "@/utils/pdfExport";
+import { supabase } from "@/integrations/supabase/client";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { AiAuditSummary } from "@/components/dealer/AiAuditSummary";
 import { DealerDocuments } from "@/components/dealer/DealerDocuments";
@@ -32,9 +33,42 @@ const DealerDetail = () => {
   const dealerName = name ? decodeURIComponent(name) : "Unknown Dealer";
   const [aiSummary, setAiSummary] = useState("");
 
+  const [passportChecks, setPassportChecks] = useState<PassportCheckEntry[]>([]);
+
   const handleSummaryChange = useCallback((summary: string) => {
     setAiSummary(summary);
   }, []);
+
+  // Fetch passport documents for PDF export
+  useEffect(() => {
+    const fetchPassportDocs = async () => {
+      const { data } = await supabase
+        .from("dealer_documents")
+        .select("*")
+        .eq("dealer_name", dealerName)
+        .eq("category", "Passport / ID")
+        .order("created_at", { ascending: false });
+
+      if (data) {
+        setPassportChecks(
+          data.map((d: any) => {
+            const statusTag = d.tags?.find((t: string) => t.startsWith("status:"));
+            const reviewTag = d.tags?.find((t: string) => t.startsWith("review:"));
+            const directorTag = d.tags?.find((t: string) => t.startsWith("director:"));
+            return {
+              directorName: directorTag?.slice(9) || "Unknown",
+              fileName: d.file_name,
+              status: (statusTag?.split(":")[1] as "pending" | "verified" | "rejected") || "pending",
+              uploadDate: new Date(d.created_at).toLocaleDateString("en-GB"),
+              expiryDate: d.expiry_date ? new Date(d.expiry_date).toLocaleDateString("en-GB") : undefined,
+              reviewNote: reviewTag?.slice(7) || undefined,
+            };
+          })
+        );
+      }
+    };
+    fetchPassportDocs();
+  }, [dealerName]);
 
   // Find the dealer in our data to get the index for consistent audit generation
   const dealerData = useMemo(() => {
@@ -58,7 +92,7 @@ const DealerDetail = () => {
 
   const handleDownloadReport = () => {
     try {
-      generateComplianceReportPDF(audit, fcaRef, aiSummary || undefined);
+      generateComplianceReportPDF(audit, fcaRef, aiSummary || undefined, passportChecks.length > 0 ? passportChecks : undefined);
       toast({
         title: "Report Downloaded",
         description: `Compliance report for ${dealerName} has been generated and downloaded.`,
