@@ -16,7 +16,9 @@ import {
   AlertTriangle,
   ShieldAlert,
   RefreshCw,
+  Flame,
 } from "lucide-react";
+import { PhoenixingAnalysis } from "./PhoenixingAnalysis";
 
 interface CreditSafeCompany {
   id: string;
@@ -39,7 +41,7 @@ interface CreditSafeCompany {
   };
 }
 
-interface CreditSafeReport {
+export interface CreditSafeReport {
   report?: {
     companySummary?: {
       businessName?: string;
@@ -47,6 +49,8 @@ interface CreditSafeReport {
       companyStatus?: { status?: string };
       latestTurnoverFigure?: { value?: number; currency?: string };
       latestShareholdersEquityFigure?: { value?: number };
+      companyRegistrationDate?: string;
+      mainActivity?: { code?: string; description?: string };
     };
     creditScore?: {
       currentCreditRating?: {
@@ -62,6 +66,27 @@ interface CreditSafeReport {
     };
     additionalInformation?: {
       ratingHistory?: Array<{ date?: string; rating?: number }>;
+    };
+    directors?: {
+      currentDirectors?: Array<{
+        name?: string;
+        dateOfBirth?: string;
+        directorType?: string;
+        appointmentDate?: string;
+        positions?: Array<{
+          dateAppointed?: string;
+          position?: string;
+        }>;
+        additionalData?: {
+          otherDirectorships?: Array<{
+            companyName?: string;
+            companyNumber?: string;
+            status?: string;
+            appointedDate?: string;
+            resignedDate?: string;
+          }>;
+        };
+      }>;
     };
     paymentData?: {
       dbt?: number;
@@ -271,6 +296,9 @@ export const CreditSafeCard = ({ dealerName, companiesHouseNumber }: CreditSafeC
               </Badge>
             )}
           </div>
+
+          {/* Phoenixing Analysis */}
+          <PhoenixingAnalysis report={report} />
 
           {/* Credit Score Summary */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
