@@ -30,12 +30,15 @@ import {
   Zap,
   CalendarCheck,
   Check,
+  Copy,
 } from "lucide-react";
 import { dealers } from "@/data/dealers";
 import { generateDealerAudit, AUDIT_SECTIONS, ControlCheck, AuditSection } from "@/data/auditFramework";
 import { RagStatus } from "@/data/dealers";
 import { getOverdueRechecks } from "@/utils/recheckSchedule";
 import { useCompletedRechecks } from "@/hooks/useCompletedRechecks";
+import { DuplicateFlagsBanner } from "@/components/dealer/DuplicateFlagsBanner";
+import { useDismissedDuplicates } from "@/hooks/useDismissedDuplicates";
 
 interface Alert {
   id: string;
@@ -160,6 +163,9 @@ const Alerts = () => {
     [allOverdueRechecks, isCompleted]
   );
 
+  // Duplicate detection
+  const { activeDuplicates } = useDismissedDuplicates();
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -172,7 +178,7 @@ const Alerts = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <ShieldAlert className="w-4 h-4 text-rag-red" />
@@ -194,6 +200,15 @@ const Alerts = () => {
             </div>
             <span className={`text-3xl font-bold ${overdueRechecks.length > 0 ? "text-rag-red" : "text-foreground"}`}>
               {overdueRechecks.length}
+            </span>
+          </div>
+          <div className="bg-card rounded-xl border border-border p-5">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+              <Copy className="w-4 h-4 text-rag-amber" />
+              Duplicate Flags
+            </div>
+            <span className={`text-3xl font-bold ${activeDuplicates.length > 0 ? "text-rag-amber" : "text-foreground"}`}>
+              {activeDuplicates.length}
             </span>
           </div>
           <div className="bg-card rounded-xl border border-border p-5">
@@ -270,6 +285,9 @@ const Alerts = () => {
             </div>
           </div>
         )}
+
+        {/* Duplicate Flags */}
+        <DuplicateFlagsBanner limit={5} compact />
 
         {/* Filters */}
         <div className="bg-card rounded-xl border border-border">

@@ -89,6 +89,27 @@ export type Database = {
         }
         Relationships: []
       }
+      dismissed_duplicates: {
+        Row: {
+          dismissed_at: string
+          duplicate_key: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          dismissed_at?: string
+          duplicate_key: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          dismissed_at?: string
+          duplicate_key?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
