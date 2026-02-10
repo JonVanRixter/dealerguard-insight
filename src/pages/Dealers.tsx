@@ -402,7 +402,14 @@ const Dealers = () => {
                             className="border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors opacity-0 animate-fade-in"
                             style={{ animationDelay: `${index * 30}ms`, animationFillMode: "forwards" }}
                           >
-                            <td className="px-3 py-3 font-medium text-foreground">{dealer.name}</td>
+                            <td className="px-3 py-3 font-medium text-foreground">
+                              <span className="flex items-center gap-2">
+                                {dealer.name}
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${dealer.firmType === "DA" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                                  {dealer.firmType}
+                                </span>
+                              </span>
+                            </td>
                             <td className="px-3 py-3 text-foreground font-semibold">{dealer.score}</td>
                             <td className="px-3 py-3"><RagBadge status={dealer.rag} /></td>
                             <td className="px-3 py-3">

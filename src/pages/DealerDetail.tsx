@@ -104,6 +104,7 @@ const DealerDetail = () => {
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
               <span>FCA Ref: <span className="font-medium text-foreground">{fcaRef}</span></span>
+              <span>Firm Type: <span className="font-medium text-foreground">{audit.firmType === "AR" ? "Appointed Representative" : "Directly Authorised"}</span></span>
               <span>Last Audit: <span className="font-medium text-foreground">{audit.lastAuditDate}</span></span>
             </div>
           </div>
@@ -118,11 +119,14 @@ const DealerDetail = () => {
         </div>
 
         {/* Alert Banner */}
-        <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${alertConfig.bg}`}>
-          <AlertIcon className={`w-5 h-5 shrink-0 ${alertConfig.iconColor}`} />
-          <p className={`text-sm font-medium ${alertConfig.text}`}>
-            {alertConfig.message}
-          </p>
+        <div className={`flex flex-col gap-1.5 px-4 py-3 rounded-lg border ${alertConfig.bg}`}>
+          <div className="flex items-center gap-3">
+            <AlertIcon className={`w-5 h-5 shrink-0 ${alertConfig.iconColor}`} />
+            <p className={`text-sm font-medium ${alertConfig.text}`}>
+              {alertConfig.message}
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground ml-8">{audit.assuranceStatement}</p>
         </div>
 
         {/* Top Cards: Customer Sentiment + Report Summary */}

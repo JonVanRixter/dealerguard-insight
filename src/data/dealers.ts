@@ -1,4 +1,5 @@
 export type RagStatus = "green" | "amber" | "red";
+export type FirmType = "AR" | "DA"; // Appointed Representative or Directly Authorised
 
 export interface Dealer {
   name: string;
@@ -7,6 +8,7 @@ export interface Dealer {
   lastAudit: string;
   trend: "up" | "down" | "stable";
   region: string;
+  firmType: FirmType;
 }
 
 const dealerPrefixes = [
@@ -43,7 +45,6 @@ function generateDealerName(index: number): string {
   const suffix = dealerSuffixes[Math.floor(index / 3) % dealerSuffixes.length];
   const location = locations[index % locations.length];
   
-  // Vary the naming patterns
   const patterns = [
     `${prefix} ${suffix}`,
     `${prefix} ${suffix} ${location}`,
@@ -67,7 +68,6 @@ function generateAuditDate(index: number): string {
 }
 
 function generateDealer(index: number): Dealer {
-  // Distribute RAG statuses: ~69% green, ~24.5% amber, ~6.5% red (matching 98/35/9 ratio scaled up)
   const ragDistribution = Math.random();
   let rag: RagStatus;
   let scoreRange: [number, number];
@@ -85,7 +85,6 @@ function generateDealer(index: number): Dealer {
   
   const score = Math.floor(Math.random() * (scoreRange[1] - scoreRange[0] + 1)) + scoreRange[0];
   
-  // Trend distribution
   const trendRandom = Math.random();
   let trend: "up" | "down" | "stable";
   if (rag === "red") {
@@ -95,6 +94,9 @@ function generateDealer(index: number): Dealer {
   } else {
     trend = trendRandom < 0.15 ? "down" : trendRandom < 0.5 ? "stable" : "up";
   }
+
+  // ~80% AR, ~20% DA — matches industry distribution
+  const firmType: FirmType = index % 5 === 0 ? "DA" : "AR";
   
   return {
     name: generateDealerName(index),
@@ -103,11 +105,54 @@ function generateDealer(index: number): Dealer {
     lastAudit: generateAuditDate(index),
     trend,
     region: locations[index % locations.length],
+    firmType,
   };
 }
 
-// Generate 200 dealers
-export const dealers: Dealer[] = Array.from({ length: 200 }, (_, i) => generateDealer(i));
+// Generate 196 mock dealers + 4 real sample dealers
+const mockDealers: Dealer[] = Array.from({ length: 196 }, (_, i) => generateDealer(i));
+
+// Real sample dealers from audit documents
+const realDealers: Dealer[] = [
+  {
+    name: "Thurlby Motors",
+    score: 72,
+    rag: "amber",
+    lastAudit: "05 Feb 2026",
+    trend: "stable",
+    region: "Lincoln",
+    firmType: "AR",
+  },
+  {
+    name: "Dynasty Partners Limited",
+    score: 68,
+    rag: "amber",
+    lastAudit: "05 Feb 2026",
+    trend: "up",
+    region: "London",
+    firmType: "DA",
+  },
+  {
+    name: "Shirlaws Limited",
+    score: 38,
+    rag: "red",
+    lastAudit: "05 Feb 2026",
+    trend: "down",
+    region: "Glasgow",
+    firmType: "AR",
+  },
+  {
+    name: "Platinum Vehicle Specialists",
+    score: 42,
+    rag: "red",
+    lastAudit: "05 Feb 2026",
+    trend: "down",
+    region: "Birmingham",
+    firmType: "AR",
+  },
+];
+
+export const dealers: Dealer[] = [...realDealers, ...mockDealers];
 
 // Calculate portfolio stats
 export const portfolioStats = {
@@ -120,9 +165,9 @@ export const portfolioStats = {
 
 // Recent activities based on actual dealer data
 export const activities = [
-  { text: `${dealers.find(d => d.rag === "amber")?.name || "A dealer"} dropped to Amber`, time: "2 hours ago", type: "amber" as const },
-  { text: `${dealers.find(d => d.rag === "red")?.name || "A dealer"} flagged as Critical`, time: "5 hours ago", type: "red" as const },
-  { text: `${dealers.filter(d => d.rag === "green")[0]?.name || "A dealer"} completed annual audit`, time: "1 day ago", type: "green" as const },
-  { text: `${dealers.filter(d => d.rag === "green")[1]?.name || "A dealer"} renewed FCA authorisation`, time: "2 days ago", type: "green" as const },
-  { text: `New DBS check alert for ${dealers.filter(d => d.rag === "amber")[1]?.name || "a dealer"}`, time: "3 days ago", type: "amber" as const },
+  { text: "Shirlaws Limited flagged as High Risk – CreditSafe Category D", time: "2 hours ago", type: "red" as const },
+  { text: "Platinum Vehicle Specialists – missing IDD on finance deal", time: "5 hours ago", type: "red" as const },
+  { text: "Thurlby Motors – representative APR update required", time: "1 day ago", type: "amber" as const },
+  { text: "Dynasty Partners Limited – website commission disclosure needs updating", time: "2 days ago", type: "amber" as const },
+  { text: `${dealers.filter(d => d.rag === "green")[0]?.name || "A dealer"} completed annual audit`, time: "3 days ago", type: "green" as const },
 ];
