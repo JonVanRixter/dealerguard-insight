@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { getOverdueRechecks } from "@/utils/recheckSchedule";
+import { detectDuplicates, MATCH_TYPE_LABELS } from "@/utils/duplicateDetection";
 
 // Extend jsPDF type for autoTable
 declare module "jspdf" {
@@ -356,6 +357,44 @@ export function generateReportsAnalyticsPDF(data: ReportsExportData): void {
       didParseCell: (data) => {
         if (data.section === "body" && data.column.index === 3) {
           data.cell.styles.textColor = [239, 68, 68];
+          data.cell.styles.fontStyle = "bold";
+        }
+      },
+    });
+  }
+
+  // === DUPLICATE FLAGS ===
+  const duplicateGroups = detectDuplicates();
+  if (duplicateGroups.length > 0) {
+    yPosition = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 15 : yPosition + 15;
+    checkPageBreak(60);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text(`Potential Duplicates (${duplicateGroups.length})`, 14, yPosition);
+    yPosition += 8;
+
+    const dupData = duplicateGroups.slice(0, 20).map((g) => [
+      MATCH_TYPE_LABELS[g.matchType],
+      g.matchValue,
+      g.dealers.map((d) => d.name).join(", "),
+    ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Match Type", "Shared Value", "Dealers"]],
+      body: dupData,
+      theme: "striped",
+      headStyles: { fillColor: [51, 65, 85], fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      columnStyles: {
+        0: { cellWidth: 35 },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 85 },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 0) {
+          data.cell.styles.textColor = [245, 158, 11];
           data.cell.styles.fontStyle = "bold";
         }
       },
