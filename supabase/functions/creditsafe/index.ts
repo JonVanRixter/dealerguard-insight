@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,7 +35,6 @@ async function authenticate(): Promise<string> {
 
   const data = await res.json();
   cachedToken = data.token;
-  // Tokens typically last 1 hour; refresh 5 min early
   tokenExpiry = Date.now() + 55 * 60 * 1000;
   return cachedToken!;
 }
@@ -80,15 +80,39 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Authenticate the calling user
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+  if (claimsError || !claimsData?.claims) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const { action, ...params } = await req.json();
-    const token = await authenticate();
+    const csToken = await authenticate();
 
     let result: unknown;
 
     switch (action) {
       case "search": {
-        result = await searchCompanies(token, {
+        result = await searchCompanies(csToken, {
           name: params.name,
           regNo: params.regNo,
           country: params.country || "GB",
@@ -97,7 +121,7 @@ serve(async (req) => {
       }
       case "report": {
         if (!params.connectId) throw new Error("connectId is required");
-        result = await getCompanyReport(token, params.connectId);
+        result = await getCompanyReport(csToken, params.connectId);
         break;
       }
       default:
@@ -109,8 +133,7 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("creditsafe error:", e);
-    const message = e instanceof Error ? e.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

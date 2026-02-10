@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import logo from "@/assets/logo.png";
 
 const Auth = () => {
-  const { signIn, signUp, devBypass } = useAuth();
+  const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
@@ -91,13 +91,6 @@ const Auth = () => {
             </form>
           </TabsContent>
         </Tabs>
-
-        {/* ⚠️ DEV ONLY – remove before production */}
-        <div className="pt-4 border-t border-dashed border-amber-500/40">
-          <Button variant="outline" className="w-full border-amber-500 text-amber-600 hover:bg-amber-50" onClick={devBypass}>
-            ⚡ Dev Bypass (skip auth)
-          </Button>
-        </div>
       </div>
     </div>
   );
