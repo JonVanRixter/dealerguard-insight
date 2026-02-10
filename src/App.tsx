@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import DealerDetail from "./pages/DealerDetail";
@@ -32,6 +32,11 @@ function AuthRoute() {
   return <Auth />;
 }
 
+function DealersRedirect() {
+  const { name } = useParams();
+  return <Navigate to={`/dealer/${name || ""}`} replace />;
+}
+
 const AppRoutes = () => (
   <Routes>
     <Route path="/auth" element={<AuthRoute />} />
@@ -44,6 +49,7 @@ const AppRoutes = () => (
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
     <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
     <Route path="/dealer/:name" element={<ProtectedRoute><DealerDetail /></ProtectedRoute>} />
+    <Route path="/dealers/:name" element={<DealersRedirect />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
