@@ -96,6 +96,14 @@ export function FcaRegisterCard({ dealerName, fcaRef, onDataLoaded }: Props) {
       if (firmError) throw new Error(firmError.message);
       if (firmResult?.error) throw new Error(firmResult.error);
 
+      // Handle "Not Found" from graceful 404 handling
+      if (firmResult?.Status === "Not Found") {
+        setError(`No firm found with FRN ${frn}. This may be a mock dealer with no real FCA record.`);
+        setFirmData(null);
+        setLoading(false);
+        return;
+      }
+
       const firm = firmResult?.Data?.[0] || firmResult;
       setFirmData(firm);
 
