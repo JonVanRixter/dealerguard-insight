@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { RagBadge } from "@/components/RagBadge";
@@ -44,6 +44,8 @@ import { generateDealerAudit } from "@/data/auditFramework";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { BatchAiSummary } from "@/components/dealer/BatchAiSummary";
 import { DuplicateFlagsBanner } from "@/components/dealer/DuplicateFlagsBanner";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -66,6 +68,22 @@ const Dealers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [regionFilter, setRegionFilter] = useState(initialRegion);
+  const [docCounts, setDocCounts] = useState<Map<string, number>>(new Map());
+
+  const fetchDocCounts = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase
+      .from("dealer_documents")
+      .select("dealer_name");
+    if (data) {
+      const counts = new Map<string, number>();
+      data.forEach((d) => counts.set(d.dealer_name, (counts.get(d.dealer_name) || 0) + 1));
+      setDocCounts(counts);
+    }
+  }, []);
+
+  useEffect(() => { fetchDocCounts(); }, [fetchDocCounts]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>("score");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -456,6 +474,11 @@ const Dealers = () => {
                               >
                                 <FolderOpen className="w-4 h-4" />
                                 <span className="hidden xl:inline">Docs</span>
+                                {(docCounts.get(dealer.name) || 0) > 0 && (
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 min-w-5 h-5 justify-center">
+                                    {docCounts.get(dealer.name)}
+                                  </Badge>
+                                )}
                               </Button>
                             </td>
                           </tr>
