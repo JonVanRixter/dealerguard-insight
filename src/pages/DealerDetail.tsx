@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { RagBadge } from "@/components/RagBadge";
@@ -21,6 +21,11 @@ const DealerDetail = () => {
   const { toast } = useToast();
   const { settings } = useUserSettings();
   const dealerName = name ? decodeURIComponent(name) : "Unknown Dealer";
+  const [aiSummary, setAiSummary] = useState("");
+
+  const handleSummaryChange = useCallback((summary: string) => {
+    setAiSummary(summary);
+  }, []);
 
   // Find the dealer in our data to get the index for consistent audit generation
   const dealerIndex = useMemo(() => {
@@ -43,7 +48,7 @@ const DealerDetail = () => {
 
   const handleDownloadReport = () => {
     try {
-      generateComplianceReportPDF(audit, fcaRef);
+      generateComplianceReportPDF(audit, fcaRef, aiSummary || undefined);
       toast({
         title: "Report Downloaded",
         description: `Compliance report for ${dealerName} has been generated and downloaded.`,
@@ -149,7 +154,7 @@ const DealerDetail = () => {
         </div>
 
         {/* AI Executive Summary */}
-        <AiAuditSummary audit={audit} />
+        <AiAuditSummary audit={audit} onSummaryChange={handleSummaryChange} />
 
         {/* Key Actions */}
         <KeyActionsTable actions={audit.keyActions} />
