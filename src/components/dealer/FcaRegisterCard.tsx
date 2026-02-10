@@ -9,6 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Search,
   Loader2,
@@ -371,8 +372,31 @@ export function FcaRegisterCard({ dealerName, fcaRef, onDataLoaded }: Props) {
           </div>
         )}
 
+        {/* Loading skeleton during auto-search */}
+        {loading && !firmData && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-48" />
+                  <div className="flex gap-4">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+                </div>
+                <Skeleton className="h-6 w-24 rounded-full" />
+              </div>
+              <Skeleton className="h-3 w-36" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+        )}
+
         {/* Empty state */}
-        {!searched && !firmData && (
+        {!searched && !firmData && !loading && (
           <div className="text-center py-4">
             <Building2 className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
