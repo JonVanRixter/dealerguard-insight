@@ -23,6 +23,7 @@ import { ControlsBreakdownChart } from "@/components/dealer/ControlsBreakdownCha
 import { ActionStatusChart } from "@/components/dealer/ActionStatusChart";
 import { DealerScoreTrend } from "@/components/dealer/DealerScoreTrend";
 import { DirectorPassportCheck } from "@/components/dealer/DirectorPassportCheck";
+import { FcaRegisterCard } from "@/components/dealer/FcaRegisterCard";
 import { dealers as dealersList } from "@/data/dealers";
 
 const DealerDetail = () => {
@@ -212,6 +213,9 @@ const DealerDetail = () => {
 
         {/* CreditSafe Report */}
         <CreditSafeCard dealerName={dealerName} companiesHouseNumber={dealerData.dealer?.companiesHouseNumber} />
+
+        {/* FCA Register Check */}
+        <FcaRegisterCard dealerName={dealerName} fcaRef={fcaRef} />
 
         {/* Director Passport / ID Check */}
         <DirectorPassportCheck dealerName={dealerName} />
