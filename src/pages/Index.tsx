@@ -235,6 +235,18 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <PortfolioTrendMini />
+          <ScoreDistributionChart />
+        </div>
+
+        {/* Section Compliance + Regional Summary */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SectionComplianceChart />
+          <RegionalSummaryTable />
+        </div>
+
         {/* Main content grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Dealer Watchlist */}
@@ -407,18 +419,6 @@ const Index = () => {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <PortfolioTrendMini />
-          <ScoreDistributionChart />
-        </div>
-
-        {/* Section Compliance + Regional Summary */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SectionComplianceChart />
-          <RegionalSummaryTable />
         </div>
       </div>
     </DashboardLayout>
