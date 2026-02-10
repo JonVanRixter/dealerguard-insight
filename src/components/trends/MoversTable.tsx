@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { DealerTrend } from "@/data/trendData";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { RagBadge } from "@/components/RagBadge";
@@ -8,6 +9,7 @@ interface MoversTableProps {
 }
 
 export function MoversTable({ improvers, decliners }: MoversTableProps) {
+  const navigate = useNavigate();
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Top Improvers */}
@@ -32,7 +34,14 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
             <tbody>
               {improvers.map((d) => (
                 <tr key={d.dealerName} className="border-b border-border last:border-0">
-                  <td className="px-5 py-2.5 font-medium text-foreground">{d.dealerName}</td>
+                  <td className="px-5 py-2.5 font-medium">
+                    <button
+                      onClick={() => navigate(`/dealer/${encodeURIComponent(d.dealerName)}`)}
+                      className="text-primary hover:underline text-left"
+                    >
+                      {d.dealerName}
+                    </button>
+                  </td>
                   <td className="px-3 py-2.5 text-center font-semibold">{d.currentScore}%</td>
                   <td className="px-3 py-2.5 text-center">
                     <span className="text-rag-green font-semibold">+{d.changeFromStart}%</span>
@@ -69,7 +78,14 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
             <tbody>
               {decliners.map((d) => (
                 <tr key={d.dealerName} className="border-b border-border last:border-0">
-                  <td className="px-5 py-2.5 font-medium text-foreground">{d.dealerName}</td>
+                  <td className="px-5 py-2.5 font-medium">
+                    <button
+                      onClick={() => navigate(`/dealer/${encodeURIComponent(d.dealerName)}`)}
+                      className="text-primary hover:underline text-left"
+                    >
+                      {d.dealerName}
+                    </button>
+                  </td>
                   <td className="px-3 py-2.5 text-center font-semibold">{d.currentScore}%</td>
                   <td className="px-3 py-2.5 text-center">
                     <span className={`font-semibold ${d.changeFromStart < 0 ? "text-rag-red" : "text-muted-foreground"}`}>
