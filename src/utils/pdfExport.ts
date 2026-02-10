@@ -16,7 +16,7 @@ const RAG_COLORS = {
   red: { r: 239, g: 68, b: 68 },
 };
 
-export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string): void {
+export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, aiSummary?: string): void {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   let yPosition = 20;
@@ -73,6 +73,68 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string):
   doc.text(`${ragLabel} - ${audit.overallScore}%`, pageWidth - 37, yPosition + 17, { align: "center" });
   
   yPosition += 40;
+
+  // === AI EXECUTIVE SUMMARY (if available) ===
+  if (aiSummary) {
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text("AI Executive Summary", 14, yPosition);
+    yPosition += 4;
+
+    // Draw a subtle accent line
+    doc.setDrawColor(99, 102, 241);
+    doc.setLineWidth(0.5);
+    doc.line(14, yPosition, pageWidth - 14, yPosition);
+    yPosition += 6;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(50);
+
+    // Strip markdown headers and format as plain text sections
+    const lines = aiSummary.split("\n");
+    for (const line of lines) {
+      checkPageBreak(12);
+      const trimmed = line.trim();
+      if (!trimmed) {
+        yPosition += 3;
+        continue;
+      }
+      // Render markdown headers as bold section titles
+      if (trimmed.startsWith("## ")) {
+        yPosition += 3;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+        doc.text(trimmed.replace("## ", ""), 14, yPosition);
+        yPosition += 6;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(50);
+        continue;
+      }
+      // Render bullet points
+      const isBullet = trimmed.startsWith("- ") || trimmed.startsWith("* ");
+      const text = isBullet ? trimmed.slice(2) : trimmed;
+      const xOffset = isBullet ? 20 : 14;
+      const maxWidth = pageWidth - xOffset - 14;
+      
+      // Strip bold markers
+      const cleanText = text.replace(/\*\*/g, "");
+      const splitLines = doc.splitTextToSize(cleanText, maxWidth);
+      
+      for (let i = 0; i < splitLines.length; i++) {
+        checkPageBreak(8);
+        if (i === 0 && isBullet) {
+          doc.text("•", 16, yPosition);
+        }
+        doc.text(splitLines[i], xOffset, yPosition);
+        yPosition += 4.5;
+      }
+    }
+    yPosition += 8;
+  }
 
   // === CUSTOMER SENTIMENT ===
   doc.setTextColor(0);

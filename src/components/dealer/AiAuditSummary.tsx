@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Sparkles, Loader2, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -7,11 +7,12 @@ import ReactMarkdown from "react-markdown";
 
 interface AiAuditSummaryProps {
   audit: DealerAudit;
+  onSummaryChange?: (summary: string) => void;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-audit-summary`;
 
-export function AiAuditSummary({ audit }: AiAuditSummaryProps) {
+export function AiAuditSummary({ audit, onSummaryChange }: AiAuditSummaryProps) {
   const [summary, setSummary] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -106,7 +107,16 @@ export function AiAuditSummary({ audit }: AiAuditSummaryProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [audit, toast, summary]);
+  }, [audit, toast, summary, onSummaryChange]);
+
+  // Notify parent when streaming completes
+  const wasLoadingRef = useRef(false);
+  useEffect(() => {
+    if (wasLoadingRef.current && !isLoading && summary) {
+      onSummaryChange?.(summary);
+    }
+    wasLoadingRef.current = isLoading;
+  }, [isLoading, summary, onSummaryChange]);
 
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(summary);
