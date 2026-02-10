@@ -266,13 +266,17 @@ const Dealers = () => {
             </div>
           </div>
 
-          <div className="bg-card rounded-xl border border-border p-5">
+          <div
+            onClick={() => { setSortKey("css"); setSortDir("desc"); setViewMode("table"); setCurrentPage(1); }}
+            className={`bg-card rounded-xl border p-5 cursor-pointer transition-colors hover:bg-muted/50 ${sortKey === "css" && sortDir === "desc" ? "border-primary ring-1 ring-primary/30" : "border-border"}`}
+          >
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <Activity className="w-4 h-4" />
               Avg CSS Score
             </div>
             <span className="text-3xl font-bold text-foreground">{avgCss}</span>
             <span className="text-lg text-muted-foreground ml-1">/ 10</span>
+            {sortKey === "css" && sortDir === "desc" && <p className="text-xs text-muted-foreground mt-1">Sorted by CSS ↓</p>}
           </div>
 
           <div
