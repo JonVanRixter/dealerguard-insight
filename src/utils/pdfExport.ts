@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import { DealerAudit, AuditSection, KeyAction } from "@/data/auditFramework";
 import { getDealerRechecks, RecheckItem } from "@/utils/recheckSchedule";
 import { detectDuplicates, MATCH_TYPE_LABELS } from "@/utils/duplicateDetection";
+import { dealerTrends } from "@/data/trendData";
 
 // Extend jsPDF type for autoTable
 declare module "jspdf" {
@@ -191,6 +192,190 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
   });
 
   yPosition = doc.lastAutoTable.finalY + 15;
+
+  // === 12-MONTH SCORE TREND ===
+  const trend = dealerTrends.find((t) => t.dealerName === audit.dealerName);
+  if (trend && trend.history.length > 0) {
+    checkPageBreak(70);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text("12-Month Score Trend", 14, yPosition);
+    yPosition += 4;
+
+    const changeLabel = trend.changeFromStart > 0
+      ? `+${trend.changeFromStart}pts`
+      : `${trend.changeFromStart}pts`;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100);
+    doc.text(`Change over period: ${changeLabel}`, 14, yPosition + 4);
+    yPosition += 10;
+
+    const trendData = trend.history.map((h) => [
+      h.month,
+      h.score.toString(),
+      h.rag.toUpperCase(),
+    ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Month", "Score", "Status"]],
+      body: trendData,
+      theme: "striped",
+      headStyles: { fillColor: [51, 65, 85], fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 25, halign: "center" },
+        2: { cellWidth: 25, halign: "center" },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 2) {
+          const status = data.cell.raw?.toString().toLowerCase() || "";
+          if (status === "green") data.cell.styles.textColor = [34, 197, 94];
+          else if (status === "amber") data.cell.styles.textColor = [245, 158, 11];
+          else if (status === "red") data.cell.styles.textColor = [239, 68, 68];
+          data.cell.styles.fontStyle = "bold";
+        }
+      },
+    });
+
+    // Draw a mini inline bar chart of scores
+    const chartY = doc.lastAutoTable.finalY + 8;
+    const chartX = 14;
+    const chartW = pageWidth - 28;
+    const barW = chartW / trend.history.length - 2;
+    const maxBarH = 25;
+
+    checkPageBreak(maxBarH + 20);
+
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text("Score Trend (visual)", 14, chartY);
+
+    const barStartY = chartY + 4;
+
+    // Threshold lines
+    const greenLineY = barStartY + maxBarH - (maxBarH * 80) / 100;
+    const amberLineY = barStartY + maxBarH - (maxBarH * 55) / 100;
+    doc.setDrawColor(34, 197, 94);
+    doc.setLineWidth(0.3);
+    doc.line(chartX, greenLineY, chartX + chartW, greenLineY);
+    doc.setDrawColor(245, 158, 11);
+    doc.line(chartX, amberLineY, chartX + chartW, amberLineY);
+
+    trend.history.forEach((h, i) => {
+      const barH = (maxBarH * h.score) / 100;
+      const x = chartX + i * (barW + 2);
+      const y = barStartY + maxBarH - barH;
+      const c = RAG_COLORS[h.rag];
+      doc.setFillColor(c.r, c.g, c.b);
+      doc.rect(x, y, barW, barH, "F");
+    });
+
+    yPosition = barStartY + maxBarH + 10;
+  }
+
+  // === SECTION COMPLIANCE RATES ===
+  checkPageBreak(60);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0);
+  doc.text("Section Compliance Rates", 14, yPosition);
+  yPosition += 6;
+
+  const complianceData = audit.sections.map((s) => {
+    const total = s.summary.green + s.summary.amber + s.summary.red;
+    const passRate = total > 0 ? Math.round((s.summary.green / total) * 100) : 0;
+    return [
+      s.name,
+      s.summary.green.toString(),
+      s.summary.amber.toString(),
+      s.summary.red.toString(),
+      total.toString(),
+      `${passRate}%`,
+    ];
+  });
+
+  autoTable(doc, {
+    startY: yPosition,
+    head: [["Section", "Pass", "Attention", "Fail", "Total", "Pass Rate"]],
+    body: complianceData,
+    theme: "striped",
+    headStyles: { fillColor: [51, 65, 85], fontSize: 8 },
+    bodyStyles: { fontSize: 8 },
+    columnStyles: {
+      0: { cellWidth: 55 },
+      1: { cellWidth: 18, halign: "center" },
+      2: { cellWidth: 22, halign: "center" },
+      3: { cellWidth: 18, halign: "center" },
+      4: { cellWidth: 18, halign: "center" },
+      5: { cellWidth: 25, halign: "center" },
+    },
+    didParseCell: (data) => {
+      if (data.section === "body" && data.column.index === 5) {
+        const rate = parseInt(data.cell.raw?.toString() || "0");
+        if (rate >= 80) data.cell.styles.textColor = [34, 197, 94];
+        else if (rate >= 55) data.cell.styles.textColor = [245, 158, 11];
+        else data.cell.styles.textColor = [239, 68, 68];
+        data.cell.styles.fontStyle = "bold";
+      }
+    },
+  });
+  yPosition = doc.lastAutoTable.finalY + 15;
+
+  // === ACTION STATUS BREAKDOWN ===
+  if (audit.keyActions.length > 0) {
+    checkPageBreak(50);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text("Action Status Breakdown", 14, yPosition);
+    yPosition += 6;
+
+    const statusCounts: Record<string, number> = {};
+    const priorityCounts = { High: 0, Medium: 0, Low: 0 };
+    audit.keyActions.forEach((a) => {
+      statusCounts[a.status] = (statusCounts[a.status] || 0) + 1;
+      priorityCounts[a.priority] = (priorityCounts[a.priority] || 0) + 1;
+    });
+
+    const statusData = Object.entries(statusCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([status, count]) => [
+        status,
+        count.toString(),
+        `${Math.round((count / audit.keyActions.length) * 100)}%`,
+      ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Status", "Count", "% of Total"]],
+      body: statusData,
+      theme: "striped",
+      headStyles: { fillColor: [51, 65, 85], fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      columnStyles: {
+        0: { cellWidth: 50 },
+        1: { cellWidth: 30, halign: "center" },
+        2: { cellWidth: 30, halign: "center" },
+      },
+    });
+    yPosition = doc.lastAutoTable.finalY + 8;
+
+    // Priority summary line
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(80);
+    doc.text(
+      `Priority: High ${priorityCounts.High} | Medium ${priorityCounts.Medium} | Low ${priorityCounts.Low}`,
+      14,
+      yPosition
+    );
+    yPosition += 12;
+  }
 
   // === KEY ACTIONS ===
   checkPageBreak(50);
