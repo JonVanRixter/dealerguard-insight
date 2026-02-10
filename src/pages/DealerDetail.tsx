@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { RagBadge } from "@/components/RagBadge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Play, Download, ShieldAlert, ShieldCheck, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Play, Download, ShieldAlert, ShieldCheck, AlertTriangle, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { dealers } from "@/data/dealers";
 import { generateDealerAudit } from "@/data/auditFramework";
@@ -25,6 +25,7 @@ import { DealerScoreTrend } from "@/components/dealer/DealerScoreTrend";
 import { DirectorPassportCheck } from "@/components/dealer/DirectorPassportCheck";
 import { FcaRegisterCard } from "@/components/dealer/FcaRegisterCard";
 import { DealerNotes } from "@/components/dealer/DealerNotes";
+import { Badge } from "@/components/ui/badge";
 import { dealers as dealersList } from "@/data/dealers";
 
 const DealerDetail = () => {
@@ -34,6 +35,7 @@ const DealerDetail = () => {
   const { settings } = useUserSettings();
   const dealerName = name ? decodeURIComponent(name) : "Unknown Dealer";
   const [aiSummary, setAiSummary] = useState("");
+  const [docCount, setDocCount] = useState(0);
 
   const [passportChecks, setPassportChecks] = useState<PassportCheckEntry[]>([]);
   const [fcaRegisterData, setFcaRegisterData] = useState<FcaRegisterEntry | undefined>(undefined);
@@ -43,35 +45,36 @@ const DealerDetail = () => {
     setAiSummary(summary);
   }, []);
 
-  // Fetch passport documents for PDF export
+  // Fetch document count + passport docs
   useEffect(() => {
-    const fetchPassportDocs = async () => {
+    const fetchDocs = async () => {
       const { data } = await supabase
         .from("dealer_documents")
-        .select("*")
-        .eq("dealer_name", dealerName)
-        .eq("category", "Passport / ID")
-        .order("created_at", { ascending: false });
+        .select("id, category, tags, file_name, created_at, expiry_date")
+        .eq("dealer_name", dealerName);
 
       if (data) {
+        setDocCount(data.length);
         setPassportChecks(
-          data.map((d: any) => {
-            const statusTag = d.tags?.find((t: string) => t.startsWith("status:"));
-            const reviewTag = d.tags?.find((t: string) => t.startsWith("review:"));
-            const directorTag = d.tags?.find((t: string) => t.startsWith("director:"));
-            return {
-              directorName: directorTag?.slice(9) || "Unknown",
-              fileName: d.file_name,
-              status: (statusTag?.split(":")[1] as "pending" | "verified" | "rejected") || "pending",
-              uploadDate: new Date(d.created_at).toLocaleDateString("en-GB"),
-              expiryDate: d.expiry_date ? new Date(d.expiry_date).toLocaleDateString("en-GB") : undefined,
-              reviewNote: reviewTag?.slice(7) || undefined,
-            };
-          })
+          data
+            .filter((d: any) => d.category === "Passport / ID")
+            .map((d: any) => {
+              const statusTag = d.tags?.find((t: string) => t.startsWith("status:"));
+              const reviewTag = d.tags?.find((t: string) => t.startsWith("review:"));
+              const directorTag = d.tags?.find((t: string) => t.startsWith("director:"));
+              return {
+                directorName: directorTag?.slice(9) || "Unknown",
+                fileName: d.file_name,
+                status: (statusTag?.split(":")[1] as "pending" | "verified" | "rejected") || "pending",
+                uploadDate: new Date(d.created_at).toLocaleDateString("en-GB"),
+                expiryDate: d.expiry_date ? new Date(d.expiry_date).toLocaleDateString("en-GB") : undefined,
+                reviewNote: reviewTag?.slice(7) || undefined,
+              };
+            })
         );
       }
     };
-    fetchPassportDocs();
+    fetchDocs();
   }, [dealerName]);
 
   // Find the dealer in our data to get the index for consistent audit generation
@@ -160,6 +163,13 @@ const DealerDetail = () => {
               <span>FCA Ref: <span className="font-medium text-foreground">{fcaRef}</span></span>
               <span>Firm Type: <span className="font-medium text-foreground">{audit.firmType === "AR" ? "Appointed Representative" : "Directly Authorised"}</span></span>
               <span>Last Audit: <span className="font-medium text-foreground">{audit.lastAuditDate}</span></span>
+              <span className="inline-flex items-center gap-1">
+                <FolderOpen className="w-3.5 h-3.5" />
+                Documents:
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 min-w-5 h-5 justify-center">
+                  {docCount}
+                </Badge>
+              </span>
             </div>
           </div>
           <div className="flex gap-2">
