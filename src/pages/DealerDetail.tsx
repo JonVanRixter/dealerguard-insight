@@ -15,6 +15,7 @@ import { generateComplianceReportPDF } from "@/utils/pdfExport";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { AiAuditSummary } from "@/components/dealer/AiAuditSummary";
 import { DealerDocuments } from "@/components/dealer/DealerDocuments";
+import { DealerRecheckTimeline } from "@/components/dealer/DealerRecheckTimeline";
 
 const DealerDetail = () => {
   const { name } = useParams();
@@ -159,6 +160,9 @@ const DealerDetail = () => {
 
         {/* Key Actions */}
         <KeyActionsTable actions={audit.keyActions} />
+
+        {/* Re-Check Schedule (Green dealers only) */}
+        <DealerRecheckTimeline dealerName={dealerName} dealerRag={audit.overallRag} />
 
         {/* Documents */}
         <DealerDocuments dealerName={dealerName} />
