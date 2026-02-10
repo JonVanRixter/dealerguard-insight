@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -84,22 +85,39 @@ const Documents = () => {
   // Upload form state
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [uploadDealer, setUploadDealer] = useState("");
   const [uploadCategory, setUploadCategory] = useState("Other");
   const [uploadDescription, setUploadDescription] = useState("");
   const [uploadTags, setUploadTags] = useState<string[]>([]);
   const [uploadTagInput, setUploadTagInput] = useState("");
   const [uploadExpiry, setUploadExpiry] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const addFiles = (newFiles: FileList | File[]) => {
+    const arr = Array.from(newFiles);
+    setUploadFiles((prev) => {
+      const existing = new Set(prev.map((f) => `${f.name}-${f.size}`));
+      const unique = arr.filter((f) => !existing.has(`${f.name}-${f.size}`));
+      return [...prev, ...unique];
+    });
+  };
+
+  const removeFile = (index: number) => {
+    setUploadFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const resetUploadForm = () => {
-    setUploadFile(null);
+    setUploadFiles([]);
+    setUploadProgress({ current: 0, total: 0 });
     setUploadDealer("");
     setUploadCategory("Other");
     setUploadDescription("");
     setUploadTags([]);
     setUploadTagInput("");
     setUploadExpiry("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const addUploadTag = () => {
@@ -111,39 +129,52 @@ const Documents = () => {
   };
 
   const handleUpload = async () => {
-    if (!uploadFile || !uploadDealer) return;
+    if (uploadFiles.length === 0 || !uploadDealer) return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast({ title: "Not authenticated", description: "Please sign in to upload documents.", variant: "destructive" });
       return;
     }
     setUploading(true);
-    const filePath = `${user.id}/${uploadDealer}/${Date.now()}_${uploadFile.name}`;
-    const { error: uploadError } = await supabase.storage.from("dealer-documents").upload(filePath, uploadFile);
-    if (uploadError) {
-      toast({ title: "Upload Failed", description: uploadError.message, variant: "destructive" });
-      setUploading(false);
-      return;
+    const total = uploadFiles.length;
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < total; i++) {
+      const file = uploadFiles[i];
+      setUploadProgress({ current: i + 1, total });
+      const filePath = `${user.id}/${uploadDealer}/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage.from("dealer-documents").upload(filePath, file);
+      if (uploadError) {
+        failCount++;
+        continue;
+      }
+      const { error: dbError } = await supabase.from("dealer_documents").insert({
+        user_id: user.id,
+        dealer_name: uploadDealer,
+        file_name: file.name,
+        file_path: filePath,
+        file_size: file.size,
+        file_type: file.type,
+        category: uploadCategory,
+        description: uploadDescription || null,
+        tags: uploadTags,
+        expiry_date: uploadExpiry || null,
+      });
+      if (dbError) failCount++;
+      else successCount++;
     }
-    const { error: dbError } = await supabase.from("dealer_documents").insert({
-      user_id: user.id,
-      dealer_name: uploadDealer,
-      file_name: uploadFile.name,
-      file_path: filePath,
-      file_size: uploadFile.size,
-      file_type: uploadFile.type,
-      category: uploadCategory,
-      description: uploadDescription || null,
-      tags: uploadTags,
-      expiry_date: uploadExpiry || null,
-    });
-    if (dbError) {
-      toast({ title: "Save Failed", description: dbError.message, variant: "destructive" });
-    } else {
-      toast({ title: "Document Uploaded", description: `${uploadFile.name} allocated to ${uploadDealer}.` });
+
+    if (successCount > 0) {
+      toast({
+        title: "Upload Complete",
+        description: `${successCount} file${successCount > 1 ? "s" : ""} uploaded to ${uploadDealer}.${failCount > 0 ? ` ${failCount} failed.` : ""}`,
+      });
       resetUploadForm();
       setUploadOpen(false);
       fetchDocuments();
+    } else {
+      toast({ title: "Upload Failed", description: `All ${failCount} file(s) failed to upload.`, variant: "destructive" });
     }
     setUploading(false);
   };
@@ -243,53 +274,56 @@ const Documents = () => {
                 </div>
                 {/* File input with drag-and-drop */}
                 <div>
-                  <label className="text-sm font-medium text-foreground block mb-1.5">File</label>
+                  <label className="text-sm font-medium text-foreground block mb-1.5">
+                    Files {uploadFiles.length > 0 && <span className="text-muted-foreground font-normal">({uploadFiles.length} selected)</span>}
+                  </label>
                   <div
                     onDragOver={(e) => { e.preventDefault(); e.currentTarget.dataset.dragging = "true"; }}
                     onDragLeave={(e) => { e.preventDefault(); e.currentTarget.dataset.dragging = "false"; }}
                     onDrop={(e) => {
                       e.preventDefault();
                       e.currentTarget.dataset.dragging = "false";
-                      const file = e.dataTransfer.files?.[0];
-                      if (file) setUploadFile(file);
+                      if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
                     }}
                     className="relative border-2 border-dashed border-border rounded-lg p-6 text-center transition-colors hover:border-primary/50 data-[dragging=true]:border-primary data-[dragging=true]:bg-primary/5 cursor-pointer"
-                    onClick={() => document.getElementById("doc-file-input")?.click()}
+                    onClick={() => fileInputRef.current?.click()}
                   >
                     <input
-                      id="doc-file-input"
+                      ref={fileInputRef}
                       type="file"
+                      multiple
                       accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.tiff,.bmp"
-                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                      onChange={(e) => { if (e.target.files?.length) addFiles(e.target.files); e.target.value = ""; }}
                       className="hidden"
                     />
-                    {uploadFile ? (
-                      <div className="flex items-center justify-center gap-2">
-                        {getFileIcon(uploadFile.type)}
-                        <div className="text-left">
-                          <p className="text-sm font-medium text-foreground truncate max-w-[280px]">{uploadFile.name}</p>
-                          <p className="text-xs text-muted-foreground">{formatFileSize(uploadFile.size)}</p>
-                        </div>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 shrink-0"
-                          onClick={(e) => { e.stopPropagation(); setUploadFile(null); }}
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        <FileUp className="w-8 h-8 mx-auto text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">
-                          Drag & drop a file here, or <span className="text-primary font-medium">browse</span>
-                        </p>
-                        <p className="text-xs text-muted-foreground">PDF, Word, Excel, CSV, images up to 50 MB</p>
-                      </div>
-                    )}
+                    <div className="space-y-1">
+                      <FileUp className="w-8 h-8 mx-auto text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        Drag & drop files here, or <span className="text-primary font-medium">browse</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">PDF, Word, Excel, CSV, images — select multiple files</p>
+                    </div>
                   </div>
+                  {uploadFiles.length > 0 && (
+                    <div className="mt-2 max-h-32 overflow-y-auto space-y-1 rounded-md border border-border p-2">
+                      {uploadFiles.map((file, i) => (
+                        <div key={`${file.name}-${i}`} className="flex items-center gap-2 text-sm py-1 px-1 rounded hover:bg-muted/50">
+                          <div className="shrink-0">{getFileIcon(file.type)}</div>
+                          <span className="truncate flex-1 text-foreground">{file.name}</span>
+                          <span className="text-xs text-muted-foreground shrink-0">{formatFileSize(file.size)}</span>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-5 w-5 shrink-0"
+                            onClick={(e) => { e.stopPropagation(); removeFile(i); }}
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {/* Category */}
                 <div>
@@ -309,7 +343,7 @@ const Documents = () => {
                 <div>
                   <label className="text-sm font-medium text-foreground block mb-1.5">Description</label>
                   <Textarea
-                    placeholder="Optional notes about this document..."
+                    placeholder="Optional notes about these documents..."
                     value={uploadDescription}
                     onChange={(e) => setUploadDescription(e.target.value)}
                     className="bg-background resize-none"
@@ -360,9 +394,18 @@ const Documents = () => {
                     />
                   </div>
                 </div>
-                <Button onClick={handleUpload} disabled={!uploadFile || !uploadDealer || uploading} className="w-full gap-2">
+                {uploading && (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Uploading file {uploadProgress.current} of {uploadProgress.total}...</span>
+                      <span>{Math.round((uploadProgress.current / uploadProgress.total) * 100)}%</span>
+                    </div>
+                    <Progress value={(uploadProgress.current / uploadProgress.total) * 100} className="h-2" />
+                  </div>
+                )}
+                <Button onClick={handleUpload} disabled={uploadFiles.length === 0 || !uploadDealer || uploading} className="w-full gap-2">
                   {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
-                  {uploading ? "Uploading..." : "Upload Document"}
+                  {uploading ? `Uploading ${uploadProgress.current}/${uploadProgress.total}...` : `Upload ${uploadFiles.length > 1 ? `${uploadFiles.length} Documents` : "Document"}`}
                 </Button>
               </div>
             </DialogContent>
