@@ -250,7 +250,14 @@ const Alerts = () => {
                       key={`${item.dealerName}-${item.recheckMonth}`}
                       className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
                     >
-                      <td className="px-5 py-3.5 font-medium text-foreground">{item.dealerName}</td>
+                      <td className="px-5 py-3.5">
+                        <button
+                          onClick={() => navigate(`/dealer/${encodeURIComponent(item.dealerName)}`)}
+                          className="font-medium text-foreground hover:text-primary hover:underline transition-colors text-left"
+                        >
+                          {item.dealerName}
+                        </button>
+                      </td>
                       <td className="px-3 py-3.5 text-muted-foreground">{item.recheckMonth}-month</td>
                       <td className="px-3 py-3.5 text-muted-foreground">
                         {item.recheckDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
@@ -353,7 +360,12 @@ const Alerts = () => {
                     >
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-foreground">{alert.dealerName}</span>
+                          <button
+                            onClick={() => navigate(`/dealer/${encodeURIComponent(alert.dealerName)}`)}
+                            className="font-medium text-foreground hover:text-primary hover:underline transition-colors text-left"
+                          >
+                            {alert.dealerName}
+                          </button>
                           {alert.automated && (
                             <span title="Automated check">
                               <Zap className="w-3.5 h-3.5 text-rag-amber" />
