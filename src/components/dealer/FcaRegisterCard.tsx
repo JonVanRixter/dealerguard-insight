@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -45,9 +45,19 @@ interface IndividualData {
 interface Props {
   dealerName: string;
   fcaRef?: string;
+  onDataLoaded?: (data: {
+    firmName: string;
+    frn: string;
+    status: string;
+    statusDate?: string;
+    firmType?: string;
+    companiesHouseNumber?: string;
+    individuals: { name: string; irn?: string; status?: string }[];
+    permissions: string[];
+  }) => void;
 }
 
-export function FcaRegisterCard({ dealerName, fcaRef }: Props) {
+export function FcaRegisterCard({ dealerName, fcaRef, onDataLoaded }: Props) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [firmData, setFirmData] = useState<FirmData | null>(null);
@@ -99,6 +109,28 @@ export function FcaRegisterCard({ dealerName, fcaRef }: Props) {
           )
         );
       }
+
+      // Notify parent with loaded data for PDF export
+      const loadedIndividuals = indResult?.Data || [];
+      const loadedPermissions = permResult?.Data?.map(
+        (p: Record<string, string>) =>
+          p["Permission"] || p["Regulated Activity"] || JSON.stringify(p)
+      ) || [];
+      
+      onDataLoaded?.({
+        firmName: firm["Organisation Name"] || "Unknown",
+        frn: firm["Firm Reference Number"] || frn,
+        status: firm["Current Status"] || "Unknown",
+        statusDate: firm["Status Effective Date"],
+        firmType: firm["Firm Type"],
+        companiesHouseNumber: firm["Companies House Number"],
+        individuals: loadedIndividuals.map((ind: IndividualData) => ({
+          name: ind["Name"] || "Unknown",
+          irn: ind["IRN"],
+          status: ind["Status"],
+        })),
+        permissions: loadedPermissions,
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Lookup failed";
       setError(msg);
