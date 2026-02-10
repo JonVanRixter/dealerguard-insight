@@ -89,6 +89,33 @@ export type Database = {
         }
         Relationships: []
       }
+      dealer_notes: {
+        Row: {
+          content: string
+          created_at: string
+          dealer_name: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          dealer_name: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          dealer_name?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dismissed_duplicates: {
         Row: {
           dismissed_at: string
