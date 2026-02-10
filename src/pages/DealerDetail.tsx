@@ -21,6 +21,7 @@ import { SectionRadarChart } from "@/components/dealer/SectionRadarChart";
 import { ControlsBreakdownChart } from "@/components/dealer/ControlsBreakdownChart";
 import { ActionStatusChart } from "@/components/dealer/ActionStatusChart";
 import { DealerScoreTrend } from "@/components/dealer/DealerScoreTrend";
+import { DirectorPassportCheck } from "@/components/dealer/DirectorPassportCheck";
 import { dealers as dealersList } from "@/data/dealers";
 
 const DealerDetail = () => {
@@ -177,6 +178,9 @@ const DealerDetail = () => {
 
         {/* CreditSafe Report */}
         <CreditSafeCard dealerName={dealerName} companiesHouseNumber={dealerData.dealer?.companiesHouseNumber} />
+
+        {/* Director Passport / ID Check */}
+        <DirectorPassportCheck dealerName={dealerName} />
 
         {/* Key Actions */}
         <KeyActionsTable actions={audit.keyActions} />
