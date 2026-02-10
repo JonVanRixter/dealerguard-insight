@@ -68,7 +68,8 @@ const Dealers = () => {
   const [viewMode, setViewMode] = useState<"table" | "region">("table");
   const [quickFilter, setQuickFilter] = useState<"all" | "oversight" | "reward" | "green" | "amber" | "red">("all");
 
-  const isFiltering = searchQuery !== "" || statusFilter !== "all" || regionFilter !== "all" || quickFilter !== "all";
+  const activeFilterCount = [searchQuery !== "", statusFilter !== "all", regionFilter !== "all", quickFilter !== "all"].filter(Boolean).length;
+  const isFiltering = activeFilterCount > 0;
 
   const clearAllFilters = () => {
     setSearchQuery("");
@@ -341,6 +342,7 @@ const Dealers = () => {
                   <Button variant="ghost" size="sm" onClick={clearAllFilters} className="gap-1.5 text-muted-foreground hover:text-foreground">
                     <X className="w-4 h-4" />
                     <span className="hidden sm:inline">Clear Filters</span>
+                    <span className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold min-w-5 h-5 px-1.5">{activeFilterCount}</span>
                   </Button>
                 )}
                 <Button variant="outline" size="sm" onClick={exportCsv} className="gap-1.5">
