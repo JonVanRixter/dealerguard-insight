@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { DealerAudit, AuditSection, KeyAction } from "@/data/auditFramework";
+import { getDealerRechecks, RecheckItem } from "@/utils/recheckSchedule";
 
 // Extend jsPDF type for autoTable
 declare module "jspdf" {
@@ -238,6 +239,64 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
     doc.setTextColor(100);
     doc.text("No outstanding actions.", 14, yPosition + 5);
     yPosition += 15;
+  }
+
+  // === RE-CHECK SCHEDULE ===
+  const rechecks = getDealerRechecks(audit.dealerName);
+  if (rechecks.length > 0) {
+    checkPageBreak(50);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text("Re-Check Schedule", 14, yPosition);
+    yPosition += 6;
+
+    const overdueCount = rechecks.filter((r) => r.isOverdue).length;
+    if (overdueCount > 0) {
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(RAG_COLORS.red.r, RAG_COLORS.red.g, RAG_COLORS.red.b);
+      doc.text(`${overdueCount} overdue re-check${overdueCount > 1 ? "s" : ""} require attention`, 14, yPosition + 4);
+      yPosition += 10;
+    }
+
+    const recheckData = rechecks
+      .sort((a, b) => a.recheckMonth - b.recheckMonth)
+      .map((r) => [
+        `${r.recheckMonth}-Month`,
+        r.recheckDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+        r.isOverdue ? `${r.daysOverdue} days overdue` : r.status === "due-soon" ? `${Math.abs(r.daysOverdue)} days remaining` : "Upcoming",
+        r.isOverdue ? "OVERDUE" : r.status === "due-soon" ? "DUE SOON" : "SCHEDULED",
+      ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Re-Check", "Due Date", "Timeline", "Status"]],
+      body: recheckData,
+      theme: "striped",
+      headStyles: { fillColor: [51, 65, 85], fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      columnStyles: {
+        0: { cellWidth: 35 },
+        1: { cellWidth: 45, halign: "center" },
+        2: { cellWidth: 50, halign: "center" },
+        3: { cellWidth: 35, halign: "center" },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 3) {
+          const status = data.cell.raw?.toString() || "";
+          if (status === "OVERDUE") {
+            data.cell.styles.textColor = [239, 68, 68];
+            data.cell.styles.fontStyle = "bold";
+          } else if (status === "DUE SOON") {
+            data.cell.styles.textColor = [245, 158, 11];
+            data.cell.styles.fontStyle = "bold";
+          }
+        }
+      },
+    });
+
+    yPosition = doc.lastAutoTable.finalY + 15;
   }
 
   // === DETAILED AUDIT SECTIONS ===
