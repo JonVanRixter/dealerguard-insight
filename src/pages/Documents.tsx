@@ -241,20 +241,55 @@ const Documents = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* File input */}
+                {/* File input with drag-and-drop */}
                 <div>
                   <label className="text-sm font-medium text-foreground block mb-1.5">File</label>
-                  <Input
-                    type="file"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.tiff,.bmp"
-                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                    className="bg-background"
-                  />
-                  {uploadFile && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {uploadFile.name} ({formatFileSize(uploadFile.size)})
-                    </p>
-                  )}
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.dataset.dragging = "true"; }}
+                    onDragLeave={(e) => { e.preventDefault(); e.currentTarget.dataset.dragging = "false"; }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.currentTarget.dataset.dragging = "false";
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) setUploadFile(file);
+                    }}
+                    className="relative border-2 border-dashed border-border rounded-lg p-6 text-center transition-colors hover:border-primary/50 data-[dragging=true]:border-primary data-[dragging=true]:bg-primary/5 cursor-pointer"
+                    onClick={() => document.getElementById("doc-file-input")?.click()}
+                  >
+                    <input
+                      id="doc-file-input"
+                      type="file"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.tiff,.bmp"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                    {uploadFile ? (
+                      <div className="flex items-center justify-center gap-2">
+                        {getFileIcon(uploadFile.type)}
+                        <div className="text-left">
+                          <p className="text-sm font-medium text-foreground truncate max-w-[280px]">{uploadFile.name}</p>
+                          <p className="text-xs text-muted-foreground">{formatFileSize(uploadFile.size)}</p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 shrink-0"
+                          onClick={(e) => { e.stopPropagation(); setUploadFile(null); }}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <FileUp className="w-8 h-8 mx-auto text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          Drag & drop a file here, or <span className="text-primary font-medium">browse</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">PDF, Word, Excel, CSV, images up to 50 MB</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 {/* Category */}
                 <div>
