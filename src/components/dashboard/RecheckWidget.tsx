@@ -1,13 +1,23 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, AlertTriangle, CalendarCheck, ExternalLink } from "lucide-react";
+import { Clock, AlertTriangle, CalendarCheck, ExternalLink, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getUrgentRechecks, RecheckItem } from "@/utils/recheckSchedule";
+import { useCompletedRechecks } from "@/hooks/useCompletedRechecks";
 
 export const RecheckWidget = () => {
   const navigate = useNavigate();
+  const { isCompleted, markComplete } = useCompletedRechecks();
 
-  const items = useMemo(() => getUrgentRechecks(new Date(), 8), []);
+  const allItems = useMemo(() => getUrgentRechecks(new Date(), 12), []);
+
+  // Filter out completed ones
+  const items = useMemo(
+    () => allItems.filter((i) => !isCompleted(i.dealerName, i.recheckMonth)).slice(0, 8),
+    [allItems, isCompleted]
+  );
+
   const overdueCount = items.filter((i) => i.status === "overdue").length;
   const dueSoonCount = items.filter((i) => i.status === "due-soon").length;
 
@@ -37,9 +47,8 @@ export const RecheckWidget = () => {
         {items.map((item, i) => (
           <div
             key={`${item.dealerName}-${item.recheckMonth}`}
-            className="px-5 py-3 flex items-center gap-3 opacity-0 animate-fade-in cursor-pointer hover:bg-muted/50 transition-colors"
+            className="px-5 py-3 flex items-center gap-3 opacity-0 animate-fade-in"
             style={{ animationDelay: `${i * 40}ms`, animationFillMode: "forwards" }}
-            onClick={() => navigate(`/dealer/${encodeURIComponent(item.dealerName)}`)}
           >
             <div className="shrink-0">
               {item.status === "overdue" ? (
@@ -48,7 +57,10 @@ export const RecheckWidget = () => {
                 <Clock className="w-4 h-4 text-rag-amber" />
               )}
             </div>
-            <div className="flex-1 min-w-0">
+            <div
+              className="flex-1 min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => navigate(`/dealer/${encodeURIComponent(item.dealerName)}`)}
+            >
               <p className="text-sm font-medium text-foreground truncate">
                 {item.dealerName}
               </p>
@@ -67,7 +79,18 @@ export const RecheckWidget = () => {
                 </span>
               )}
             </div>
-            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 shrink-0"
+              title="Mark as complete"
+              onClick={(e) => {
+                e.stopPropagation();
+                markComplete(item.dealerName, item.recheckMonth);
+              }}
+            >
+              <Check className="w-3.5 h-3.5" />
+            </Button>
           </div>
         ))}
       </div>
