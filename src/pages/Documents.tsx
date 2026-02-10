@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +14,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   Search,
   FileText,
   FileSpreadsheet,
@@ -22,10 +30,18 @@ import {
   Tag,
   ExternalLink,
   FolderOpen,
+  FileUp,
+  Calendar,
+  Plus,
+  X,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { dealers } from "@/data/dealers";
 
 const CATEGORIES = ["All", "Compliance", "Financial", "Contract", "Audit Report", "Training", "Correspondence", "Legal", "Other"];
+const UPLOAD_CATEGORIES = CATEGORIES.filter((c) => c !== "All");
+const allDealerNames = dealers.map((d) => d.name).sort();
 
 interface DealerDocument {
   id: string;
@@ -65,15 +81,80 @@ const Documents = () => {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [dealerFilter, setDealerFilter] = useState("All");
 
+  // Upload form state
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadDealer, setUploadDealer] = useState("");
+  const [uploadCategory, setUploadCategory] = useState("Other");
+  const [uploadDescription, setUploadDescription] = useState("");
+  const [uploadTags, setUploadTags] = useState<string[]>([]);
+  const [uploadTagInput, setUploadTagInput] = useState("");
+  const [uploadExpiry, setUploadExpiry] = useState("");
+
+  const resetUploadForm = () => {
+    setUploadFile(null);
+    setUploadDealer("");
+    setUploadCategory("Other");
+    setUploadDescription("");
+    setUploadTags([]);
+    setUploadTagInput("");
+    setUploadExpiry("");
+  };
+
+  const addUploadTag = () => {
+    const t = uploadTagInput.trim();
+    if (t && !uploadTags.includes(t) && uploadTags.length < 10) {
+      setUploadTags([...uploadTags, t]);
+      setUploadTagInput("");
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!uploadFile || !uploadDealer) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({ title: "Not authenticated", description: "Please sign in to upload documents.", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    const filePath = `${user.id}/${uploadDealer}/${Date.now()}_${uploadFile.name}`;
+    const { error: uploadError } = await supabase.storage.from("dealer-documents").upload(filePath, uploadFile);
+    if (uploadError) {
+      toast({ title: "Upload Failed", description: uploadError.message, variant: "destructive" });
+      setUploading(false);
+      return;
+    }
+    const { error: dbError } = await supabase.from("dealer_documents").insert({
+      user_id: user.id,
+      dealer_name: uploadDealer,
+      file_name: uploadFile.name,
+      file_path: filePath,
+      file_size: uploadFile.size,
+      file_type: uploadFile.type,
+      category: uploadCategory,
+      description: uploadDescription || null,
+      tags: uploadTags,
+      expiry_date: uploadExpiry || null,
+    });
+    if (dbError) {
+      toast({ title: "Save Failed", description: dbError.message, variant: "destructive" });
+    } else {
+      toast({ title: "Document Uploaded", description: `${uploadFile.name} allocated to ${uploadDealer}.` });
+      resetUploadForm();
+      setUploadOpen(false);
+      fetchDocuments();
+    }
+    setUploading(false);
+  };
+
   const fetchDocuments = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
-
     const { data, error } = await supabase
       .from("dealer_documents")
       .select("*")
       .order("created_at", { ascending: false });
-
     if (!error && data) setDocuments(data as DealerDocument[]);
     setLoading(false);
   }, []);
@@ -128,11 +209,129 @@ const Documents = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">Documents</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Browse all uploaded documents across your dealer network.
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Documents</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Browse all uploaded documents across your dealer network.
+            </p>
+          </div>
+          <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-1.5">
+                <FileUp className="w-4 h-4" /> Upload Document
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Upload Document</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-2">
+                {/* Dealer selector */}
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-1.5">Dealer</label>
+                  <Select value={uploadDealer} onValueChange={setUploadDealer}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Select a dealer..." />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {allDealerNames.map((name) => (
+                        <SelectItem key={name} value={name}>{name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* File input */}
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-1.5">File</label>
+                  <Input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.tiff,.bmp"
+                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    className="bg-background"
+                  />
+                  {uploadFile && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {uploadFile.name} ({formatFileSize(uploadFile.size)})
+                    </p>
+                  )}
+                </div>
+                {/* Category */}
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-1.5">Category</label>
+                  <Select value={uploadCategory} onValueChange={setUploadCategory}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {UPLOAD_CATEGORIES.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Description */}
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-1.5">Description</label>
+                  <Textarea
+                    placeholder="Optional notes about this document..."
+                    value={uploadDescription}
+                    onChange={(e) => setUploadDescription(e.target.value)}
+                    className="bg-background resize-none"
+                    rows={2}
+                    maxLength={500}
+                  />
+                </div>
+                {/* Tags */}
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-1.5">Tags</label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add a tag..."
+                      value={uploadTagInput}
+                      onChange={(e) => setUploadTagInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addUploadTag())}
+                      className="bg-background"
+                      maxLength={30}
+                    />
+                    <Button type="button" size="sm" variant="outline" onClick={addUploadTag}>
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  {uploadTags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {uploadTags.map((t) => (
+                        <Badge key={t} variant="secondary" className="gap-1 text-xs">
+                          <Tag className="w-3 h-3" />
+                          {t}
+                          <button onClick={() => setUploadTags(uploadTags.filter((x) => x !== t))} className="ml-0.5 hover:text-foreground">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Expiry date */}
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-1.5">Expiry Date</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="date"
+                      value={uploadExpiry}
+                      onChange={(e) => setUploadExpiry(e.target.value)}
+                      className="pl-9 bg-background"
+                    />
+                  </div>
+                </div>
+                <Button onClick={handleUpload} disabled={!uploadFile || !uploadDealer || uploading} className="w-full gap-2">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
+                  {uploading ? "Uploading..." : "Upload Document"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Summary cards */}
