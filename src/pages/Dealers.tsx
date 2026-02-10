@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { RagBadge } from "@/components/RagBadge";
 import { Input } from "@/components/ui/input";
@@ -59,9 +59,11 @@ const ragOrder = { red: 0, amber: 1, green: 2 };
 const Dealers = () => {
   const navigate = useNavigate();
   const { settings } = useUserSettings();
+  const [searchParams] = useSearchParams();
+  const initialRegion = searchParams.get("region") || "all";
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [regionFilter, setRegionFilter] = useState("all");
+  const [regionFilter, setRegionFilter] = useState(initialRegion);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>("score");
   const [sortDir, setSortDir] = useState<SortDir>("desc");

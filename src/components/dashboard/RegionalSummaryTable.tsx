@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { dealers } from "@/data/dealers";
 import { RagBadge } from "@/components/RagBadge";
 import type { RagStatus } from "@/data/dealers";
@@ -20,6 +21,7 @@ function getRag(score: number): RagStatus {
 }
 
 export function RegionalSummaryTable() {
+  const navigate = useNavigate();
   const regions = useMemo<RegionStat[]>(() => {
     const map = new Map<string, typeof dealers>();
     dealers.forEach(d => {
@@ -66,8 +68,9 @@ export function RegionalSummaryTable() {
             {regions.map((r, i) => (
               <tr
                 key={r.region}
-                className="border-b border-border last:border-0 opacity-0 animate-fade-in"
+                className="border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors opacity-0 animate-fade-in"
                 style={{ animationDelay: `${i * 40}ms`, animationFillMode: "forwards" }}
+                onClick={() => navigate(`/dealers?region=${encodeURIComponent(r.region)}`)}
               >
                 <td className="px-4 py-2.5 font-medium text-foreground">{r.region}</td>
                 <td className="px-3 py-2.5 text-center text-muted-foreground">{r.count}</td>
