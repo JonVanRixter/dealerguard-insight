@@ -7,6 +7,7 @@ import {
   TrendingUp,
   Settings,
   LogOut,
+  FolderOpen,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +16,7 @@ import logo from "@/assets/logo-light.png";
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Dealer Portfolio", url: "/dealers", icon: Building2 },
+  { title: "Documents", url: "/documents", icon: FolderOpen },
   { title: "Alerts", url: "/alerts", icon: Bell },
   { title: "Reports", url: "/reports", icon: FileBarChart },
   { title: "Comparison", url: "/comparison", icon: GitCompare },

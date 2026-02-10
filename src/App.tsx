@@ -12,6 +12,7 @@ import Reports from "./pages/Reports";
 import Comparison from "./pages/Comparison";
 import Trends from "./pages/Trends";
 import Settings from "./pages/Settings";
+import Documents from "./pages/Documents";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -41,6 +42,7 @@ const AppRoutes = () => (
     <Route path="/comparison" element={<ProtectedRoute><Comparison /></ProtectedRoute>} />
     <Route path="/trends" element={<ProtectedRoute><Trends /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+    <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
     <Route path="/dealer/:name" element={<ProtectedRoute><DealerDetail /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
