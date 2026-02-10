@@ -16,6 +16,8 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 import { AiAuditSummary } from "@/components/dealer/AiAuditSummary";
 import { DealerDocuments } from "@/components/dealer/DealerDocuments";
 import { DealerRecheckTimeline } from "@/components/dealer/DealerRecheckTimeline";
+import { CreditSafeCard } from "@/components/dealer/CreditSafeCard";
+import { dealers as dealersList } from "@/data/dealers";
 
 const DealerDetail = () => {
   const { name } = useParams();
@@ -30,10 +32,11 @@ const DealerDetail = () => {
   }, []);
 
   // Find the dealer in our data to get the index for consistent audit generation
-  const dealerIndex = useMemo(() => {
-    const index = dealers.findIndex(d => d.name === dealerName);
-    return index >= 0 ? index : 0;
+  const dealerData = useMemo(() => {
+    const index = dealersList.findIndex(d => d.name === dealerName);
+    return { index: index >= 0 ? index : 0, dealer: dealersList[index >= 0 ? index : 0] };
   }, [dealerName]);
+  const dealerIndex = dealerData.index;
 
   // Generate the full audit for this dealer
   const audit = useMemo(() => generateDealerAudit(dealerName, dealerIndex), [dealerName, dealerIndex]);
@@ -157,6 +160,9 @@ const DealerDetail = () => {
 
         {/* AI Executive Summary */}
         <AiAuditSummary audit={audit} onSummaryChange={handleSummaryChange} />
+
+        {/* CreditSafe Report */}
+        <CreditSafeCard dealerName={dealerName} companiesHouseNumber={dealerData.dealer?.companiesHouseNumber} />
 
         {/* Key Actions */}
         <KeyActionsTable actions={audit.keyActions} />
