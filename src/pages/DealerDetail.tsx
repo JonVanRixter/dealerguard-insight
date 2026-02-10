@@ -17,6 +17,9 @@ import { AiAuditSummary } from "@/components/dealer/AiAuditSummary";
 import { DealerDocuments } from "@/components/dealer/DealerDocuments";
 import { DealerRecheckTimeline } from "@/components/dealer/DealerRecheckTimeline";
 import { CreditSafeCard } from "@/components/dealer/CreditSafeCard";
+import { SectionRadarChart } from "@/components/dealer/SectionRadarChart";
+import { ControlsBreakdownChart } from "@/components/dealer/ControlsBreakdownChart";
+import { ActionStatusChart } from "@/components/dealer/ActionStatusChart";
 import { dealers as dealersList } from "@/data/dealers";
 
 const DealerDetail = () => {
@@ -156,6 +159,13 @@ const DealerDetail = () => {
               overallScore={audit.overallScore}
             />
           </div>
+        </div>
+
+        {/* Data Visualizations Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <SectionRadarChart sections={audit.sections} />
+          <ControlsBreakdownChart sections={audit.sections} />
+          <ActionStatusChart actions={audit.keyActions} />
         </div>
 
         {/* AI Executive Summary */}
