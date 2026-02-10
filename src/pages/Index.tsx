@@ -39,6 +39,10 @@ import { TrendHighlightsWidget } from "@/components/dashboard/TrendHighlightsWid
 import { useAnimatedCounter } from "@/hooks/useAnimatedCounter";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { ScoreDistributionChart } from "@/components/dashboard/ScoreDistributionChart";
+import { SectionComplianceChart } from "@/components/dashboard/SectionComplianceChart";
+import { RegionalSummaryTable } from "@/components/dashboard/RegionalSummaryTable";
+import { PortfolioTrendMini } from "@/components/dashboard/PortfolioTrendMini";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -403,6 +407,18 @@ const Index = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <PortfolioTrendMini />
+          <ScoreDistributionChart />
+        </div>
+
+        {/* Section Compliance + Regional Summary */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SectionComplianceChart />
+          <RegionalSummaryTable />
         </div>
       </div>
     </DashboardLayout>
