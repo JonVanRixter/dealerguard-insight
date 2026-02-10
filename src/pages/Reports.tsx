@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from "date-fns";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { dealers, portfolioStats } from "@/data/dealers";
@@ -72,6 +73,7 @@ type DatePreset = typeof DATE_PRESETS[number]["value"];
 
 const Reports = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Date range state
   const [datePreset, setDatePreset] = useState<DatePreset>("6m");
@@ -554,7 +556,14 @@ const Reports = () => {
                 <tbody>
                   {topRiskDealers.map((dealer) => (
                     <tr key={dealer.name} className="border-b border-border last:border-0">
-                      <td className="px-5 py-3 font-medium text-foreground">{dealer.name}</td>
+                      <td className="px-5 py-3 font-medium">
+                        <button
+                          onClick={() => navigate(`/dealers/${encodeURIComponent(dealer.name)}`)}
+                          className="text-primary hover:underline text-left"
+                        >
+                          {dealer.name}
+                        </button>
+                      </td>
                       <td className="px-3 py-3 text-foreground font-semibold">{dealer.score}</td>
                       <td className="px-3 py-3">
                         <RagBadge status={dealer.rag} size="sm" />
