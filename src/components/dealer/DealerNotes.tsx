@@ -23,6 +23,7 @@ interface DealerNote {
   content: string;
   created_at: string;
   updated_at: string;
+  author_name?: string;
 }
 
 interface DealerNotesProps {
@@ -42,14 +43,25 @@ export function DealerNotes({ dealerName }: DealerNotesProps) {
   const fetchNotes = useCallback(async () => {
     const { data, error } = await supabase
       .from("dealer_notes")
-      .select("*")
+      .select("*, profiles!dealer_notes_user_id_fkey(display_name)")
       .eq("dealer_name", dealerName)
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Failed to fetch notes:", error);
+      // Fallback without join if FK doesn't exist
+      const { data: fallbackData } = await supabase
+        .from("dealer_notes")
+        .select("*")
+        .eq("dealer_name", dealerName)
+        .order("created_at", { ascending: false });
+      setNotes(fallbackData || []);
     } else {
-      setNotes(data || []);
+      setNotes(
+        (data || []).map((n: any) => ({
+          ...n,
+          author_name: n.profiles?.display_name || undefined,
+        }))
+      );
     }
     setLoading(false);
   }, [dealerName]);
@@ -207,9 +219,9 @@ export function DealerNotes({ dealerName }: DealerNotesProps) {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 font-medium">
                       <User className="w-3 h-3" />
-                      {user?.email || "Unknown"}
+                      {note.author_name || user?.email || "Unknown"}
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
