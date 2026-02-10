@@ -29,11 +29,13 @@ import {
   Filter,
   Zap,
   CalendarCheck,
+  Check,
 } from "lucide-react";
 import { dealers } from "@/data/dealers";
 import { generateDealerAudit, AUDIT_SECTIONS, ControlCheck, AuditSection } from "@/data/auditFramework";
 import { RagStatus } from "@/data/dealers";
 import { getOverdueRechecks } from "@/utils/recheckSchedule";
+import { useCompletedRechecks } from "@/hooks/useCompletedRechecks";
 
 interface Alert {
   id: string;
@@ -151,7 +153,12 @@ const Alerts = () => {
   const warningCount = allAlerts.filter((a) => a.riskRating === "amber").length;
 
   // Overdue re-checks
-  const overdueRechecks = useMemo(() => getOverdueRechecks(), []);
+  const { isCompleted, markComplete } = useCompletedRechecks();
+  const allOverdueRechecks = useMemo(() => getOverdueRechecks(), []);
+  const overdueRechecks = useMemo(
+    () => allOverdueRechecks.filter((r) => !isCompleted(r.dealerName, r.recheckMonth)),
+    [allOverdueRechecks, isCompleted]
+  );
 
   return (
     <DashboardLayout>
@@ -237,14 +244,24 @@ const Alerts = () => {
                         <Badge variant="destructive" className="text-xs">{item.daysOverdue}d</Badge>
                       </td>
                       <td className="px-3 py-3.5 text-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/dealer/${encodeURIComponent(item.dealerName)}`)}
-                          className="h-8 px-2"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/dealer/${encodeURIComponent(item.dealerName)}`)}
+                            className="h-8 px-2"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => markComplete(item.dealerName, item.recheckMonth)}
+                            className="h-8 px-2 text-xs"
+                          >
+                            <Check className="w-3.5 h-3.5 mr-1" /> Complete
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      completed_rechecks: {
+        Row: {
+          completed_at: string
+          dealer_name: string
+          id: string
+          notes: string | null
+          recheck_month: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          dealer_name: string
+          id?: string
+          notes?: string | null
+          recheck_month: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          dealer_name?: string
+          id?: string
+          notes?: string | null
+          recheck_month?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       dealer_documents: {
         Row: {
           category: string

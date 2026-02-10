@@ -1,7 +1,9 @@
 import { useMemo } from "react";
-import { CalendarCheck, AlertTriangle, Clock, CheckCircle2 } from "lucide-react";
+import { CalendarCheck, AlertTriangle, Clock, CheckCircle2, Check, Undo2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getDealerRechecks, RecheckItem } from "@/utils/recheckSchedule";
+import { useCompletedRechecks } from "@/hooks/useCompletedRechecks";
 
 interface DealerRecheckTimelineProps {
   dealerName: string;
@@ -10,11 +12,11 @@ interface DealerRecheckTimelineProps {
 
 export const DealerRecheckTimeline = ({ dealerName, dealerRag }: DealerRecheckTimelineProps) => {
   const rechecks = useMemo(() => getDealerRechecks(dealerName), [dealerName]);
+  const { isCompleted, markComplete, undoComplete } = useCompletedRechecks();
 
-  // Only show for Green-status dealers
   if (dealerRag !== "green" || rechecks.length === 0) return null;
 
-  const overdueCount = rechecks.filter((r) => r.isOverdue).length;
+  const overdueCount = rechecks.filter((r) => r.isOverdue && !isCompleted(dealerName, r.recheckMonth)).length;
 
   return (
     <div className="bg-card rounded-xl border border-border">
@@ -31,54 +33,82 @@ export const DealerRecheckTimeline = ({ dealerName, dealerRag }: DealerRecheckTi
       </div>
       <div className="px-5 py-4">
         <div className="relative">
-          {/* Timeline line */}
           <div className="absolute left-3 top-3 bottom-3 w-px bg-border" />
-
           <div className="space-y-4">
             {rechecks
               .sort((a, b) => a.recheckMonth - b.recheckMonth)
-              .map((item) => (
-                <div key={item.recheckMonth} className="flex items-start gap-4 relative">
-                  {/* Timeline dot */}
-                  <div className="relative z-10 shrink-0">
-                    {item.status === "overdue" ? (
-                      <div className="w-6 h-6 rounded-full bg-rag-red/10 border-2 border-rag-red flex items-center justify-center">
-                        <AlertTriangle className="w-3 h-3 text-rag-red" />
-                      </div>
-                    ) : item.status === "due-soon" ? (
-                      <div className="w-6 h-6 rounded-full bg-rag-amber/10 border-2 border-rag-amber flex items-center justify-center">
-                        <Clock className="w-3 h-3 text-rag-amber" />
-                      </div>
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-muted border-2 border-border flex items-center justify-center">
-                        <CheckCircle2 className="w-3 h-3 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0 pb-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-foreground">
-                        {item.recheckMonth}-Month Re-Check
-                      </span>
-                      {item.status === "overdue" && (
-                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
-                          {item.daysOverdue}d overdue
-                        </Badge>
-                      )}
-                      {item.status === "due-soon" && (
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-rag-amber text-rag-amber">
-                          {Math.abs(item.daysOverdue)}d remaining
-                        </Badge>
+              .map((item) => {
+                const completed = isCompleted(dealerName, item.recheckMonth);
+                return (
+                  <div key={item.recheckMonth} className="flex items-start gap-4 relative">
+                    <div className="relative z-10 shrink-0">
+                      {completed ? (
+                        <div className="w-6 h-6 rounded-full bg-rag-green/10 border-2 border-rag-green flex items-center justify-center">
+                          <Check className="w-3 h-3 text-rag-green" />
+                        </div>
+                      ) : item.status === "overdue" ? (
+                        <div className="w-6 h-6 rounded-full bg-rag-red/10 border-2 border-rag-red flex items-center justify-center">
+                          <AlertTriangle className="w-3 h-3 text-rag-red" />
+                        </div>
+                      ) : item.status === "due-soon" ? (
+                        <div className="w-6 h-6 rounded-full bg-rag-amber/10 border-2 border-rag-amber flex items-center justify-center">
+                          <Clock className="w-3 h-3 text-rag-amber" />
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-muted border-2 border-border flex items-center justify-center">
+                          <CheckCircle2 className="w-3 h-3 text-muted-foreground" />
+                        </div>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Due: {item.recheckDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                    </p>
+                    <div className="flex-1 min-w-0 pb-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-medium ${completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                          {item.recheckMonth}-Month Re-Check
+                        </span>
+                        {completed && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-rag-green text-rag-green">
+                            Completed
+                          </Badge>
+                        )}
+                        {!completed && item.status === "overdue" && (
+                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                            {item.daysOverdue}d overdue
+                          </Badge>
+                        )}
+                        {!completed && item.status === "due-soon" && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-rag-amber text-rag-amber">
+                            {Math.abs(item.daysOverdue)}d remaining
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Due: {item.recheckDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
+                    </div>
+                    <div className="shrink-0">
+                      {completed ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-muted-foreground"
+                          onClick={() => undoComplete(dealerName, item.recheckMonth)}
+                        >
+                          <Undo2 className="w-3 h-3 mr-1" /> Undo
+                        </Button>
+                      ) : (item.status === "overdue" || item.status === "due-soon") ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => markComplete(dealerName, item.recheckMonth)}
+                        >
+                          <Check className="w-3 h-3 mr-1" /> Complete
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
           </div>
         </div>
       </div>
