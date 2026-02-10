@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CommandDialog,
@@ -19,13 +19,31 @@ import {
   Settings,
   FolderOpen,
   Search,
-  CreditCard,
-  ShieldCheck,
-  BarChart3,
-  FileText,
-  Users,
+  Clock,
+  X,
 } from "lucide-react";
 import { dealers } from "@/data/dealers";
+
+const RECENT_SEARCHES_KEY = "global-search-recent";
+const MAX_RECENT = 8;
+
+interface RecentItem {
+  label: string;
+  url: string;
+  timestamp: number;
+}
+
+function loadRecent(): RecentItem[] {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveRecent(items: RecentItem[]) {
+  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(items.slice(0, MAX_RECENT)));
+}
 
 const pages = [
   { label: "Dashboard", url: "/", icon: LayoutDashboard, keywords: ["home", "overview", "portfolio", "summary"] },
@@ -54,6 +72,7 @@ const features = [
 
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);
+  const [recentItems, setRecentItems] = useState<RecentItem[]>(loadRecent);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -67,12 +86,36 @@ export function GlobalSearch() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
+  // Reload recent when dialog opens
+  useEffect(() => {
+    if (open) setRecentItems(loadRecent());
+  }, [open]);
+
   const topDealers = useMemo(() => dealers.slice(0, 50), []);
 
-  const handleSelect = (url: string) => {
+  const addRecent = useCallback((label: string, url: string) => {
+    const updated = [{ label, url, timestamp: Date.now() }, ...loadRecent().filter((r) => r.url !== url)].slice(0, MAX_RECENT);
+    saveRecent(updated);
+    setRecentItems(updated);
+  }, []);
+
+  const removeRecent = useCallback((url: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = loadRecent().filter((r) => r.url !== url);
+    saveRecent(updated);
+    setRecentItems(updated);
+  }, []);
+
+  const clearAllRecent = useCallback(() => {
+    saveRecent([]);
+    setRecentItems([]);
+  }, []);
+
+  const handleSelect = useCallback((label: string, url: string) => {
+    addRecent(label, url);
     setOpen(false);
     navigate(url);
-  };
+  }, [addRecent, navigate]);
 
   return (
     <>
@@ -92,12 +135,46 @@ export function GlobalSearch() {
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
 
+          {recentItems.length > 0 && (
+            <>
+              <CommandGroup heading={
+                <div className="flex items-center justify-between w-full">
+                  <span>Recent</span>
+                  <button
+                    onClick={clearAllRecent}
+                    className="text-[10px] text-muted-foreground hover:text-foreground transition-colors font-normal"
+                  >
+                    Clear all
+                  </button>
+                </div>
+              }>
+                {recentItems.map((item) => (
+                  <CommandItem
+                    key={item.url + item.timestamp}
+                    value={`recent ${item.label}`}
+                    onSelect={() => handleSelect(item.label, item.url)}
+                  >
+                    <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>{item.label}</span>
+                    <button
+                      className="ml-auto p-0.5 rounded hover:bg-muted-foreground/20 transition-colors"
+                      onClick={(e) => removeRecent(item.url, e)}
+                    >
+                      <X className="h-3 w-3 text-muted-foreground" />
+                    </button>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+              <CommandSeparator />
+            </>
+          )}
+
           <CommandGroup heading="Pages">
             {pages.map((page) => (
               <CommandItem
                 key={page.url}
                 value={`${page.label} ${page.keywords.join(" ")}`}
-                onSelect={() => handleSelect(page.url)}
+                onSelect={() => handleSelect(page.label, page.url)}
               >
                 <page.icon className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>{page.label}</span>
@@ -113,12 +190,10 @@ export function GlobalSearch() {
                 key={feat.label}
                 value={`${feat.label} ${feat.description} ${feat.keywords.join(" ")}`}
                 onSelect={() => {
-                  if (feat.navigateTo === "dealer") {
-                    // Navigate to first dealer as an example entry point
-                    handleSelect(`/dealer/${encodeURIComponent(topDealers[0]?.name || "")}`);
-                  } else {
-                    handleSelect(feat.navigateTo);
-                  }
+                  const url = feat.navigateTo === "dealer"
+                    ? `/dealer/${encodeURIComponent(topDealers[0]?.name || "")}`
+                    : feat.navigateTo;
+                  handleSelect(feat.label, url);
                 }}
               >
                 <Search className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -137,7 +212,7 @@ export function GlobalSearch() {
               <CommandItem
                 key={dealer.name}
                 value={`${dealer.name} ${dealer.region} ${dealer.firmType} ${dealer.postcode}`}
-                onSelect={() => handleSelect(`/dealer/${encodeURIComponent(dealer.name)}`)}
+                onSelect={() => handleSelect(dealer.name, `/dealer/${encodeURIComponent(dealer.name)}`)}
               >
                 <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>{dealer.name}</span>
