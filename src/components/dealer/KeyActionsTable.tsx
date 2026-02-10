@@ -19,11 +19,13 @@ const priorityColors = {
   Low: "bg-muted text-muted-foreground border-border",
 };
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   Pending: "bg-rag-red/10 text-rag-red",
   "In Progress": "bg-rag-amber/10 text-rag-amber",
   Planned: "bg-muted text-muted-foreground",
   Complete: "bg-rag-green/10 text-rag-green",
+  BAU: "bg-primary/10 text-primary",
+  Optional: "bg-muted text-muted-foreground/70",
 };
 
 export function KeyActionsTable({ actions }: KeyActionsTableProps) {
