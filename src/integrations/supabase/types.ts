@@ -161,6 +161,36 @@ export type Database = {
         }
         Relationships: []
       }
+      qa_health_checks: {
+        Row: {
+          checks: Json
+          created_at: string
+          duration_ms: number | null
+          id: string
+          overall_status: string
+          run_at: string
+          summary: string | null
+        }
+        Insert: {
+          checks?: Json
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          overall_status?: string
+          run_at?: string
+          summary?: string | null
+        }
+        Update: {
+          checks?: Json
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          overall_status?: string
+          run_at?: string
+          summary?: string | null
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           amber_threshold: number
