@@ -24,6 +24,7 @@ import { ActionStatusChart } from "@/components/dealer/ActionStatusChart";
 import { DealerScoreTrend } from "@/components/dealer/DealerScoreTrend";
 import { DirectorPassportCheck } from "@/components/dealer/DirectorPassportCheck";
 import { FcaRegisterCard } from "@/components/dealer/FcaRegisterCard";
+import { DealerNotes } from "@/components/dealer/DealerNotes";
 import { dealers as dealersList } from "@/data/dealers";
 
 const DealerDetail = () => {
@@ -227,6 +228,9 @@ const DealerDetail = () => {
 
         {/* Re-Check Schedule (Green dealers only) */}
         <DealerRecheckTimeline dealerName={dealerName} dealerRag={audit.overallRag} />
+
+        {/* Notes */}
+        <DealerNotes dealerName={dealerName} />
 
         {/* Documents */}
         <DealerDocuments dealerName={dealerName} />
