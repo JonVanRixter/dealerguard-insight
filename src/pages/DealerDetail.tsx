@@ -11,7 +11,7 @@ import { AuditSectionCard } from "@/components/dealer/AuditSectionCard";
 import { KeyActionsTable } from "@/components/dealer/KeyActionsTable";
 import { CustomerSentimentCard } from "@/components/dealer/CustomerSentimentCard";
 import { ReportSummaryCard } from "@/components/dealer/ReportSummaryCard";
-import { generateComplianceReportPDF, type PassportCheckEntry } from "@/utils/pdfExport";
+import { generateComplianceReportPDF, type PassportCheckEntry, type FcaRegisterEntry } from "@/utils/pdfExport";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { AiAuditSummary } from "@/components/dealer/AiAuditSummary";
@@ -35,6 +35,7 @@ const DealerDetail = () => {
   const [aiSummary, setAiSummary] = useState("");
 
   const [passportChecks, setPassportChecks] = useState<PassportCheckEntry[]>([]);
+  const [fcaRegisterData, setFcaRegisterData] = useState<FcaRegisterEntry | undefined>(undefined);
 
   const handleSummaryChange = useCallback((summary: string) => {
     setAiSummary(summary);
@@ -93,7 +94,7 @@ const DealerDetail = () => {
 
   const handleDownloadReport = () => {
     try {
-      generateComplianceReportPDF(audit, fcaRef, aiSummary || undefined, passportChecks.length > 0 ? passportChecks : undefined);
+      generateComplianceReportPDF(audit, fcaRef, aiSummary || undefined, passportChecks.length > 0 ? passportChecks : undefined, fcaRegisterData);
       toast({
         title: "Report Downloaded",
         description: `Compliance report for ${dealerName} has been generated and downloaded.`,
@@ -215,7 +216,7 @@ const DealerDetail = () => {
         <CreditSafeCard dealerName={dealerName} companiesHouseNumber={dealerData.dealer?.companiesHouseNumber} />
 
         {/* FCA Register Check */}
-        <FcaRegisterCard dealerName={dealerName} fcaRef={fcaRef} />
+        <FcaRegisterCard dealerName={dealerName} fcaRef={fcaRef} onDataLoaded={setFcaRegisterData} />
 
         {/* Director Passport / ID Check */}
         <DirectorPassportCheck dealerName={dealerName} />

@@ -28,7 +28,18 @@ export interface PassportCheckEntry {
   reviewNote?: string;
 }
 
-export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, aiSummary?: string, passportChecks?: PassportCheckEntry[]): void {
+export interface FcaRegisterEntry {
+  firmName: string;
+  frn: string;
+  status: string;
+  statusDate?: string;
+  firmType?: string;
+  companiesHouseNumber?: string;
+  individuals: { name: string; irn?: string; status?: string }[];
+  permissions: string[];
+}
+
+export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, aiSummary?: string, passportChecks?: PassportCheckEntry[], fcaRegister?: FcaRegisterEntry): void {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   let yPosition = 20;
@@ -609,6 +620,132 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
     });
 
     yPosition = doc.lastAutoTable.finalY + 15;
+  }
+
+  // === FCA REGISTER STATUS ===
+  if (fcaRegister) {
+    checkPageBreak(60);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text("FCA Register Status", 14, yPosition);
+    yPosition += 4;
+
+    doc.setDrawColor(99, 102, 241);
+    doc.setLineWidth(0.5);
+    doc.line(14, yPosition, pageWidth - 14, yPosition);
+    yPosition += 8;
+
+    // Firm summary box
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(14, yPosition, pageWidth - 28, 24, 3, 3, "F");
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text(fcaRegister.firmName, 20, yPosition + 7);
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(80);
+    doc.text(`FRN: ${fcaRegister.frn}`, 20, yPosition + 14);
+
+    const statusText = fcaRegister.status;
+    const isAuthorised = statusText.toLowerCase().includes("authorised") || statusText.toLowerCase().includes("registered");
+    const statusColor = isAuthorised ? RAG_COLORS.green : RAG_COLORS.red;
+    doc.setFillColor(statusColor.r, statusColor.g, statusColor.b);
+    doc.roundedRect(pageWidth - 70, yPosition + 4, 50, 14, 2, 2, "F");
+    doc.setTextColor(255);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text(statusText, pageWidth - 45, yPosition + 13, { align: "center" });
+
+    yPosition += 30;
+
+    // Additional firm details
+    doc.setTextColor(80);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    const details: string[] = [];
+    if (fcaRegister.firmType) details.push(`Firm Type: ${fcaRegister.firmType}`);
+    if (fcaRegister.companiesHouseNumber) details.push(`Companies House: ${fcaRegister.companiesHouseNumber}`);
+    if (fcaRegister.statusDate) details.push(`Status Effective: ${fcaRegister.statusDate}`);
+    if (details.length > 0) {
+      doc.text(details.join("  |  "), 14, yPosition);
+      yPosition += 8;
+    }
+
+    // Approved Individuals
+    if (fcaRegister.individuals.length > 0) {
+      checkPageBreak(40);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
+      doc.text(`Approved Individuals (${fcaRegister.individuals.length})`, 14, yPosition);
+      yPosition += 6;
+
+      const indData = fcaRegister.individuals.slice(0, 30).map((ind) => [
+        ind.name,
+        ind.irn || "—",
+        ind.status || "—",
+      ]);
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Name", "IRN", "Status"]],
+        body: indData,
+        theme: "striped",
+        headStyles: { fillColor: [51, 65, 85], fontSize: 8 },
+        bodyStyles: { fontSize: 8 },
+        columnStyles: {
+          0: { cellWidth: 60 },
+          1: { cellWidth: 30, halign: "center" },
+          2: { cellWidth: 40, halign: "center" },
+        },
+        didParseCell: (data) => {
+          if (data.section === "body" && data.column.index === 2) {
+            const status = data.cell.raw?.toString().toLowerCase() || "";
+            if (status.includes("active") || status.includes("current")) data.cell.styles.textColor = [34, 197, 94];
+            else if (status.includes("inactive") || status.includes("withdrawn")) data.cell.styles.textColor = [239, 68, 68];
+          }
+        },
+      });
+
+      yPosition = doc.lastAutoTable.finalY + 8;
+
+      if (fcaRegister.individuals.length > 30) {
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "italic");
+        doc.setTextColor(100);
+        doc.text(`+ ${fcaRegister.individuals.length - 30} more individuals (see FCA Register for full list)`, 14, yPosition);
+        yPosition += 6;
+      }
+    }
+
+    // Permissions
+    if (fcaRegister.permissions.length > 0) {
+      checkPageBreak(30);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
+      doc.text(`Permissions (${fcaRegister.permissions.length})`, 14, yPosition);
+      yPosition += 6;
+
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(60);
+
+      const permText = fcaRegister.permissions.join("  •  ");
+      const permLines = doc.splitTextToSize(permText, pageWidth - 28);
+      for (const line of permLines) {
+        checkPageBreak(8);
+        doc.text(line, 14, yPosition);
+        yPosition += 4.5;
+      }
+      yPosition += 8;
+    }
+
+    yPosition += 5;
   }
 
   // === DETAILED AUDIT SECTIONS ===
