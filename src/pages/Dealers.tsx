@@ -41,6 +41,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { dealers, portfolioStats } from "@/data/dealers";
 import { generateDealerAudit } from "@/data/auditFramework";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { BatchAiSummary } from "@/components/dealer/BatchAiSummary";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -561,8 +562,11 @@ const Dealers = () => {
                 </div>
               )}
             </div>
-          )}
+        )}
         </div>
+
+        {/* Batch AI Summary Generator */}
+        <BatchAiSummary />
       </div>
     </DashboardLayout>
   );
