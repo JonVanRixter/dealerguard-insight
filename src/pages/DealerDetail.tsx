@@ -20,6 +20,7 @@ import { CreditSafeCard } from "@/components/dealer/CreditSafeCard";
 import { SectionRadarChart } from "@/components/dealer/SectionRadarChart";
 import { ControlsBreakdownChart } from "@/components/dealer/ControlsBreakdownChart";
 import { ActionStatusChart } from "@/components/dealer/ActionStatusChart";
+import { DealerScoreTrend } from "@/components/dealer/DealerScoreTrend";
 import { dealers as dealersList } from "@/data/dealers";
 
 const DealerDetail = () => {
@@ -160,6 +161,9 @@ const DealerDetail = () => {
             />
           </div>
         </div>
+
+        {/* 12-Month Score Trend */}
+        <DealerScoreTrend dealerName={dealerName} />
 
         {/* Data Visualizations Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
