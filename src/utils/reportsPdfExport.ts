@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
+import { getOverdueRechecks } from "@/utils/recheckSchedule";
 
 // Extend jsPDF type for autoTable
 declare module "jspdf" {
@@ -319,6 +320,46 @@ export function generateReportsAnalyticsPDF(data: ReportsExportData): void {
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text("No at-risk dealers found.", 14, yPosition + 5);
+  }
+
+  // === OVERDUE RE-CHECKS ===
+  const overdueRechecks = getOverdueRechecks();
+  if (overdueRechecks.length > 0) {
+    yPosition = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 15 : yPosition + 15;
+    checkPageBreak(60);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text(`Overdue Re-Checks (${overdueRechecks.length})`, 14, yPosition);
+    yPosition += 8;
+
+    const recheckData = overdueRechecks.slice(0, 20).map((r) => [
+      r.dealerName,
+      `${r.recheckMonth}-month`,
+      r.recheckDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      `${r.daysOverdue}d`,
+    ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Dealer", "Re-Check", "Due Date", "Overdue"]],
+      body: recheckData,
+      theme: "striped",
+      headStyles: { fillColor: [51, 65, 85], fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      columnStyles: {
+        0: { cellWidth: 70 },
+        1: { cellWidth: 30, halign: "center" },
+        2: { cellWidth: 40, halign: "center" },
+        3: { cellWidth: 25, halign: "center" },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 3) {
+          data.cell.styles.textColor = [239, 68, 68];
+          data.cell.styles.fontStyle = "bold";
+        }
+      },
+    });
   }
 
   // === FOOTER ===
