@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -68,6 +68,15 @@ export function FcaRegisterCard({ dealerName, fcaRef, onDataLoaded }: Props) {
   const [showIndividuals, setShowIndividuals] = useState(false);
   const [showPermissions, setShowPermissions] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoSearched = useRef(false);
+
+  // Auto-search on mount if fcaRef is provided
+  useEffect(() => {
+    if (fcaRef && !autoSearched.current) {
+      autoSearched.current = true;
+      lookupFirm(fcaRef);
+    }
+  }, [fcaRef]);
 
   const lookupFirm = async (frn: string) => {
     setLoading(true);
