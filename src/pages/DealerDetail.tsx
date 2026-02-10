@@ -14,6 +14,7 @@ import { ReportSummaryCard } from "@/components/dealer/ReportSummaryCard";
 import { generateComplianceReportPDF } from "@/utils/pdfExport";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { AiAuditSummary } from "@/components/dealer/AiAuditSummary";
+import { DealerDocuments } from "@/components/dealer/DealerDocuments";
 
 const DealerDetail = () => {
   const { name } = useParams();
@@ -158,6 +159,9 @@ const DealerDetail = () => {
 
         {/* Key Actions */}
         <KeyActionsTable actions={audit.keyActions} />
+
+        {/* Documents */}
+        <DealerDocuments dealerName={dealerName} />
 
         {/* Audit Sections */}
         <div className="space-y-4">
