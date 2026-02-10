@@ -19,7 +19,16 @@ const RAG_COLORS = {
   red: { r: 239, g: 68, b: 68 },
 };
 
-export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, aiSummary?: string): void {
+export interface PassportCheckEntry {
+  directorName: string;
+  fileName: string;
+  status: "pending" | "verified" | "rejected";
+  uploadDate: string;
+  expiryDate?: string;
+  reviewNote?: string;
+}
+
+export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, aiSummary?: string, passportChecks?: PassportCheckEntry[]): void {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   let yPosition = 20;
@@ -526,6 +535,75 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
         if (data.section === "body" && data.column.index === 0) {
           data.cell.styles.textColor = [245, 158, 11];
           data.cell.styles.fontStyle = "bold";
+        }
+      },
+    });
+
+    yPosition = doc.lastAutoTable.finalY + 15;
+  }
+
+  // === DIRECTOR PASSPORT / ID VERIFICATION ===
+  if (passportChecks && passportChecks.length > 0) {
+    checkPageBreak(50);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text("Director Passport / ID Verification", 14, yPosition);
+    yPosition += 4;
+
+    const verifiedCount = passportChecks.filter((p) => p.status === "verified").length;
+    const pendingCount = passportChecks.filter((p) => p.status === "pending").length;
+    const rejectedCount = passportChecks.filter((p) => p.status === "rejected").length;
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(80);
+    doc.text(
+      `${passportChecks.length} document${passportChecks.length !== 1 ? "s" : ""}: ${verifiedCount} verified, ${pendingCount} pending, ${rejectedCount} rejected`,
+      14,
+      yPosition + 4
+    );
+    yPosition += 10;
+
+    const passportData = passportChecks.map((p) => [
+      p.directorName,
+      p.fileName,
+      p.status.toUpperCase(),
+      p.uploadDate,
+      p.expiryDate || "—",
+      p.reviewNote || "—",
+    ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Director", "Document", "Status", "Uploaded", "Expiry", "Review Note"]],
+      body: passportData,
+      theme: "striped",
+      headStyles: { fillColor: [51, 65, 85], fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 35 },
+        2: { cellWidth: 22, halign: "center" },
+        3: { cellWidth: 25, halign: "center" },
+        4: { cellWidth: 25, halign: "center" },
+        5: { cellWidth: 30 },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 2) {
+          const status = data.cell.raw?.toString().toLowerCase() || "";
+          if (status === "verified") data.cell.styles.textColor = [34, 197, 94];
+          else if (status === "pending") data.cell.styles.textColor = [245, 158, 11];
+          else if (status === "rejected") data.cell.styles.textColor = [239, 68, 68];
+          data.cell.styles.fontStyle = "bold";
+        }
+        // Highlight expired dates
+        if (data.section === "body" && data.column.index === 4) {
+          const val = data.cell.raw?.toString() || "";
+          if (val !== "—" && new Date(val) < new Date()) {
+            data.cell.styles.textColor = [239, 68, 68];
+            data.cell.styles.fontStyle = "bold";
+          }
         }
       },
     });
