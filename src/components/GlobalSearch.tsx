@@ -115,7 +115,7 @@ export function GlobalSearch() {
                 onSelect={() => {
                   if (feat.navigateTo === "dealer") {
                     // Navigate to first dealer as an example entry point
-                    handleSelect(`/dealers/${encodeURIComponent(topDealers[0]?.name || "")}`);
+                    handleSelect(`/dealer/${encodeURIComponent(topDealers[0]?.name || "")}`);
                   } else {
                     handleSelect(feat.navigateTo);
                   }
@@ -137,7 +137,7 @@ export function GlobalSearch() {
               <CommandItem
                 key={dealer.name}
                 value={`${dealer.name} ${dealer.region} ${dealer.firmType} ${dealer.postcode}`}
-                onSelect={() => handleSelect(`/dealers/${encodeURIComponent(dealer.name)}`)}
+                onSelect={() => handleSelect(`/dealer/${encodeURIComponent(dealer.name)}`)}
               >
                 <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>{dealer.name}</span>
