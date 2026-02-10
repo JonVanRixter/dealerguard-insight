@@ -25,20 +25,32 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // ⚠️ TEMPORARY DEV BYPASS – remove before production
 const DEV_BYPASS_ENABLED = true;
+const DEV_BYPASS_KEY = "dev-bypass-active";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fakeUser = { id: "dev-bypass-user", email: "dev@test.local" } as User;
+  const fakeSession = {} as Session;
+
   const devBypass = () => {
     if (!DEV_BYPASS_ENABLED) return;
-    const fakeUser = { id: "dev-bypass-user", email: "dev@test.local" } as User;
+    sessionStorage.setItem(DEV_BYPASS_KEY, "true");
     setUser(fakeUser);
-    setSession({} as Session);
+    setSession(fakeSession);
   };
 
   useEffect(() => {
+    // Restore dev bypass from sessionStorage
+    if (DEV_BYPASS_ENABLED && sessionStorage.getItem(DEV_BYPASS_KEY) === "true") {
+      setUser(fakeUser);
+      setSession(fakeSession);
+      setLoading(false);
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -69,7 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    sessionStorage.removeItem(DEV_BYPASS_KEY);
     await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
   };
 
   return (
