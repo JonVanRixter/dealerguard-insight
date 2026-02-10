@@ -43,6 +43,7 @@ import { ScoreDistributionChart } from "@/components/dashboard/ScoreDistribution
 import { SectionComplianceChart } from "@/components/dashboard/SectionComplianceChart";
 import { RegionalSummaryTable } from "@/components/dashboard/RegionalSummaryTable";
 import { PortfolioTrendMini } from "@/components/dashboard/PortfolioTrendMini";
+import { TopRiskDealers } from "@/components/dashboard/TopRiskDealers";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -241,10 +242,11 @@ const Index = () => {
           <ScoreDistributionChart />
         </div>
 
-        {/* Section Compliance + Regional Summary */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Section Compliance + Regional Summary + Top Risk */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <SectionComplianceChart />
           <RegionalSummaryTable />
+          <TopRiskDealers />
         </div>
 
         {/* Main content grid */}
