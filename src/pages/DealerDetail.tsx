@@ -11,7 +11,7 @@ import { AuditSectionCard } from "@/components/dealer/AuditSectionCard";
 import { KeyActionsTable } from "@/components/dealer/KeyActionsTable";
 import { CustomerSentimentCard } from "@/components/dealer/CustomerSentimentCard";
 import { ReportSummaryCard } from "@/components/dealer/ReportSummaryCard";
-import { generateComplianceReportPDF, type PassportCheckEntry, type FcaRegisterEntry } from "@/utils/pdfExport";
+import { generateComplianceReportPDF, type PassportCheckEntry, type FcaRegisterEntry, type CreditSafeEntry } from "@/utils/pdfExport";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { AiAuditSummary } from "@/components/dealer/AiAuditSummary";
@@ -36,6 +36,7 @@ const DealerDetail = () => {
 
   const [passportChecks, setPassportChecks] = useState<PassportCheckEntry[]>([]);
   const [fcaRegisterData, setFcaRegisterData] = useState<FcaRegisterEntry | undefined>(undefined);
+  const [creditSafeData, setCreditSafeData] = useState<CreditSafeEntry | undefined>(undefined);
 
   const handleSummaryChange = useCallback((summary: string) => {
     setAiSummary(summary);
@@ -94,7 +95,7 @@ const DealerDetail = () => {
 
   const handleDownloadReport = () => {
     try {
-      generateComplianceReportPDF(audit, fcaRef, aiSummary || undefined, passportChecks.length > 0 ? passportChecks : undefined, fcaRegisterData);
+      generateComplianceReportPDF(audit, fcaRef, aiSummary || undefined, passportChecks.length > 0 ? passportChecks : undefined, fcaRegisterData, creditSafeData);
       toast({
         title: "Report Downloaded",
         description: `Compliance report for ${dealerName} has been generated and downloaded.`,
@@ -213,7 +214,7 @@ const DealerDetail = () => {
         <AiAuditSummary audit={audit} onSummaryChange={handleSummaryChange} />
 
         {/* CreditSafe Report */}
-        <CreditSafeCard dealerName={dealerName} companiesHouseNumber={dealerData.dealer?.companiesHouseNumber} />
+        <CreditSafeCard dealerName={dealerName} companiesHouseNumber={dealerData.dealer?.companiesHouseNumber} onDataLoaded={setCreditSafeData} />
 
         {/* FCA Register Check */}
         <FcaRegisterCard dealerName={dealerName} fcaRef={fcaRef} onDataLoaded={setFcaRegisterData} />

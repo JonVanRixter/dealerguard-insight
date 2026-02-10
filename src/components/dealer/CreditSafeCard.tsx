@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import {
   Flame,
 } from "lucide-react";
 import { PhoenixingAnalysis } from "./PhoenixingAnalysis";
+import type { CreditSafeEntry } from "@/utils/pdfExport";
 
 interface CreditSafeCompany {
   id: string;
@@ -119,9 +120,10 @@ function getRatingBadge(rating?: string) {
 interface CreditSafeCardProps {
   dealerName: string;
   companiesHouseNumber?: string;
+  onDataLoaded?: (data: CreditSafeEntry) => void;
 }
 
-export const CreditSafeCard = ({ dealerName, companiesHouseNumber }: CreditSafeCardProps) => {
+export const CreditSafeCard = ({ dealerName, companiesHouseNumber, onDataLoaded }: CreditSafeCardProps) => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState(dealerName);
   const [searching, setSearching] = useState(false);
@@ -204,6 +206,32 @@ export const CreditSafeCard = ({ dealerName, companiesHouseNumber }: CreditSafeC
   const currentVal = parseInt(creditRating?.providerValue?.value || "0");
   const prevVal = parseInt(prevRating?.commonValue || "0");
   const trendDir = currentVal > prevVal ? "up" : currentVal < prevVal ? "down" : "stable";
+
+  // Notify parent with CreditSafe data for PDF export
+  useEffect(() => {
+    if (report && onDataLoaded) {
+      const scoreVal = creditRating?.providerValue?.value;
+      const scoreNum = scoreVal ? parseInt(scoreVal) : 0;
+      const riskLevel: "Low Risk" | "Medium Risk" | "High Risk" | undefined = scoreVal ? (scoreNum >= 71 ? "Low Risk" : scoreNum >= 40 ? "Medium Risk" : "High Risk") : undefined;
+      onDataLoaded({
+        companyName: summary?.businessName || selectedCompany?.name || dealerName,
+        registrationNumber: summary?.companyRegistrationNumber,
+        companyStatus: summary?.companyStatus?.status,
+        creditScore: creditRating?.providerValue?.value,
+        creditScoreMax: creditRating?.providerValue?.maxValue,
+        creditDescription: creditRating?.commonDescription,
+        creditLimit: creditRating?.creditLimit?.value,
+        dbt: report.report?.paymentData?.dbt,
+        ccjCount: ccjs?.numberOfExact,
+        ccjTotal: ccjs?.totalAmountOfExact,
+        turnover: summary?.latestTurnoverFigure?.value,
+        equity: summary?.latestShareholdersEquityFigure?.value,
+        riskLevel,
+        previousScore: prevRating?.commonValue,
+      });
+    }
+  }, [report]);
+
 
   return (
     <div className="bg-card rounded-xl border border-border">
