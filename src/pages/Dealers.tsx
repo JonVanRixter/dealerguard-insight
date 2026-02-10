@@ -42,6 +42,7 @@ import { dealers, portfolioStats } from "@/data/dealers";
 import { generateDealerAudit } from "@/data/auditFramework";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { BatchAiSummary } from "@/components/dealer/BatchAiSummary";
+import { DuplicateFlagsBanner } from "@/components/dealer/DuplicateFlagsBanner";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -306,6 +307,9 @@ const Dealers = () => {
             <p className="text-xs text-muted-foreground mt-1">Above {settings.css_reward_threshold.toFixed(1)}{quickFilter === "reward" ? " · Filtering" : ""}</p>
           </div>
         </div>
+
+        {/* Duplicate Flags */}
+        <DuplicateFlagsBanner limit={5} />
 
         {/* Controls */}
         <div className="bg-card rounded-xl border border-border">

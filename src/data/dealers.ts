@@ -9,6 +9,10 @@ export interface Dealer {
   trend: "up" | "down" | "stable";
   region: string;
   firmType: FirmType;
+  phone: string;
+  postcode: string;
+  address: string;
+  companiesHouseNumber: string;
 }
 
 const dealerPrefixes = [
@@ -39,6 +43,36 @@ const locations = [
   "Swansea", "Plymouth", "Reading", "Aberdeen", "Bournemouth", "Middlesbrough", "Bolton",
   "Luton", "Sunderland", "Norwich", "Preston", "Milton Keynes", "Brighton", "Oxford",
 ];
+
+const streetNames = [
+  "High Street", "Station Road", "London Road", "Church Lane", "Victoria Road",
+  "Park Avenue", "Mill Lane", "Kings Road", "Queen Street", "Bridge Road",
+  "Market Street", "Green Lane", "Manor Drive", "Chapel Road", "New Road",
+  "Broad Street", "Castle Street", "North Road", "South Street", "West End",
+];
+
+const postcodeAreas = [
+  "SW1A 1AA", "B1 1BB", "M1 1CC", "LS1 1DD", "G1 1EE", "L1 1FF", "NE1 1GG",
+  "S1 1HH", "BS1 1JJ", "EH1 1KK", "CF1 1LL", "BT1 1MM", "NG1 1NN", "SO1 1PP",
+  "LE1 1QQ", "CV1 1RR", "BD1 1SS", "HU1 1TT", "ST1 1UU", "WV1 1VV", "DE1 1WW",
+  "SA1 1XX", "PL1 1YY", "RG1 1ZZ", "AB1 1AB", "BH1 1BC", "TS1 1CD", "BL1 1DE",
+  "LU1 1EF", "SR1 1FG", "NR1 1GH", "PR1 1HJ", "MK1 1JK", "BN1 1KL", "OX1 1LM",
+];
+
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 9301 + 49297) * 49271;
+  return x - Math.floor(x);
+}
+
+function generatePhone(index: number): string {
+  const area = String(1200 + (index % 800)).padStart(4, "0");
+  const local = String(100000 + Math.floor(seededRandom(index + 999) * 899999)).slice(0, 6);
+  return `0${area} ${local}`;
+}
+
+function generateCompaniesHouse(index: number): string {
+  return String(1000000 + index * 37 + Math.floor(seededRandom(index + 7777) * 9000000)).slice(0, 8);
+}
 
 function generateDealerName(index: number): string {
   const prefix = dealerPrefixes[index % dealerPrefixes.length];
@@ -97,15 +131,43 @@ function generateDealer(index: number): Dealer {
 
   // ~80% AR, ~20% DA — matches industry distribution
   const firmType: FirmType = index % 5 === 0 ? "DA" : "AR";
-  
+
+  const streetNum = (index * 7 + 3) % 200 + 1;
+  const street = streetNames[index % streetNames.length];
+  const region = locations[index % locations.length];
+  const postcode = postcodeAreas[index % postcodeAreas.length];
+
+  // Introduce deliberate duplicates for testing:
+  // Dealers 10 & 11 share same phone
+  // Dealers 20 & 21 share same postcode + address
+  // Dealers 30 & 31 share same companies house number
+  let phone = generatePhone(index);
+  let companiesHouseNumber = generateCompaniesHouse(index);
+  let address = `${streetNum} ${street}, ${region}`;
+
+  if (index === 11) phone = generatePhone(10);
+  if (index === 21) {
+    address = `${((10 * 7 + 3) % 200 + 1) + 10} ${streetNames[20 % streetNames.length]}, ${locations[20 % locations.length]}`;
+    // share postcode with dealer 20
+  }
+  if (index === 31) companiesHouseNumber = generateCompaniesHouse(30);
+
+  // Additional duplicates: dealers 50 & 51 share phone, 60 & 61 share companies house
+  if (index === 51) phone = generatePhone(50);
+  if (index === 61) companiesHouseNumber = generateCompaniesHouse(60);
+
   return {
     name: generateDealerName(index),
     score,
     rag,
     lastAudit: generateAuditDate(index),
     trend,
-    region: locations[index % locations.length],
+    region,
     firmType,
+    phone,
+    postcode: index === 21 ? postcodeAreas[20 % postcodeAreas.length] : postcode,
+    address,
+    companiesHouseNumber,
   };
 }
 
@@ -122,6 +184,10 @@ const realDealers: Dealer[] = [
     trend: "stable",
     region: "Lincoln",
     firmType: "AR",
+    phone: "01522 456789",
+    postcode: "LN1 3AA",
+    address: "12 High Street, Lincoln",
+    companiesHouseNumber: "04523891",
   },
   {
     name: "Dynasty Partners Limited",
@@ -131,6 +197,10 @@ const realDealers: Dealer[] = [
     trend: "up",
     region: "London",
     firmType: "DA",
+    phone: "020 7946 0958",
+    postcode: "EC2A 4NE",
+    address: "45 Finsbury Square, London",
+    companiesHouseNumber: "09281746",
   },
   {
     name: "Shirlaws Limited",
@@ -140,6 +210,10 @@ const realDealers: Dealer[] = [
     trend: "down",
     region: "Glasgow",
     firmType: "AR",
+    phone: "0141 352 4567",
+    postcode: "G1 1EE",
+    address: "78 Argyle Street, Glasgow",
+    companiesHouseNumber: "SC087542",
   },
   {
     name: "Platinum Vehicle Specialists",
@@ -149,6 +223,10 @@ const realDealers: Dealer[] = [
     trend: "down",
     region: "Birmingham",
     firmType: "AR",
+    phone: "0121 678 9012",
+    postcode: "B1 1BB",
+    address: "15 Station Road, Birmingham",
+    companiesHouseNumber: "07653219",
   },
 ];
 
