@@ -35,6 +35,7 @@ import {
   ChevronDown,
   ChevronRight,
   Download,
+  X,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { dealers, portfolioStats } from "@/data/dealers";
@@ -67,7 +68,16 @@ const Dealers = () => {
   const [viewMode, setViewMode] = useState<"table" | "region">("table");
   const [quickFilter, setQuickFilter] = useState<"all" | "oversight" | "reward" | "green" | "amber" | "red">("all");
 
-  // Precompute CSS scores
+  const isFiltering = searchQuery !== "" || statusFilter !== "all" || regionFilter !== "all" || quickFilter !== "all";
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setRegionFilter("all");
+    setQuickFilter("all");
+    setCurrentPage(1);
+  };
+
   const dealerCssScores = useMemo(() => {
     const map = new Map<string, number>();
     dealers.forEach((d, i) => {
@@ -327,12 +337,17 @@ const Dealers = () => {
                 </Select>
               </div>
               <div className="flex gap-1 items-center">
+                {isFiltering && (
+                  <Button variant="ghost" size="sm" onClick={clearAllFilters} className="gap-1.5 text-muted-foreground hover:text-foreground">
+                    <X className="w-4 h-4" />
+                    <span className="hidden sm:inline">Clear Filters</span>
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={exportCsv} className="gap-1.5">
                   <Download className="w-4 h-4" />
                   <span className="hidden sm:inline">Export CSV</span>
                 </Button>
-                <Button
-                  variant={viewMode === "table" ? "default" : "outline"}
+                  <Button
                   size="sm"
                   onClick={() => setViewMode("table")}
                   className="gap-1.5"
