@@ -43,26 +43,40 @@ export function DealerNotes({ dealerName }: DealerNotesProps) {
   const fetchNotes = useCallback(async () => {
     const { data, error } = await supabase
       .from("dealer_notes")
-      .select("*, profiles!dealer_notes_user_id_fkey(display_name)")
+      .select("*")
       .eq("dealer_name", dealerName)
       .order("created_at", { ascending: false });
 
     if (error) {
-      // Fallback without join if FK doesn't exist
-      const { data: fallbackData } = await supabase
-        .from("dealer_notes")
-        .select("*")
-        .eq("dealer_name", dealerName)
-        .order("created_at", { ascending: false });
-      setNotes(fallbackData || []);
-    } else {
+      console.error("Failed to fetch notes:", error);
+      setLoading(false);
+      return;
+    }
+
+    const notes = data || [];
+
+    // Fetch author display names from profiles
+    if (notes.length > 0) {
+      const userIds = [...new Set(notes.map((n) => n.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", userIds);
+
+      const profileMap = new Map(
+        (profiles || []).map((p) => [p.user_id, p.display_name])
+      );
+
       setNotes(
-        (data || []).map((n: any) => ({
+        notes.map((n) => ({
           ...n,
-          author_name: n.profiles?.display_name || undefined,
+          author_name: profileMap.get(n.user_id) || undefined,
         }))
       );
+    } else {
+      setNotes([]);
     }
+
     setLoading(false);
   }, [dealerName]);
 
