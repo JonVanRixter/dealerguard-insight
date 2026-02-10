@@ -39,7 +39,24 @@ export interface FcaRegisterEntry {
   permissions: string[];
 }
 
-export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, aiSummary?: string, passportChecks?: PassportCheckEntry[], fcaRegister?: FcaRegisterEntry): void {
+export interface CreditSafeEntry {
+  companyName: string;
+  registrationNumber?: string;
+  companyStatus?: string;
+  creditScore?: string;
+  creditScoreMax?: string;
+  creditDescription?: string;
+  creditLimit?: number;
+  dbt?: number;
+  ccjCount?: number;
+  ccjTotal?: number;
+  turnover?: number;
+  equity?: number;
+  riskLevel?: "Low Risk" | "Medium Risk" | "High Risk";
+  previousScore?: string;
+}
+
+export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, aiSummary?: string, passportChecks?: PassportCheckEntry[], fcaRegister?: FcaRegisterEntry, creditSafe?: CreditSafeEntry): void {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   let yPosition = 20;
@@ -746,6 +763,98 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
     }
 
     yPosition += 5;
+  }
+
+  // === CREDITSAFE CREDIT SCORE SUMMARY ===
+  if (creditSafe) {
+    checkPageBreak(70);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text("CreditSafe Credit Score Summary", 14, yPosition);
+    yPosition += 4;
+
+    doc.setDrawColor(59, 130, 246);
+    doc.setLineWidth(0.5);
+    doc.line(14, yPosition, pageWidth - 14, yPosition);
+    yPosition += 8;
+
+    // Company header box
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(14, yPosition, pageWidth - 28, 24, 3, 3, "F");
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text(creditSafe.companyName, 20, yPosition + 7);
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(80);
+    const compDetails: string[] = [];
+    if (creditSafe.registrationNumber) compDetails.push(`Reg: ${creditSafe.registrationNumber}`);
+    if (creditSafe.companyStatus) compDetails.push(creditSafe.companyStatus);
+    doc.text(compDetails.join("  ·  "), 20, yPosition + 14);
+
+    // Risk badge
+    if (creditSafe.riskLevel) {
+      const riskColor = creditSafe.riskLevel === "Low Risk" ? RAG_COLORS.green : creditSafe.riskLevel === "Medium Risk" ? RAG_COLORS.amber : RAG_COLORS.red;
+      doc.setFillColor(riskColor.r, riskColor.g, riskColor.b);
+      doc.roundedRect(pageWidth - 65, yPosition + 4, 45, 14, 2, 2, "F");
+      doc.setTextColor(255);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.text(creditSafe.riskLevel, pageWidth - 42.5, yPosition + 13, { align: "center" });
+    }
+
+    yPosition += 30;
+
+    // Key metrics table
+    const metricsData: string[][] = [];
+    metricsData.push(["Credit Score", creditSafe.creditScore ? `${creditSafe.creditScore} / ${creditSafe.creditScoreMax || "100"}` : "N/A"]);
+    if (creditSafe.previousScore) metricsData.push(["Previous Score", creditSafe.previousScore]);
+    metricsData.push(["Credit Limit", creditSafe.creditLimit ? `£${creditSafe.creditLimit.toLocaleString()}` : "N/A"]);
+    metricsData.push(["DBT (Days Beyond Terms)", creditSafe.dbt !== undefined ? `${creditSafe.dbt} days` : "N/A"]);
+    metricsData.push(["CCJs", creditSafe.ccjCount !== undefined ? `${creditSafe.ccjCount}${creditSafe.ccjTotal ? ` (£${creditSafe.ccjTotal.toLocaleString()})` : ""}` : "N/A"]);
+    if (creditSafe.turnover) metricsData.push(["Turnover", `£${creditSafe.turnover.toLocaleString()}`]);
+    if (creditSafe.equity) metricsData.push(["Shareholders' Equity", `£${creditSafe.equity.toLocaleString()}`]);
+    if (creditSafe.creditDescription) metricsData.push(["Rating Description", creditSafe.creditDescription]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Metric", "Value"]],
+      body: metricsData,
+      theme: "striped",
+      headStyles: { fillColor: [51, 65, 85], fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      columnStyles: {
+        0: { cellWidth: 60, fontStyle: "bold" },
+        1: { cellWidth: 100 },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 1) {
+          const metric = data.row.cells[0]?.raw?.toString() || "";
+          const val = data.cell.raw?.toString() || "";
+          if (metric === "Credit Score" && val !== "N/A") {
+            const score = parseInt(val);
+            if (score >= 71) data.cell.styles.textColor = [34, 197, 94];
+            else if (score >= 40) data.cell.styles.textColor = [245, 158, 11];
+            else data.cell.styles.textColor = [239, 68, 68];
+            data.cell.styles.fontStyle = "bold";
+          }
+          if (metric.startsWith("DBT") && val !== "N/A") {
+            const dbtVal = parseInt(val);
+            if (dbtVal > 30) data.cell.styles.textColor = [239, 68, 68];
+            else if (dbtVal > 14) data.cell.styles.textColor = [245, 158, 11];
+          }
+          if (metric === "CCJs" && val !== "N/A" && !val.startsWith("0")) {
+            data.cell.styles.textColor = [239, 68, 68];
+          }
+        }
+      },
+    });
+
+    yPosition = doc.lastAutoTable.finalY + 15;
   }
 
   // === DETAILED AUDIT SECTIONS ===
