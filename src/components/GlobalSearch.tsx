@@ -9,6 +9,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
 import {
   LayoutDashboard,
   Building2,
@@ -21,6 +22,8 @@ import {
   Search,
   Clock,
   X,
+  Zap,
+  Navigation,
 } from "lucide-react";
 import { dealers } from "@/data/dealers";
 
@@ -169,7 +172,15 @@ export function GlobalSearch() {
             </>
           )}
 
-          <CommandGroup heading="Pages">
+          <CommandGroup heading={
+            <div className="flex items-center justify-between w-full">
+              <span className="flex items-center gap-1.5">
+                <Navigation className="w-3 h-3" />
+                Pages
+              </span>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-normal">{pages.length}</Badge>
+            </div>
+          }>
             {pages.map((page) => (
               <CommandItem
                 key={page.url}
@@ -178,13 +189,22 @@ export function GlobalSearch() {
               >
                 <page.icon className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>{page.label}</span>
+                <Badge variant="outline" className="ml-auto text-[9px] px-1.5 py-0 h-4 font-normal text-muted-foreground">Page</Badge>
               </CommandItem>
             ))}
           </CommandGroup>
 
           <CommandSeparator />
 
-          <CommandGroup heading="Features">
+          <CommandGroup heading={
+            <div className="flex items-center justify-between w-full">
+              <span className="flex items-center gap-1.5">
+                <Zap className="w-3 h-3" />
+                Features
+              </span>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-normal">{features.length}</Badge>
+            </div>
+          }>
             {features.map((feat) => (
               <CommandItem
                 key={feat.label}
@@ -197,17 +217,26 @@ export function GlobalSearch() {
                 }}
               >
                 <Search className="mr-2 h-4 w-4 text-muted-foreground" />
-                <div>
+                <div className="flex-1 min-w-0">
                   <span>{feat.label}</span>
                   <span className="ml-2 text-xs text-muted-foreground">{feat.description}</span>
                 </div>
+                <Badge variant="outline" className="ml-2 shrink-0 text-[9px] px-1.5 py-0 h-4 font-normal text-muted-foreground">Feature</Badge>
               </CommandItem>
             ))}
           </CommandGroup>
 
           <CommandSeparator />
 
-          <CommandGroup heading="Dealers">
+          <CommandGroup heading={
+            <div className="flex items-center justify-between w-full">
+              <span className="flex items-center gap-1.5">
+                <Building2 className="w-3 h-3" />
+                Dealers
+              </span>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-normal">{topDealers.length}</Badge>
+            </div>
+          }>
             {topDealers.map((dealer) => (
               <CommandItem
                 key={dealer.name}
@@ -216,7 +245,8 @@ export function GlobalSearch() {
               >
                 <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>{dealer.name}</span>
-                <span className="ml-auto text-xs text-muted-foreground">{dealer.region}</span>
+                <Badge variant="outline" className="ml-auto text-[9px] px-1.5 py-0 h-4 font-normal text-muted-foreground">{dealer.firmType}</Badge>
+                <span className="ml-1.5 text-xs text-muted-foreground">{dealer.region}</span>
               </CommandItem>
             ))}
           </CommandGroup>
