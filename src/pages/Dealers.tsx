@@ -36,6 +36,7 @@ import {
   ChevronRight,
   Download,
   X,
+  FolderOpen,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { dealers, portfolioStats } from "@/data/dealers";
@@ -392,8 +393,9 @@ const Dealers = () => {
                       <SortHeader label="Status" sortKeyVal="rag" />
                       <SortHeader label="CSS" sortKeyVal="css" />
                       <SortHeader label="Region" sortKeyVal="region" />
-                      <th className="text-left px-3 py-3 font-medium hidden lg:table-cell">Last Audit</th>
+                       <th className="text-left px-3 py-3 font-medium hidden lg:table-cell">Last Audit</th>
                       <th className="text-center px-3 py-3 font-medium">Trend</th>
+                      <th className="px-3 py-3 font-medium"><span className="sr-only">Actions</span></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -445,6 +447,17 @@ const Dealers = () => {
                             <td className="px-3 py-3 text-muted-foreground">{dealer.region}</td>
                             <td className="px-3 py-3 text-muted-foreground hidden lg:table-cell">{dealer.lastAudit}</td>
                             <td className="px-3 py-3 text-center"><TrendIcon trend={dealer.trend} /></td>
+                            <td className="px-3 py-3 text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="gap-1.5 text-muted-foreground hover:text-foreground"
+                                onClick={(e) => { e.stopPropagation(); navigate(`/documents?dealer=${encodeURIComponent(dealer.name)}`); }}
+                              >
+                                <FolderOpen className="w-4 h-4" />
+                                <span className="hidden xl:inline">Docs</span>
+                              </Button>
+                            </td>
                           </tr>
                         );
                       })

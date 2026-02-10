@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,12 +75,13 @@ function getFileIcon(type: string) {
 
 const Documents = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [documents, setDocuments] = useState<DealerDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
-  const [dealerFilter, setDealerFilter] = useState("All");
+  const [dealerFilter, setDealerFilter] = useState(searchParams.get("dealer") || "All");
 
   // Upload form state
   const [uploadOpen, setUploadOpen] = useState(false);
