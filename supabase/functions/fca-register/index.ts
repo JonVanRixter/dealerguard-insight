@@ -50,6 +50,10 @@ serve(async (req) => {
         const res = await fetch(`${FCA_BASE}/V0.1/Firm/${params.frn}`, {
           headers,
         });
+        if (res.status === 404) {
+          result = { Status: "Not Found", Message: `No firm found with FRN ${params.frn}` };
+          break;
+        }
         if (!res.ok) {
           const text = await res.text();
           throw new Error(`FCA firm lookup failed [${res.status}]: ${text}`);
@@ -64,6 +68,10 @@ serve(async (req) => {
           `${FCA_BASE}/V0.1/Firm/${params.frn}/Individuals`,
           { headers }
         );
+        if (res.status === 404) {
+          result = { Status: "Not Found", Message: `No individuals found for FRN ${params.frn}` };
+          break;
+        }
         if (!res.ok) {
           const text = await res.text();
           throw new Error(
@@ -80,6 +88,10 @@ serve(async (req) => {
           `${FCA_BASE}/V0.1/Firm/${params.frn}/Permission`,
           { headers }
         );
+        if (res.status === 404) {
+          result = { Status: "Not Found", Message: `No permissions found for FRN ${params.frn}` };
+          break;
+        }
         if (!res.ok) {
           const text = await res.text();
           throw new Error(
@@ -96,6 +108,10 @@ serve(async (req) => {
           `${FCA_BASE}/V0.1/Firm/${params.frn}/Activities`,
           { headers }
         );
+        if (res.status === 404) {
+          result = { Status: "Not Found", Message: `No activities found for FRN ${params.frn}` };
+          break;
+        }
         if (!res.ok) {
           const text = await res.text();
           throw new Error(
