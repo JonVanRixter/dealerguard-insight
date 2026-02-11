@@ -31,7 +31,8 @@ export function GeneralSettings({ settings, onSave, saving }: GeneralSettingsPro
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Email Address</Label>
-            <Input value={user?.email || ""} disabled className="bg-muted" />
+            <Input defaultValue={user?.email || "joel.knight@lenderexample.com"} className="bg-background" />
+            <p className="text-xs text-muted-foreground">Changes to email require re-verification.</p>
           </div>
         </div>
       </div>

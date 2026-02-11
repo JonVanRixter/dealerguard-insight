@@ -3,6 +3,7 @@ export type FirmType = "AR" | "DA"; // Appointed Representative or Directly Auth
 
 export interface Dealer {
   name: string;
+  tradingName: string;
   score: number;
   rag: RagStatus;
   lastAudit: string;
@@ -13,6 +14,7 @@ export interface Dealer {
   postcode: string;
   address: string;
   companiesHouseNumber: string;
+  alertCount: number;
 }
 
 const dealerPrefixes = [
@@ -72,6 +74,13 @@ function generatePhone(index: number): string {
 
 function generateCompaniesHouse(index: number): string {
   return String(1000000 + index * 37 + Math.floor(seededRandom(index + 7777) * 9000000)).slice(0, 8);
+}
+
+function generateTradingName(dealerName: string): string {
+  // Extract the first word as trading name
+  const parts = dealerName.split(" ");
+  if (parts.length <= 2) return parts[0];
+  return parts.slice(0, 2).join(" ");
 }
 
 function generateDealerName(index: number): string {
@@ -156,8 +165,12 @@ function generateDealer(index: number): Dealer {
   if (index === 51) phone = generatePhone(50);
   if (index === 61) companiesHouseNumber = generateCompaniesHouse(60);
 
+  const dealerName = generateDealerName(index);
+  const alertCount = rag === "red" ? Math.floor(seededRandom(index + 500) * 5) + 2 : rag === "amber" ? Math.floor(seededRandom(index + 600) * 3) : 0;
+
   return {
-    name: generateDealerName(index),
+    name: dealerName,
+    tradingName: generateTradingName(dealerName),
     score,
     rag,
     lastAudit: generateAuditDate(index),
@@ -168,6 +181,7 @@ function generateDealer(index: number): Dealer {
     postcode: index === 21 ? postcodeAreas[20 % postcodeAreas.length] : postcode,
     address,
     companiesHouseNumber,
+    alertCount,
   };
 }
 
@@ -178,6 +192,7 @@ const mockDealers: Dealer[] = Array.from({ length: 196 }, (_, i) => generateDeal
 const realDealers: Dealer[] = [
   {
     name: "Thurlby Motors",
+    tradingName: "Thurlby",
     score: 72,
     rag: "amber",
     lastAudit: "05 Feb 2026",
@@ -188,9 +203,11 @@ const realDealers: Dealer[] = [
     postcode: "LN1 3AA",
     address: "12 High Street, Lincoln",
     companiesHouseNumber: "04523891",
+    alertCount: 1,
   },
   {
     name: "Dynasty Partners Limited",
+    tradingName: "Dynasty",
     score: 68,
     rag: "amber",
     lastAudit: "05 Feb 2026",
@@ -201,9 +218,11 @@ const realDealers: Dealer[] = [
     postcode: "EC2A 4NE",
     address: "45 Finsbury Square, London",
     companiesHouseNumber: "09281746",
+    alertCount: 2,
   },
   {
     name: "Shirlaws Limited",
+    tradingName: "Shirlaws",
     score: 38,
     rag: "red",
     lastAudit: "05 Feb 2026",
@@ -214,9 +233,11 @@ const realDealers: Dealer[] = [
     postcode: "G1 1EE",
     address: "78 Argyle Street, Glasgow",
     companiesHouseNumber: "SC087542",
+    alertCount: 5,
   },
   {
     name: "Platinum Vehicle Specialists",
+    tradingName: "Platinum",
     score: 42,
     rag: "red",
     lastAudit: "05 Feb 2026",
@@ -227,6 +248,7 @@ const realDealers: Dealer[] = [
     postcode: "B1 1BB",
     address: "15 Station Road, Birmingham",
     companiesHouseNumber: "07653219",
+    alertCount: 4,
   },
 ];
 

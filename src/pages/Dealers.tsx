@@ -426,15 +426,15 @@ const Dealers = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border text-muted-foreground">
+                     <tr className="border-b border-border text-muted-foreground">
                       <SortHeader label="Dealer Name" sortKeyVal="name" />
+                      <th className="text-left px-3 py-3 font-medium hidden lg:table-cell">Trading Name</th>
                       <SortHeader label="Score" sortKeyVal="score" />
                       <SortHeader label="Status" sortKeyVal="rag" />
                       <SortHeader label="CSS" sortKeyVal="css" />
                       <SortHeader label="Region" sortKeyVal="region" />
                        <th className="text-left px-3 py-3 font-medium hidden lg:table-cell">Last Audit</th>
-                      <th className="text-left px-3 py-3 font-medium hidden xl:table-cell">Credit Score</th>
-                      <th className="text-left px-3 py-3 font-medium hidden lg:table-cell">Onboarding</th>
+                      <th className="text-center px-3 py-3 font-medium">Alerts</th>
                       <th className="text-center px-3 py-3 font-medium">Trend</th>
                       <th className="px-3 py-3 font-medium"><span className="sr-only">Actions</span></th>
                     </tr>
@@ -460,7 +460,8 @@ const Dealers = () => {
                                 </span>
                               </span>
                             </td>
-                            <td className="px-3 py-3 text-foreground font-semibold">{dealer.score}</td>
+                            <td className="px-3 py-3 text-muted-foreground hidden lg:table-cell">{dealer.tradingName}</td>
+                            <td className={`px-3 py-3 font-semibold ${dealer.rag === "red" ? "text-rag-red" : dealer.rag === "amber" ? "text-rag-amber" : "text-rag-green"}`}>{dealer.score}</td>
                             <td className="px-3 py-3"><RagBadge status={dealer.rag} /></td>
                             <td className="px-3 py-3">
                               {isOversight ? (
@@ -487,54 +488,44 @@ const Dealers = () => {
                             </td>
                             <td className="px-3 py-3 text-muted-foreground">{dealer.region}</td>
                             <td className="px-3 py-3 text-muted-foreground hidden lg:table-cell">{dealer.lastAudit}</td>
-                            <td className="px-3 py-3 hidden xl:table-cell">
-                              {(() => {
-                                // Deterministic mock credit score based on dealer compliance score
-                                const cs = Math.min(100, Math.max(1, Math.round(dealer.score * 0.85 + (dealer.name.charCodeAt(0) % 20))));
-                                const color = cs >= 71 ? "text-emerald-600" : cs >= 40 ? "text-amber-600" : "text-destructive";
-                                return <span className={`font-semibold text-sm ${color}`}>{cs}</span>;
-                              })()}
-                            </td>
-                            <td className="px-3 py-3 hidden lg:table-cell">
-                              {(() => {
-                                const ob = onboardingMap.get(dealer.name);
-                                if (!ob) return <span className="text-xs text-muted-foreground">—</span>;
-                                const stageColors: Record<string, string> = {
-                                  "pre-screening": "bg-muted text-muted-foreground",
-                                  application: "bg-primary/10 text-primary",
-                                  completed: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
-                                  failed: "bg-destructive/15 text-destructive",
-                                };
-                                return (
-                                  <Badge variant="outline" className={`text-[10px] ${stageColors[ob.stage] || ""}`}>
-                                    {ob.stage}
-                                  </Badge>
-                                );
-                              })()}
+                            <td className="px-3 py-3 text-center">
+                              {dealer.alertCount > 0 ? (
+                                <Badge variant="destructive" className="text-[10px] px-1.5 py-0 min-w-5 h-5 justify-center">
+                                  {dealer.alertCount}
+                                </Badge>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">0</span>
+                              )}
                             </td>
                             <td className="px-3 py-3 text-center"><TrendIcon trend={dealer.trend} /></td>
                             <td className="px-3 py-3 text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="gap-1.5 text-muted-foreground hover:text-foreground"
-                                onClick={(e) => { e.stopPropagation(); navigate(`/documents?dealer=${encodeURIComponent(dealer.name)}`); }}
-                              >
-                                <FolderOpen className="w-4 h-4" />
-                                <span className="hidden xl:inline">Docs</span>
-                                {(docCounts.get(dealer.name) || 0) > 0 && (
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 min-w-5 h-5 justify-center">
-                                    {docCounts.get(dealer.name)}
-                                  </Badge>
-                                )}
-                              </Button>
+                              <div className="flex items-center justify-end gap-1">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="gap-1.5 text-muted-foreground hover:text-foreground"
+                                      onClick={(e) => { e.stopPropagation(); navigate(`/documents?dealer=${encodeURIComponent(dealer.name)}`); }}
+                                    >
+                                      <FolderOpen className="w-4 h-4" />
+                                      {(docCounts.get(dealer.name) || 0) > 0 && (
+                                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 min-w-5 h-5 justify-center">
+                                          {docCounts.get(dealer.name)}
+                                        </Badge>
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent><p className="text-xs">View dealer documents</p></TooltipContent>
+                                </Tooltip>
+                              </div>
                             </td>
                           </tr>
                         );
                       })
                     ) : (
                       <tr>
-                        <td colSpan={8} className="px-5 py-8 text-center text-muted-foreground">
+                        <td colSpan={10} className="px-5 py-8 text-center text-muted-foreground">
                           No dealers found matching your criteria.
                         </td>
                       </tr>

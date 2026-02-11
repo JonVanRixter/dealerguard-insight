@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,7 +74,23 @@ function getFileIcon(type: string) {
   return <File className="w-5 h-5 text-muted-foreground" />;
 }
 
+const MOCK_DOCUMENTS: DealerDocument[] = [
+  { id: "m1", dealer_name: "Redline Specialist Cars", file_name: "Redline Specialist Cars - Audit Report - Feb 2026.pdf", file_path: "", file_size: 251000, file_type: "application/pdf", category: "Audit Report", description: "Full compliance audit report", tags: ["audit", "feb-2026"], expiry_date: null, created_at: "2026-02-07T10:00:00Z" },
+  { id: "m2", dealer_name: "Apex Motors Ltd", file_name: "Apex Motors - Audit Report - Feb 2026.pdf", file_path: "", file_size: 319000, file_type: "application/pdf", category: "Audit Report", description: "Full compliance audit report", tags: ["audit", "feb-2026"], expiry_date: null, created_at: "2026-02-08T09:00:00Z" },
+  { id: "m3", dealer_name: "Stratstone BMW", file_name: "Stratstone BMW - Audit Report - Feb 2026.pdf", file_path: "", file_size: 198000, file_type: "application/pdf", category: "Audit Report", description: "Full compliance audit report", tags: ["audit", "feb-2026"], expiry_date: null, created_at: "2026-02-05T14:00:00Z" },
+  { id: "m4", dealer_name: "Portfolio", file_name: "Portfolio Compliance Summary - Q1 2026.pdf", file_path: "", file_size: 1228800, file_type: "application/pdf", category: "Compliance", description: "Quarterly portfolio compliance summary", tags: ["compliance", "q1-2026"], expiry_date: null, created_at: "2026-02-01T08:00:00Z" },
+  { id: "m5", dealer_name: "Portfolio", file_name: "FCA Compliance Pack - Jan 2026.xlsx", file_path: "", file_size: 467000, file_type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", category: "Compliance", description: "FCA regulatory compliance pack", tags: ["fca", "jan-2026"], expiry_date: null, created_at: "2026-01-31T16:00:00Z" },
+  { id: "m6", dealer_name: "Portfolio", file_name: "Monthly Risk Dashboard - Feb 2026.pdf", file_path: "", file_size: 890000, file_type: "application/pdf", category: "Compliance", description: "Monthly risk analysis dashboard", tags: ["risk", "feb-2026"], expiry_date: null, created_at: "2026-02-08T11:00:00Z" },
+  { id: "m7", dealer_name: "Lookers Manchester", file_name: "Amber Dealers - Action Plan.docx", file_path: "", file_size: 79800, file_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", category: "Compliance", description: "Action plan for amber-rated dealers", tags: ["action-plan", "amber"], expiry_date: null, created_at: "2026-02-07T13:00:00Z" },
+  { id: "m8", dealer_name: "NewStart Motors", file_name: "NewStart Motors - Onboarding Checklist.pdf", file_path: "", file_size: 234000, file_type: "application/pdf", category: "Other", description: "Onboarding checklist for new dealer", tags: ["onboarding"], expiry_date: null, created_at: "2026-02-10T10:00:00Z" },
+  { id: "m9", dealer_name: "Arnold Clark Glasgow", file_name: "Arnold Clark - Training Certificates.pdf", file_path: "", file_size: 456000, file_type: "application/pdf", category: "Training", description: "Staff training completion certificates", tags: ["training", "certificates"], expiry_date: "2027-02-01", created_at: "2026-01-20T09:00:00Z" },
+  { id: "m10", dealer_name: "Evans Halshaw", file_name: "Evans Halshaw - Insurance Certificate 2026.pdf", file_path: "", file_size: 187000, file_type: "application/pdf", category: "Compliance", description: "Motor trade insurance certificate", tags: ["insurance"], expiry_date: "2027-01-15", created_at: "2026-01-15T10:00:00Z" },
+  { id: "m11", dealer_name: "Shirlaws Limited", file_name: "Shirlaws - Enhanced Due Diligence Report.pdf", file_path: "", file_size: 345000, file_type: "application/pdf", category: "Compliance", description: "Enhanced due diligence for high-risk dealer", tags: ["edd", "high-risk"], expiry_date: null, created_at: "2026-02-05T15:00:00Z" },
+  { id: "m12", dealer_name: "Thurlby Motors", file_name: "Thurlby Motors - Financial Statements 2025.xlsx", file_path: "", file_size: 523000, file_type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", category: "Financial", description: "Annual financial statements", tags: ["financial", "2025"], expiry_date: null, created_at: "2026-01-28T11:00:00Z" },
+];
+
 const Documents = () => {
+  const { demoMode } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -181,6 +198,11 @@ const Documents = () => {
   };
 
   const fetchDocuments = useCallback(async () => {
+    if (demoMode) {
+      setDocuments(MOCK_DOCUMENTS);
+      setLoading(false);
+      return;
+    }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
     const { data, error } = await supabase
@@ -189,7 +211,7 @@ const Documents = () => {
       .order("created_at", { ascending: false });
     if (!error && data) setDocuments(data as DealerDocument[]);
     setLoading(false);
-  }, []);
+  }, [demoMode]);
 
   useEffect(() => { fetchDocuments(); }, [fetchDocuments]);
 
