@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { RagBadge } from "@/components/RagBadge";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ import {
   CalendarCheck,
   Check,
   Copy,
+  UserX,
 } from "lucide-react";
 import { dealers } from "@/data/dealers";
 import { generateDealerAudit, AUDIT_SECTIONS, ControlCheck, AuditSection } from "@/data/auditFramework";
@@ -166,6 +168,22 @@ const Alerts = () => {
   // Duplicate detection
   const { activeDuplicates } = useDismissedDuplicates();
 
+  // Failed onboarding applications
+  const [failedApps, setFailedApps] = useState<{ id: string; dealer_name: string; failure_reason: string | null; updated_at: string }[]>([]);
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("onboarding_applications")
+        .select("id, dealer_name, failure_reason, updated_at")
+        .eq("user_id", user.id)
+        .eq("status", "failed")
+        .order("updated_at", { ascending: false });
+      if (data) setFailedApps(data);
+    })();
+  }, []);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -178,7 +196,7 @@ const Alerts = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <ShieldAlert className="w-4 h-4 text-rag-red" />
@@ -200,6 +218,15 @@ const Alerts = () => {
             </div>
             <span className={`text-3xl font-bold ${overdueRechecks.length > 0 ? "text-rag-red" : "text-foreground"}`}>
               {overdueRechecks.length}
+            </span>
+          </div>
+          <div className="bg-card rounded-xl border border-border p-5">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+              <UserX className="w-4 h-4 text-rag-red" />
+              Failed Onboarding
+            </div>
+            <span className={`text-3xl font-bold ${failedApps.length > 0 ? "text-rag-red" : "text-foreground"}`}>
+              {failedApps.length}
             </span>
           </div>
           <div className="bg-card rounded-xl border border-border p-5">
@@ -284,6 +311,49 @@ const Alerts = () => {
                             <Check className="w-3.5 h-3.5 mr-1" /> Complete
                           </Button>
                         </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Failed Onboarding */}
+        {failedApps.length > 0 && (
+          <div className="bg-card rounded-xl border border-border">
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <UserX className="w-4 h-4 text-rag-red" />
+                <h3 className="text-sm font-semibold text-foreground">Failed Onboarding Applications</h3>
+              </div>
+              <Badge variant="destructive" className="text-xs">
+                {failedApps.length} failed
+              </Badge>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="text-left px-5 py-3 font-medium">Dealer</th>
+                    <th className="text-left px-3 py-3 font-medium">Reason</th>
+                    <th className="text-left px-3 py-3 font-medium">Date</th>
+                    <th className="text-center px-3 py-3 font-medium w-20">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {failedApps.slice(0, 10).map((app) => (
+                    <tr key={app.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
+                      <td className="px-5 py-3.5 font-medium text-foreground">{app.dealer_name}</td>
+                      <td className="px-3 py-3.5 text-muted-foreground">{app.failure_reason || "—"}</td>
+                      <td className="px-3 py-3.5 text-muted-foreground">
+                        {new Date(app.updated_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      </td>
+                      <td className="px-3 py-3.5 text-center">
+                        <Button variant="ghost" size="sm" onClick={() => navigate("/pre-onboarding")} className="h-8 px-2">
+                          <ExternalLink className="w-4 h-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
