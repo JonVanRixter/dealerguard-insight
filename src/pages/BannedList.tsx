@@ -234,6 +234,35 @@ export default function BannedList() {
           </Dialog>
         </div>
 
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          {[
+            { label: "Total Banned", value: entities.length, icon: ShieldBan },
+            { label: "Dealers", value: entities.filter(e => e.entity_type === "dealer").length, icon: Building2 },
+            { label: "Directors", value: entities.filter(e => e.entity_type === "director").length, icon: User },
+            {
+              label: "Avg Credit Score",
+              value: (() => {
+                const scores = entities.map(e => e.credit_score).filter((s): s is number => s !== undefined);
+                return scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : "—";
+              })(),
+              icon: AlertTriangle,
+            },
+          ].map((s) => (
+            <Card key={s.label}>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="rounded-md bg-destructive/10 p-2">
+                  <s.icon className="w-5 h-5 text-destructive" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">{s.label}</p>
+                  <p className="text-2xl font-bold">{s.value}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
         {/* Search */}
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
