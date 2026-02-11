@@ -1,1 +1,4 @@
 project_id = "dialhfzoentqpewhunxg"
+
+[functions.fca-register]
+verify_jwt = false
