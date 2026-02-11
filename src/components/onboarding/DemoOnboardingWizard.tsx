@@ -161,6 +161,48 @@ function StepSearch({
 }
 
 /* ------------------------------------------------------------------ */
+/*  RAG colour helper for CreditSafe fields                            */
+/* ------------------------------------------------------------------ */
+function getCreditSafeRag(field: FieldResult): "green" | "amber" | "red" | null {
+  if (field.source !== "CreditSafe") return null;
+
+  const v = field.value.toLowerCase();
+
+  if (field.label === "Credit Score") {
+    const num = parseInt(v, 10);
+    if (isNaN(num)) return null;
+    if (num >= 60) return "green";
+    if (num >= 40) return "amber";
+    return "red";
+  }
+  if (field.label === "Risk Rating") {
+    if (v.includes("low")) return "green";
+    if (v.includes("medium") || v.includes("moderate")) return "amber";
+    return "red";
+  }
+  if (field.label === "CCJs") {
+    const num = parseInt(v, 10);
+    if (isNaN(num) || num === 0) return "green";
+    if (num <= 2) return "amber";
+    return "red";
+  }
+  if (field.label === "Days Beyond Terms (DBT)") {
+    const num = parseInt(v, 10);
+    if (isNaN(num)) return null;
+    if (num <= 14) return "green";
+    if (num <= 30) return "amber";
+    return "red";
+  }
+  return null;
+}
+
+const ragStyles = {
+  green: { border: "border-[hsl(142,71%,45%)]/30", bg: "bg-[hsl(142,71%,45%)]/5", text: "text-[hsl(142,71%,45%)]" },
+  amber: { border: "border-[hsl(38,92%,50%)]/30", bg: "bg-[hsl(38,92%,50%)]/5", text: "text-[hsl(38,92%,50%)]" },
+  red:   { border: "border-destructive/30", bg: "bg-destructive/5", text: "text-destructive" },
+};
+
+/* ------------------------------------------------------------------ */
 /*  Step 2 — Results Review                                            */
 /* ------------------------------------------------------------------ */
 function StepResults({ results }: { results: SearchResults }) {
@@ -175,7 +217,7 @@ function StepResults({ results }: { results: SearchResults }) {
           <CardTitle>Step 2: Search Results</CardTitle>
         </div>
         <CardDescription>
-          Data automatically retrieved from Companies House and FCA Register. Missing fields are highlighted in red.
+          Data automatically retrieved from Companies House, FCA Register, and CreditSafe. Missing fields are highlighted in red.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -193,21 +235,35 @@ function StepResults({ results }: { results: SearchResults }) {
         {/* Found fields */}
         {found.length > 0 && (
           <div className="space-y-1.5">
-            {found.map((f, i) => (
-              <div
-                key={i}
-                className="flex items-start justify-between gap-3 rounded-md border border-emerald-500/30 bg-emerald-500/5 px-3 py-2"
-              >
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">{f.label}</p>
-                  <p className="text-sm font-medium">{f.value}</p>
+            {found.map((f, i) => {
+              const rag = getCreditSafeRag(f);
+              const style = rag ? ragStyles[rag] : null;
+              return (
+                <div
+                  key={i}
+                  className={`flex items-start justify-between gap-3 rounded-md border px-3 py-2 ${
+                    style
+                      ? `${style.border} ${style.bg}`
+                      : "border-emerald-500/30 bg-emerald-500/5"
+                  }`}
+                >
+                  <div className="flex-1">
+                    <p className="text-xs text-muted-foreground">{f.label}</p>
+                    <p className={`text-sm font-medium ${style ? style.text : ""}`}>{f.value}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="secondary" className="text-[10px]">{f.source}</Badge>
+                    {rag === "red" ? (
+                      <AlertTriangle className="w-4 h-4 text-destructive" />
+                    ) : rag === "amber" ? (
+                      <AlertTriangle className="w-4 h-4 text-[hsl(38,92%,50%)]" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Badge variant="secondary" className="text-[10px]">{f.source}</Badge>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
