@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  ShieldBan, Plus, Trash2, Building2, User, Search, AlertTriangle, XCircle, AlertCircle,
+  ShieldBan, Plus, Trash2, Building2, User, Search, AlertTriangle,
 } from "lucide-react";
 
 interface BannedEntity {
@@ -83,44 +83,39 @@ function getCreditScoreColor(score: number | undefined) {
   return "text-destructive";
 }
 
-function FailedChecksBadges({ checks }: { checks: string[] }) {
-  const MAX_VISIBLE = 3;
-  const visible = checks.slice(0, MAX_VISIBLE);
-  const remaining = checks.length - MAX_VISIBLE;
+function FailedChecksSummary({ checks }: { checks: string[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const critical = checks.filter((c) => CRITICAL_CHECKS.includes(c));
+  const warnings = checks.filter((c) => !CRITICAL_CHECKS.includes(c));
+
+  if (checks.length === 0) return <span className="text-muted-foreground text-sm">—</span>;
 
   return (
-    <div className="flex flex-wrap gap-1">
-      {visible.map((c) => {
-        const isCritical = CRITICAL_CHECKS.includes(c);
-        return (
-          <span
-            key={c}
-            className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${
-              isCritical
-                ? "bg-destructive/10 text-destructive border-destructive/20"
-                : "bg-[hsl(38,92%,50%)]/10 text-[hsl(38,92%,50%)] border-[hsl(38,92%,50%)]/20"
-            }`}
-          >
-            {isCritical ? <XCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
-            {c}
-          </span>
-        );
-      })}
-      {remaining > 0 && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-full border border-border bg-muted text-muted-foreground font-medium cursor-default">
-              +{remaining} more
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            <div className="space-y-1">
-              {checks.slice(MAX_VISIBLE).map((c) => (
-                <p key={c} className="text-xs">{c}</p>
-              ))}
-            </div>
-          </TooltipContent>
-        </Tooltip>
+    <div className="text-sm">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="text-left hover:bg-muted/50 p-1 rounded transition-colors w-full"
+      >
+        {critical.length > 0 && (
+          <div className="text-destructive font-medium">
+            Critical: <span className="font-semibold">{critical.length}</span>
+          </div>
+        )}
+        {warnings.length > 0 && (
+          <div className="text-[hsl(38,92%,50%)] font-medium">
+            Warnings: <span className="font-semibold">{warnings.length}</span>
+          </div>
+        )}
+      </button>
+      {expanded && (
+        <div className="mt-2 ml-4 space-y-1 text-xs border-l-2 border-border pl-3">
+          {critical.map((c) => (
+            <div key={c} className="text-destructive">⨯ {c}</div>
+          ))}
+          {warnings.map((c) => (
+            <div key={c} className="text-[hsl(38,92%,50%)]">⚠ {c}</div>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -249,7 +244,7 @@ export default function BannedList() {
             </TableCell>
             <TableCell className="text-sm">{new Date(e.banned_at).toLocaleDateString()}</TableCell>
             <TableCell>
-              <FailedChecksBadges checks={e.failed_checks || []} />
+              <FailedChecksSummary checks={e.failed_checks || []} />
             </TableCell>
             <TableCell>
               <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => handleDelete(e.id)}>

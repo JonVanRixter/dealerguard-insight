@@ -46,16 +46,16 @@ export function UserProfileDropdown() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuItem onClick={() => navigate("/settings")} className="gap-2 cursor-pointer">
-            <User className="w-4 h-4" /> Profile Settings
+            <User className="w-4 h-4" /> My Profile
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => navigate("/settings")} className="gap-2 cursor-pointer">
-            <Bell className="w-4 h-4" /> Notification Preferences
+            <Bell className="w-4 h-4" /> Notifications
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => navigate("/settings")} className="gap-2 cursor-pointer">
-            <Settings className="w-4 h-4" /> Account Settings
+            <Settings className="w-4 h-4" /> Preferences
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setActivityOpen(true)} className="gap-2 cursor-pointer">
-            <Activity className="w-4 h-4" /> My Activity Log
+            <Activity className="w-4 h-4" /> Activity Log
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setHelpOpen(true)} className="gap-2 cursor-pointer">
@@ -81,7 +81,7 @@ export function UserProfileDropdown() {
             </div>
             <div>
               <p className="text-muted-foreground mb-1">Phone</p>
-              <p className="font-medium text-foreground">+44 (0)20 1234 5678</p>
+              <p className="font-medium text-foreground">01929 26040</p>
             </div>
             <div>
               <p className="text-muted-foreground mb-1">Knowledge Base</p>
