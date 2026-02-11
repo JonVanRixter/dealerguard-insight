@@ -37,6 +37,10 @@ serve(async (req) => {
           `${FCA_BASE}/V0.1/Search?q=${q}&type=${type}`,
           { headers }
         );
+        if (res.status === 404) {
+          result = { Status: "Not Found", Data: [], Message: `No results found for "${params.query}"` };
+          break;
+        }
         if (!res.ok) {
           const text = await res.text();
           throw new Error(`FCA search failed [${res.status}]: ${text}`);
