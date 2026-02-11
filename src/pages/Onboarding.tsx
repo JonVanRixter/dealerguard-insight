@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,11 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { OnboardingDocUpload } from "@/components/onboarding/OnboardingDocUpload";
 import { CreditSafeSearch } from "@/components/onboarding/CreditSafeSearch";
+import { ScreeningDataBadge } from "@/components/onboarding/ScreeningDataBadge";
+import { FcaRegisterCard } from "@/components/dealer/FcaRegisterCard";
 import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
 import { useToast } from "@/hooks/use-toast";
 import {
   Building2, PoundSterling, Users, FileText,
-  CheckCircle2, FileUp, ArrowLeft, ArrowRight, Loader2,
+  CheckCircle2, FileUp, ArrowLeft, ArrowRight, Loader2, ShieldCheck,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -23,6 +25,8 @@ interface CheckItem {
   label: string;
   description?: string;
   docCategory?: string;
+  /** Key in screeningDataMap to auto-populate value from screening results */
+  dataKey?: string;
 }
 
 function ChecklistSection({
@@ -34,6 +38,7 @@ function ChecklistSection({
   dealerName,
   savedChecks,
   onChecksChange,
+  screeningDataMap,
 }: {
   title: string;
   sectionKey: string;
@@ -43,6 +48,7 @@ function ChecklistSection({
   dealerName: string;
   savedChecks: boolean[];
   onChecksChange: (checks: boolean[]) => void;
+  screeningDataMap?: Record<string, string>;
 }) {
   const checks = savedChecks.length === items.length ? savedChecks : new Array(items.length).fill(false);
   const toggle = (i: number) => {
@@ -81,6 +87,9 @@ function ChecklistSection({
                   {item.description && (
                     <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
                   )}
+                  {item.dataKey && screeningDataMap?.[item.dataKey] && (
+                    <ScreeningDataBadge label="From screening" value={screeningDataMap[item.dataKey]} />
+                  )}
                 </div>
               </label>
               {item.docCategory && dealerName && (
@@ -116,11 +125,11 @@ function ChecklistSection({
 /*  Section data                                                       */
 /* ------------------------------------------------------------------ */
 const businessItems: CheckItem[] = [
-  { label: "Company registration number", description: "Verified against Companies House" },
-  { label: "Registered address", description: "Official registered office address" },
+  { label: "Company registration number", description: "Verified against Companies House", dataKey: "companyRegNo" },
+  { label: "Registered address", description: "Official registered office address", dataKey: "registeredAddress" },
   { label: "Trading address(es)", description: "All physical trading locations" },
-  { label: "VAT registration", description: "VAT number and registration certificate", docCategory: "Financial" },
-  { label: "FCA permissions", description: "If offering retail finance — FCA registration details", docCategory: "Compliance" },
+  { label: "VAT registration", description: "VAT number and registration certificate", docCategory: "Financial", dataKey: "vatRegistration" },
+  { label: "FCA permissions", description: "If offering retail finance — FCA registration details", docCategory: "Compliance", dataKey: "fcaPermissions" },
   { label: "Organisational chart", description: "Company structure showing key personnel and reporting lines", docCategory: "Compliance" },
 ];
 
@@ -132,7 +141,7 @@ const financialItems: CheckItem[] = [
 ];
 
 const directorsItems: CheckItem[] = [
-  { label: "Director details for KYC / AML", description: "Full name, DOB, residential address, nationality for each director", docCategory: "Compliance" },
+  { label: "Director details for KYC / AML", description: "Full name, DOB, residential address, nationality for each director", docCategory: "Compliance", dataKey: "fcaIndividuals" },
   { label: "Directorship history", description: "Previous and concurrent directorships for all directors" },
   { label: "Personal guarantees", description: "If required — signed PG documentation from guarantors", docCategory: "Legal" },
 ];
@@ -155,7 +164,7 @@ const SECTIONS = [
 export default function Onboarding() {
   const navigate = useNavigate();
   const location = useLocation();
-  const locState = location.state as { dealerName?: string; companyNumber?: string } | null;
+  const locState = location.state as { dealerName?: string; companyNumber?: string; screeningResults?: Record<string, string> } | null;
   const { toast } = useToast();
 
   const { state, update, saving, save } = useOnboardingPersistence();
@@ -168,8 +177,53 @@ export default function Onboarding() {
   const [seeded, setSeeded] = useState(false);
   if (!seeded && locState?.dealerName && !state.dealerName) {
     setSeeded(true);
-    update({ dealerName: locState.dealerName, companyNumber: locState.companyNumber || "", stage: "application" });
+    update({
+      dealerName: locState.dealerName,
+      companyNumber: locState.companyNumber || "",
+      stage: "application",
+      screeningResults: locState.screeningResults || {},
+    });
   }
+
+  // Parse screening data into a flat map for checklist display
+  const screeningDataMap = useMemo(() => {
+    const results = state.screeningResults || locState?.screeningResults || {};
+    const map: Record<string, string> = {};
+
+    // CreditSafe data
+    if (results.creditSafe) {
+      try {
+        const cs = JSON.parse(results.creditSafe);
+        if (cs.regNo) map.companyRegNo = cs.regNo;
+        if (cs.score) map.creditScore = `${cs.score}/${cs.maxScore || "100"} (${cs.riskLevel || "N/A"})`;
+        if (cs.companyName) map.companyName = cs.companyName;
+      } catch {}
+    }
+
+    // FCA data
+    if (results.fca) {
+      try {
+        const fca = JSON.parse(results.fca);
+        if (fca.permissions?.length > 0) {
+          map.fcaPermissions = fca.permissions.slice(0, 3).join(", ") + (fca.permissions.length > 3 ? ` (+${fca.permissions.length - 3} more)` : "");
+        }
+        if (fca.frn) map.fcaFrn = `FRN: ${fca.frn} — ${fca.status || "Unknown"}`;
+        if (fca.individuals?.length > 0) {
+          map.fcaIndividuals = fca.individuals.slice(0, 3).map((i: any) => i.name).join(", ") + (fca.individuals.length > 3 ? ` (+${fca.individuals.length - 3} more)` : "");
+        }
+        if (fca.companiesHouseNumber) {
+          map.companyRegNo = map.companyRegNo || fca.companiesHouseNumber;
+        }
+      } catch {}
+    }
+
+    // Company number from state
+    if (!map.companyRegNo && companyNumber) {
+      map.companyRegNo = companyNumber;
+    }
+
+    return map;
+  }, [state.screeningResults, locState?.screeningResults, companyNumber]);
 
   const tabOrder = SECTIONS.map((s) => s.key);
   const currentIdx = tabOrder.indexOf(activeTab);
@@ -238,8 +292,57 @@ export default function Onboarding() {
             {/* CreditSafe */}
             <div className="pt-2 border-t border-border">
               <p className="text-xs font-medium text-muted-foreground mb-2">CreditSafe Report</p>
-              <CreditSafeSearch defaultSearch={dealerName} companyNumber={companyNumber} />
+              <CreditSafeSearch
+                defaultSearch={dealerName}
+                companyNumber={companyNumber}
+                onResult={(res) => {
+                  update({ screeningResults: { ...state.screeningResults, creditSafe: JSON.stringify(res) } });
+                }}
+              />
             </div>
+            {/* FCA Register */}
+            <div className="pt-2 border-t border-border">
+              <p className="text-xs font-medium text-muted-foreground mb-2">FCA Register</p>
+              <FcaRegisterCard
+                dealerName={dealerName}
+                onDataLoaded={(data) => {
+                  update({ screeningResults: { ...state.screeningResults, fca: JSON.stringify(data) } });
+                }}
+              />
+            </div>
+
+            {/* Screening data summary */}
+            {Object.keys(screeningDataMap).length > 0 && (
+              <div className="pt-2 border-t border-border">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Collected Screening Data</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {screeningDataMap.companyRegNo && (
+                    <div className="rounded-md bg-muted/30 px-3 py-2">
+                      <p className="text-[10px] text-muted-foreground">Company Reg No</p>
+                      <p className="text-sm font-medium">{screeningDataMap.companyRegNo}</p>
+                    </div>
+                  )}
+                  {screeningDataMap.creditScore && (
+                    <div className="rounded-md bg-muted/30 px-3 py-2">
+                      <p className="text-[10px] text-muted-foreground">Credit Score</p>
+                      <p className="text-sm font-medium">{screeningDataMap.creditScore}</p>
+                    </div>
+                  )}
+                  {screeningDataMap.fcaFrn && (
+                    <div className="rounded-md bg-muted/30 px-3 py-2">
+                      <p className="text-[10px] text-muted-foreground">FCA Status</p>
+                      <p className="text-sm font-medium">{screeningDataMap.fcaFrn}</p>
+                    </div>
+                  )}
+                  {screeningDataMap.fcaPermissions && (
+                    <div className="rounded-md bg-muted/30 px-3 py-2">
+                      <p className="text-[10px] text-muted-foreground">FCA Permissions</p>
+                      <p className="text-sm font-medium">{screeningDataMap.fcaPermissions}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -263,6 +366,7 @@ export default function Onboarding() {
                 dealerName={dealerName}
                 savedChecks={checklistProgress[s.key] || []}
                 onChecksChange={(checks) => updateChecks(s.key, checks)}
+                screeningDataMap={screeningDataMap}
               />
             </TabsContent>
           ))}

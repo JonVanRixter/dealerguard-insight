@@ -69,7 +69,7 @@ const Dealers = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [regionFilter, setRegionFilter] = useState(initialRegion);
   const [docCounts, setDocCounts] = useState<Map<string, number>>(new Map());
-
+  const [onboardingMap, setOnboardingMap] = useState<Map<string, { stage: string; status: string; screeningResults: Record<string, string> }>>(new Map());
   const fetchDocCounts = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -84,6 +84,27 @@ const Dealers = () => {
   }, []);
 
   useEffect(() => { fetchDocCounts(); }, [fetchDocCounts]);
+
+  // Fetch onboarding applications
+  const fetchOnboarding = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase
+      .from("onboarding_applications")
+      .select("dealer_name, stage, status, screening_results")
+      .eq("user_id", user.id);
+    if (data) {
+      const map = new Map<string, { stage: string; status: string; screeningResults: Record<string, string> }>();
+      data.forEach((d) => map.set(d.dealer_name, {
+        stage: d.stage,
+        status: d.status,
+        screeningResults: (d.screening_results as unknown as Record<string, string>) || {},
+      }));
+      setOnboardingMap(map);
+    }
+  }, []);
+
+  useEffect(() => { fetchOnboarding(); }, [fetchOnboarding]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>("score");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -413,6 +434,7 @@ const Dealers = () => {
                       <SortHeader label="Region" sortKeyVal="region" />
                        <th className="text-left px-3 py-3 font-medium hidden lg:table-cell">Last Audit</th>
                       <th className="text-left px-3 py-3 font-medium hidden xl:table-cell">Credit Score</th>
+                      <th className="text-left px-3 py-3 font-medium hidden lg:table-cell">Onboarding</th>
                       <th className="text-center px-3 py-3 font-medium">Trend</th>
                       <th className="px-3 py-3 font-medium"><span className="sr-only">Actions</span></th>
                     </tr>
@@ -471,6 +493,23 @@ const Dealers = () => {
                                 const cs = Math.min(100, Math.max(1, Math.round(dealer.score * 0.85 + (dealer.name.charCodeAt(0) % 20))));
                                 const color = cs >= 71 ? "text-emerald-600" : cs >= 40 ? "text-amber-600" : "text-destructive";
                                 return <span className={`font-semibold text-sm ${color}`}>{cs}</span>;
+                              })()}
+                            </td>
+                            <td className="px-3 py-3 hidden lg:table-cell">
+                              {(() => {
+                                const ob = onboardingMap.get(dealer.name);
+                                if (!ob) return <span className="text-xs text-muted-foreground">—</span>;
+                                const stageColors: Record<string, string> = {
+                                  "pre-screening": "bg-muted text-muted-foreground",
+                                  application: "bg-primary/10 text-primary",
+                                  completed: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
+                                  failed: "bg-destructive/15 text-destructive",
+                                };
+                                return (
+                                  <Badge variant="outline" className={`text-[10px] ${stageColors[ob.stage] || ""}`}>
+                                    {ob.stage}
+                                  </Badge>
+                                );
                               })()}
                             </td>
                             <td className="px-3 py-3 text-center"><TrendIcon trend={dealer.trend} /></td>
