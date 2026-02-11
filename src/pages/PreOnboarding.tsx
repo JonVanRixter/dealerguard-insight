@@ -340,20 +340,19 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
           ))}
         </div>
 
-        {/* Full Dealer Enrichment */}
+        {/* Full Dealer Enrichment — auto-triggers when dealer name is entered */}
         <div className="space-y-2">
-          <Label className="flex items-center gap-2"><Search className="w-4 h-4" /> Full Dealer Enrichment</Label>
-          <p className="text-xs text-muted-foreground">Auto-search FCA, Companies House &amp; CreditSafe in one click.</p>
+          <Label className="flex items-center gap-2"><Search className="w-4 h-4" /> Automatic Dealer Enrichment</Label>
+          <p className="text-xs text-muted-foreground">Automatically searches FCA, Companies House &amp; CreditSafe when you enter a dealer name.</p>
           <DealerEnrichment
             dealerName={dealerName}
             companyNumber={companyNumber}
+            autoTrigger
             onEnriched={(result, screeningMap) => {
-              // Merge enrichment results into screening data
               const enrichmentData: Record<string, string> = {};
               for (const [k, v] of Object.entries(screeningMap)) {
                 if (v) enrichmentData[k] = v;
               }
-              // Store the full enrichment JSON too
               enrichmentData._enrichment = JSON.stringify(result);
               onScreeningUpdate({ ...screeningResults, ...enrichmentData });
             }}
