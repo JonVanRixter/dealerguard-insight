@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Save, TrendingDown, AlertTriangle, ShieldAlert, Award } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { dealers } from "@/data/dealers";
 import type { UserSettings } from "@/hooks/useUserSettings";
 
 interface AlertThresholdsProps {
@@ -12,6 +14,7 @@ interface AlertThresholdsProps {
 }
 
 export function AlertThresholds({ settings, onSave, saving }: AlertThresholdsProps) {
+  const { toast } = useToast();
   const [local, setLocal] = useState({
     amber_threshold: settings.amber_threshold,
     green_threshold: settings.green_threshold,
@@ -21,8 +24,34 @@ export function AlertThresholds({ settings, onSave, saving }: AlertThresholdsPro
     css_reward_threshold: settings.css_reward_threshold,
   });
 
-  const handleSave = () => {
-    onSave(local);
+  const handleSave = async () => {
+    // Check which dealers change RAG status with new thresholds
+    const getRag = (score: number, amber: number, green: number) => {
+      if (score < amber) return "red";
+      if (score < green) return "amber";
+      return "green";
+    };
+
+    const affectedDealers = dealers.filter((d) => {
+      const oldRag = getRag(d.score, settings.amber_threshold, settings.green_threshold);
+      const newRag = getRag(d.score, local.amber_threshold, local.green_threshold);
+      return newRag !== oldRag && (newRag === "red" || newRag === "amber");
+    });
+
+    await onSave(local);
+
+    if (affectedDealers.length > 0) {
+      toast({
+        title: "Thresholds Updated",
+        description: `${affectedDealers.length} dealer${affectedDealers.length > 1 ? "s" : ""} now require${affectedDealers.length === 1 ? "s" : ""} attention based on updated risk appetite.`,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Thresholds Saved",
+        description: "No dealers affected by this change.",
+      });
+    }
   };
 
   return (
