@@ -10,6 +10,7 @@ import {
   FolderOpen,
   UserPlus,
   ClipboardCheck,
+  ShieldBan,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +20,7 @@ const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Pre‑Onboarding", url: "/pre-onboarding", icon: UserPlus },
   { title: "Onboarding", url: "/onboarding", icon: ClipboardCheck },
+  { title: "Banned List", url: "/banned-list", icon: ShieldBan },
   { title: "Dealer Portfolio", url: "/dealers", icon: Building2 },
   { title: "Documents", url: "/documents", icon: FolderOpen },
   { title: "Alerts", url: "/alerts", icon: Bell },

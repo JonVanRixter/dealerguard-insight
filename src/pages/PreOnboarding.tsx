@@ -11,30 +11,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { OnboardingDocUpload } from "@/components/onboarding/OnboardingDocUpload";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   Users, Phone, ShieldCheck, Building2, Car, PoundSterling,
   CheckCircle2, AlertTriangle, XCircle, ArrowRight, Search,
-  ClipboardList, FileSearch, Landmark,
+  ClipboardList, FileSearch, Landmark, FileUp, ShieldBan,
 } from "lucide-react";
+
+/* ------------------------------------------------------------------ */
+/*  Shared state for dealer name across tabs                           */
+/* ------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------ */
 /*  1.1  Dealer Segmentation                                          */
 /* ------------------------------------------------------------------ */
-function DealerSegmentation() {
-  const [seg, setSeg] = useState({
-    franchise: "",
-    size: "",
-    stockType: [] as string[],
-    existingFinance: "",
-  });
+interface SegData {
+  franchise: string;
+  size: string;
+  stockType: string[];
+  existingFinance: string;
+}
 
+function DealerSegmentation({ seg, setSeg, dealerName }: { seg: SegData; setSeg: (s: SegData) => void; dealerName: string }) {
   const toggleStock = (val: string) =>
-    setSeg((s) => ({
-      ...s,
-      stockType: s.stockType.includes(val)
-        ? s.stockType.filter((v) => v !== val)
-        : [...s.stockType, val],
-    }));
+    setSeg({
+      ...seg,
+      stockType: seg.stockType.includes(val)
+        ? seg.stockType.filter((v) => v !== val)
+        : [...seg.stockType, val],
+    });
 
   const filled = [seg.franchise, seg.size, seg.stockType.length > 0, seg.existingFinance].filter(Boolean).length;
 
@@ -50,7 +57,6 @@ function DealerSegmentation() {
       <CardContent className="space-y-6">
         <Progress value={(filled / 4) * 100} className="h-2" />
 
-        {/* Franchise status */}
         <div className="space-y-2">
           <Label>Franchise Status</Label>
           <Select value={seg.franchise} onValueChange={(v) => setSeg({ ...seg, franchise: v })}>
@@ -62,7 +68,6 @@ function DealerSegmentation() {
           </Select>
         </div>
 
-        {/* Size */}
         <div className="space-y-2">
           <Label>Size (units sold annually)</Label>
           <Select value={seg.size} onValueChange={(v) => setSeg({ ...seg, size: v })}>
@@ -76,23 +81,18 @@ function DealerSegmentation() {
           </Select>
         </div>
 
-        {/* Stock type */}
         <div className="space-y-2">
           <Label>Stock Type</Label>
           <div className="flex flex-wrap gap-3">
             {["New", "Used", "Prestige", "Commercial"].map((t) => (
               <label key={t} className="flex items-center gap-2 text-sm">
-                <Checkbox
-                  checked={seg.stockType.includes(t)}
-                  onCheckedChange={() => toggleStock(t)}
-                />
+                <Checkbox checked={seg.stockType.includes(t)} onCheckedChange={() => toggleStock(t)} />
                 {t}
               </label>
             ))}
           </div>
         </div>
 
-        {/* Existing finance */}
         <div className="space-y-2">
           <Label>Existing Finance Relationships</Label>
           <Select value={seg.existingFinance} onValueChange={(v) => setSeg({ ...seg, existingFinance: v })}>
@@ -103,6 +103,16 @@ function DealerSegmentation() {
               <SelectItem value="multi">Multiple lenders</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Documents */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2"><FileUp className="w-4 h-4" /> Supporting Documents</Label>
+          {dealerName ? (
+            <OnboardingDocUpload dealerName={dealerName} category="Pre-Screening" compact />
+          ) : (
+            <p className="text-xs text-muted-foreground">Enter a dealer name above to upload documents.</p>
+          )}
         </div>
 
         {filled === 4 && (
@@ -126,7 +136,7 @@ function DealerSegmentation() {
 /* ------------------------------------------------------------------ */
 /*  1.2  Initial Qualification Call                                    */
 /* ------------------------------------------------------------------ */
-function QualificationCall() {
+function QualificationCall({ notes, setNotes, dealerName }: { notes: string; setNotes: (n: string) => void; dealerName: string }) {
   const objectives = [
     { label: "Understand dealer profile & stocking needs", icon: Building2 },
     { label: "Confirm minimum criteria met", icon: CheckCircle2 },
@@ -135,8 +145,6 @@ function QualificationCall() {
   ];
 
   const [checks, setChecks] = useState<boolean[]>(new Array(objectives.length).fill(false));
-  const [notes, setNotes] = useState("");
-
   const toggle = (i: number) => setChecks((c) => c.map((v, j) => (j === i ? !v : v)));
   const done = checks.filter(Boolean).length;
 
@@ -179,6 +187,16 @@ function QualificationCall() {
           />
         </div>
 
+        {/* Documents */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2"><FileUp className="w-4 h-4" /> Call Evidence / Documents</Label>
+          {dealerName ? (
+            <OnboardingDocUpload dealerName={dealerName} category="Qualification" compact />
+          ) : (
+            <p className="text-xs text-muted-foreground">Enter a dealer name above to upload documents.</p>
+          )}
+        </div>
+
         {done === objectives.length && (
           <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
@@ -195,9 +213,14 @@ function QualificationCall() {
 /* ------------------------------------------------------------------ */
 type CheckStatus = "pending" | "pass" | "fail" | "running";
 
-function PreScreeningChecks() {
+function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFail }: {
+  dealerName: string;
+  companyNumber: string;
+  setCompanyNumber: (v: string) => void;
+  onFail: (failedChecks: string[]) => void;
+}) {
   const navigate = useNavigate();
-  const [companyNumber, setCompanyNumber] = useState("");
+  const { toast } = useToast();
   const [statuses, setStatuses] = useState<Record<string, CheckStatus>>({
     companiesHouse: "pending",
     openBanking: "pending",
@@ -206,7 +229,6 @@ function PreScreeningChecks() {
 
   const runCheck = (key: string) => {
     setStatuses((s) => ({ ...s, [key]: "running" }));
-    // Simulate check
     setTimeout(() => {
       setStatuses((s) => ({ ...s, [key]: Math.random() > 0.15 ? "pass" : "fail" }));
     }, 1500 + Math.random() * 1000);
@@ -233,6 +255,22 @@ function PreScreeningChecks() {
 
   const allDone = Object.values(statuses).every((s) => s === "pass" || s === "fail");
   const allPass = Object.values(statuses).every((s) => s === "pass");
+  const failedKeys = Object.entries(statuses).filter(([, s]) => s === "fail").map(([k]) => k);
+
+  const handleBanDealer = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("banned_entities").insert({
+      entity_type: "dealer",
+      entity_name: dealerName || "Unknown Dealer",
+      company_name: companyNumber,
+      reason: "Failed pre-screening checks",
+      failed_checks: failedKeys,
+      banned_by: user.id,
+    });
+    onFail(failedKeys);
+    toast({ title: "Dealer Flagged", description: `${dealerName || "Dealer"} added to banned list.`, variant: "destructive" });
+  };
 
   const checks = [
     { key: "companiesHouse", label: "Companies House Quick Lookup", icon: Landmark, description: "Verify incorporation status, directors, and filing history" },
@@ -254,11 +292,7 @@ function PreScreeningChecks() {
           <div className="flex-1 space-y-2">
             <Label>Companies House Number</Label>
             <div className="flex gap-2">
-              <Input
-                placeholder="e.g. 12345678"
-                value={companyNumber}
-                onChange={(e) => setCompanyNumber(e.target.value)}
-              />
+              <Input placeholder="e.g. 12345678" value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} />
               <Button onClick={runAll} disabled={!companyNumber} className="shrink-0 gap-2">
                 <Search className="w-4 h-4" /> Run All Checks
               </Button>
@@ -268,10 +302,7 @@ function PreScreeningChecks() {
 
         <div className="space-y-3">
           {checks.map((c) => (
-            <div
-              key={c.key}
-              className="flex items-center justify-between rounded-lg border border-border p-4"
-            >
+            <div key={c.key} className="flex items-center justify-between rounded-lg border border-border p-4">
               <div className="flex items-center gap-3">
                 <c.icon className="w-5 h-5 text-muted-foreground" />
                 <div>
@@ -281,17 +312,22 @@ function PreScreeningChecks() {
               </div>
               <div className="flex items-center gap-3">
                 {statusBadge(statuses[c.key])}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => runCheck(c.key)}
-                  disabled={statuses[c.key] === "running" || !companyNumber}
-                >
+                <Button size="sm" variant="ghost" onClick={() => runCheck(c.key)} disabled={statuses[c.key] === "running" || !companyNumber}>
                   Run
                 </Button>
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Documents */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2"><FileUp className="w-4 h-4" /> Pre-Screening Documents</Label>
+          {dealerName ? (
+            <OnboardingDocUpload dealerName={dealerName} category="Pre-Screening" compact />
+          ) : (
+            <p className="text-xs text-muted-foreground">Enter a dealer name above to upload documents.</p>
+          )}
         </div>
 
         {allDone && (
@@ -308,7 +344,7 @@ function PreScreeningChecks() {
                 <div className="text-sm">
                   <p className="font-medium text-emerald-700 dark:text-emerald-400">All checks passed</p>
                   <p className="text-muted-foreground mt-1">This dealer is cleared to proceed to full onboarding.</p>
-                  <Button onClick={() => navigate("/onboarding")} className="mt-3 gap-2">
+                  <Button onClick={() => navigate("/onboarding", { state: { dealerName, companyNumber } })} className="mt-3 gap-2">
                     <ArrowRight className="w-4 h-4" /> Proceed to Application &amp; Due Diligence
                   </Button>
                 </div>
@@ -316,9 +352,19 @@ function PreScreeningChecks() {
             ) : (
               <>
                 <XCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
-                <div className="text-sm">
+                <div className="text-sm space-y-2">
                   <p className="font-medium text-destructive">One or more checks failed</p>
-                  <p className="text-muted-foreground mt-1">Review failed items before proceeding. Manual override may be required.</p>
+                  <p className="text-muted-foreground">
+                    Failed: {failedKeys.join(", ")}. This dealer cannot proceed.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button variant="destructive" size="sm" className="gap-2" onClick={handleBanDealer}>
+                      <ShieldBan className="w-4 h-4" /> Add to Banned List
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => navigate("/banned-list")}>
+                      View Banned List
+                    </Button>
+                  </div>
                 </div>
               </>
             )}
@@ -333,6 +379,13 @@ function PreScreeningChecks() {
 /*  Main page                                                          */
 /* ------------------------------------------------------------------ */
 export default function PreOnboarding() {
+  const [dealerName, setDealerName] = useState("");
+  const [companyNumber, setCompanyNumber] = useState("");
+  const [seg, setSeg] = useState<SegData>({ franchise: "", size: "", stockType: [], existingFinance: "" });
+  const [qualNotes, setQualNotes] = useState("");
+  const [failed, setFailed] = useState(false);
+  const [failedChecks, setFailedChecks] = useState<string[]>([]);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -341,6 +394,28 @@ export default function PreOnboarding() {
           <p className="text-muted-foreground mt-1">Attraction &amp; Qualification — assess new dealer prospects before full onboarding.</p>
         </div>
 
+        {/* Dealer name input — shared across all tabs */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex gap-4 items-end">
+              <div className="flex-1 space-y-2">
+                <Label>Dealer / Company Name</Label>
+                <Input
+                  placeholder="Enter dealer name to begin…"
+                  value={dealerName}
+                  onChange={(e) => setDealerName(e.target.value)}
+                  className="max-w-md"
+                />
+              </div>
+              {failed && (
+                <Badge variant="destructive" className="gap-1 mb-2">
+                  <ShieldBan className="w-3 h-3" /> Failed — Banned
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         <Tabs defaultValue="segmentation" className="space-y-6">
           <TabsList>
             <TabsTrigger value="segmentation" className="gap-2"><Users className="w-4 h-4" />Segmentation</TabsTrigger>
@@ -348,9 +423,20 @@ export default function PreOnboarding() {
             <TabsTrigger value="screening" className="gap-2"><FileSearch className="w-4 h-4" />Pre‑Screening</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="segmentation"><DealerSegmentation /></TabsContent>
-          <TabsContent value="qualification"><QualificationCall /></TabsContent>
-          <TabsContent value="screening"><PreScreeningChecks /></TabsContent>
+          <TabsContent value="segmentation">
+            <DealerSegmentation seg={seg} setSeg={setSeg} dealerName={dealerName} />
+          </TabsContent>
+          <TabsContent value="qualification">
+            <QualificationCall notes={qualNotes} setNotes={setQualNotes} dealerName={dealerName} />
+          </TabsContent>
+          <TabsContent value="screening">
+            <PreScreeningChecks
+              dealerName={dealerName}
+              companyNumber={companyNumber}
+              setCompanyNumber={setCompanyNumber}
+              onFail={(checks) => { setFailed(true); setFailedChecks(checks); }}
+            />
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
