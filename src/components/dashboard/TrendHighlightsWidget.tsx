@@ -98,7 +98,7 @@ export function TrendHighlightsWidget() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm text-foreground leading-snug">
-              <span className="font-semibold">{topGainer.dealerName}</span> improved most
+              <span className="font-semibold">{topGainer.dealerName}</span> — compliance leader
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               +{topGainer.changeFromStart}pts over 12 months
@@ -114,7 +114,7 @@ export function TrendHighlightsWidget() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm text-foreground leading-snug">
-              <span className="font-semibold">{topDecliner.dealerName}</span> declined most
+              <span className="font-semibold">{topDecliner.dealerName}</span> — requires attention
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {topDecliner.changeFromStart}pts over 12 months

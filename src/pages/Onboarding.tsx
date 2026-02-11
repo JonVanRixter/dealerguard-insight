@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,7 +16,6 @@ import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
 import { useToast } from "@/hooks/use-toast";
 import { ScreeningDataEditor } from "@/components/onboarding/ScreeningDataEditor";
 import { generateOnboardingPdf } from "@/utils/onboardingPdfExport";
-import { DemoOnboardingWizard } from "@/components/onboarding/DemoOnboardingWizard";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -216,7 +215,127 @@ const SECTIONS = [
 /* ------------------------------------------------------------------ */
 /*  Detail modal data for demo mode                                    */
 /* ------------------------------------------------------------------ */
-const SECTION_DETAILS: Record<string, { title: string; content: React.ReactNode }> = {
+function DbsDetailContent() {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploaded, setUploaded] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm text-muted-foreground mb-2">Staff Requiring Enhanced DBS Checks</p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">Mark Roberts — Sales Manager</p>
+              <p className="text-xs text-muted-foreground">Enhanced DBS required</p>
+            </div>
+            <Badge variant="destructive" className="text-xs">{uploaded ? "Pending Review" : "Missing"}</Badge>
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">Lisa Evans — Sales Executive</p>
+              <p className="text-xs text-muted-foreground">Enhanced DBS required</p>
+            </div>
+            <Badge variant="destructive" className="text-xs">Missing</Badge>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        <div><p className="text-muted-foreground">Deadline</p><p className="font-medium text-destructive">14 days remaining</p></div>
+        <div><p className="text-muted-foreground">Status</p><p className="font-medium text-destructive">{uploaded ? "Certificate received — Under TCG review" : "Action Required"}</p></div>
+      </div>
+      {uploaded && (
+        <div className="flex items-center gap-2 text-sm text-rag-green">
+          <CheckCircle2 className="w-4 h-4" /> {uploaded}
+        </div>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            setUploaded(file.name);
+            toast({ title: "DBS certificate uploaded successfully", description: "Certificate received — Under TCG review" });
+          }
+          e.target.value = "";
+        }}
+      />
+      <Button variant="outline" size="sm" className="gap-2" onClick={() => fileInputRef.current?.click()}>
+        <FileUp className="w-4 h-4" /> Upload DBS Certificate
+      </Button>
+    </div>
+  );
+}
+
+function TrainingDetailContent() {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploaded, setUploaded] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        <div><p className="text-muted-foreground">Certificates Uploaded</p><p className="font-medium text-foreground">{uploaded ? 2 : 1}</p></div>
+        <div><p className="text-muted-foreground">Status</p><p className="font-medium text-rag-amber">Under Review</p></div>
+      </div>
+      <div>
+        <p className="text-sm text-muted-foreground mb-2">Staff Training Records</p>
+        <div className="rounded-lg border border-border p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">J. Smith (Director)</p>
+              <p className="text-xs text-muted-foreground">TCF Annual Refresher 2025</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-rag-amber/15 text-rag-amber border-rag-amber/30 text-xs">Under Review</Badge>
+              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1"><Download className="w-3 h-3" /> View</Button>
+            </div>
+          </div>
+        </div>
+        {uploaded && (
+          <div className="rounded-lg border border-border p-3 mt-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-rag-green" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">{uploaded}</p>
+                  <p className="text-xs text-muted-foreground">Uploaded just now</p>
+                </div>
+              </div>
+              <Badge className="bg-rag-amber/15 text-rag-amber border-rag-amber/30 text-xs">Under Review</Badge>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="rounded-lg border border-rag-amber/30 bg-rag-amber-bg p-3">
+        <p className="text-sm text-rag-amber-text">TCG Operations team is reviewing the uploaded certificate. Expected completion: 2 business days.</p>
+      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.jpg,.png"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            setUploaded(file.name);
+            toast({ title: "Certificate uploaded for review", description: `${file.name} has been submitted for TCG Operations review.` });
+          }
+          e.target.value = "";
+        }}
+      />
+      <Button variant="outline" size="sm" className="gap-2" onClick={() => fileInputRef.current?.click()}>
+        <FileUp className="w-4 h-4" /> Upload Certificate
+      </Button>
+    </div>
+  );
+}
+
+const STATIC_SECTION_DETAILS: Record<string, { title: string; content: React.ReactNode }> = {
   "Legal Status": {
     title: "Legal Status — Details",
     content: (
@@ -278,66 +397,6 @@ const SECTION_DETAILS: Record<string, { title: string; content: React.ReactNode 
         </div>
         <div className="rounded-lg border border-rag-amber/30 bg-rag-amber-bg p-3">
           <p className="text-sm text-rag-amber-text flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Full credit report is pending. Preliminary score retrieved.</p>
-        </div>
-      </div>
-    ),
-  },
-  "DBS / Background": {
-    title: "DBS / Background Checks — Details",
-    content: (
-      <div className="space-y-4">
-        <div>
-          <p className="text-sm text-muted-foreground mb-2">Staff Requiring Enhanced DBS Checks</p>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-              <div>
-                <p className="text-sm font-medium text-foreground">Mark Roberts — Sales Manager</p>
-                <p className="text-xs text-muted-foreground">Enhanced DBS required</p>
-              </div>
-              <Badge variant="destructive" className="text-xs">Missing</Badge>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-              <div>
-                <p className="text-sm font-medium text-foreground">Lisa Evans — Sales Executive</p>
-                <p className="text-xs text-muted-foreground">Enhanced DBS required</p>
-              </div>
-              <Badge variant="destructive" className="text-xs">Missing</Badge>
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><p className="text-muted-foreground">Deadline</p><p className="font-medium text-destructive">14 days remaining</p></div>
-          <div><p className="text-muted-foreground">Status</p><p className="font-medium text-destructive">Action Required</p></div>
-        </div>
-        <Button variant="outline" size="sm" className="gap-2"><FileUp className="w-4 h-4" /> Upload DBS Certificate</Button>
-      </div>
-    ),
-  },
-  "Training & Competency": {
-    title: "Training & Competency — Details",
-    content: (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><p className="text-muted-foreground">Certificates Uploaded</p><p className="font-medium text-foreground">1</p></div>
-          <div><p className="text-muted-foreground">Status</p><p className="font-medium text-rag-amber">Under Review</p></div>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground mb-2">Staff Training Records</p>
-          <div className="rounded-lg border border-border p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">J. Smith (Director)</p>
-                <p className="text-xs text-muted-foreground">TCF Annual Refresher 2025</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge className="bg-rag-amber/15 text-rag-amber border-rag-amber/30 text-xs">Under Review</Badge>
-                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1"><Download className="w-3 h-3" /> View</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-lg border border-rag-amber/30 bg-rag-amber-bg p-3">
-          <p className="text-sm text-rag-amber-text">TCG Operations team is reviewing the uploaded certificate. Expected completion: 2 business days.</p>
         </div>
       </div>
     ),
@@ -495,7 +554,21 @@ export default function Onboarding() {
   }, 0);
   const overallPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
-  const detailData = detailModal ? SECTION_DETAILS[detailModal] : null;
+  // Render detail content — use component for interactive ones, static for others
+  const renderDetailContent = () => {
+    if (!detailModal) return null;
+    if (detailModal === "DBS / Background") return <DbsDetailContent />;
+    if (detailModal === "Training & Competency") return <TrainingDetailContent />;
+    const staticDetail = STATIC_SECTION_DETAILS[detailModal];
+    return staticDetail?.content || null;
+  };
+
+  const getDetailTitle = () => {
+    if (!detailModal) return "";
+    if (detailModal === "DBS / Background") return "DBS / Background Checks — Details";
+    if (detailModal === "Training & Competency") return "Training & Competency — Details";
+    return STATIC_SECTION_DETAILS[detailModal]?.title || detailModal;
+  };
 
   if (demoMode) {
     return (
@@ -568,10 +641,10 @@ export default function Onboarding() {
           <Dialog open={!!detailModal} onOpenChange={(open) => !open && setDetailModal(null)}>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>{detailData?.title}</DialogTitle>
+                <DialogTitle>{getDetailTitle()}</DialogTitle>
                 <DialogDescription>Detailed compliance information for this section.</DialogDescription>
               </DialogHeader>
-              {detailData?.content}
+              {renderDetailContent()}
             </DialogContent>
           </Dialog>
 
@@ -610,8 +683,6 @@ export default function Onboarding() {
               </div>
             </DialogContent>
           </Dialog>
-
-          <DemoOnboardingWizard />
         </div>
       </DashboardLayout>
     );

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { DealerTrend } from "@/data/trendData";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
 import { RagBadge } from "@/components/RagBadge";
 
 interface MoversTableProps {
@@ -12,28 +12,28 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
   const navigate = useNavigate();
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Top Improvers */}
+      {/* Compliance Leaders */}
       <div className="bg-card rounded-xl border border-border">
         <div className="px-5 py-4 border-b border-border">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-rag-green" />
-            <h3 className="text-sm font-semibold text-foreground">Top Improvers</h3>
+            <h3 className="text-sm font-semibold text-foreground">Compliance Leaders</h3>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">Biggest score gains over 12 months</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Dealerships with biggest score improvements over 12 months</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-muted-foreground">
-                <th className="text-left px-5 py-2.5 font-medium">Dealer</th>
-                <th className="text-center px-3 py-2.5 font-medium">Current</th>
-                <th className="text-center px-3 py-2.5 font-medium">Change</th>
-                <th className="text-center px-3 py-2.5 font-medium">Status</th>
+              <tr className="border-b border-border bg-muted/50">
+                <th className="text-left px-5 py-3 font-semibold text-foreground">Dealership Name</th>
+                <th className="text-center px-3 py-3 font-semibold text-foreground">Current</th>
+                <th className="text-center px-3 py-3 font-semibold text-foreground">Change</th>
+                <th className="text-center px-3 py-3 font-semibold text-foreground">Status</th>
               </tr>
             </thead>
             <tbody>
               {improvers.map((d) => (
-                <tr key={d.dealerName} className="border-b border-border last:border-0">
+                <tr key={d.dealerName} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                   <td className="px-5 py-2.5 font-medium">
                     <button
                       onClick={() => navigate(`/dealer/${encodeURIComponent(d.dealerName)}`)}
@@ -44,7 +44,9 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
                   </td>
                   <td className="px-3 py-2.5 text-center font-semibold">{d.currentScore}%</td>
                   <td className="px-3 py-2.5 text-center">
-                    <span className="text-rag-green font-semibold">+{d.changeFromStart}%</span>
+                    <span className="text-rag-green font-semibold flex items-center justify-center gap-1">
+                      <TrendingUp className="w-3.5 h-3.5" /> +{d.changeFromStart}%
+                    </span>
                   </td>
                   <td className="px-3 py-2.5 flex justify-center">
                     <RagBadge status={d.currentRag} size="sm" />
@@ -56,28 +58,28 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
         </div>
       </div>
 
-      {/* Top Decliners */}
+      {/* Dealerships Requiring Attention */}
       <div className="bg-card rounded-xl border border-border">
         <div className="px-5 py-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <TrendingDown className="w-4 h-4 text-rag-red" />
-            <h3 className="text-sm font-semibold text-foreground">Top Decliners</h3>
+            <AlertTriangle className="w-4 h-4 text-rag-red" />
+            <h3 className="text-sm font-semibold text-foreground">Dealerships Requiring Attention</h3>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">Biggest score drops over 12 months</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Dealerships with declining compliance scores over 12 months</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-muted-foreground">
-                <th className="text-left px-5 py-2.5 font-medium">Dealer</th>
-                <th className="text-center px-3 py-2.5 font-medium">Current</th>
-                <th className="text-center px-3 py-2.5 font-medium">Change</th>
-                <th className="text-center px-3 py-2.5 font-medium">Status</th>
+              <tr className="border-b border-border bg-muted/50">
+                <th className="text-left px-5 py-3 font-semibold text-foreground">Dealership Name</th>
+                <th className="text-center px-3 py-3 font-semibold text-foreground">Current</th>
+                <th className="text-center px-3 py-3 font-semibold text-foreground">Change</th>
+                <th className="text-center px-3 py-3 font-semibold text-foreground">Status</th>
               </tr>
             </thead>
             <tbody>
               {decliners.map((d) => (
-                <tr key={d.dealerName} className="border-b border-border last:border-0">
+                <tr key={d.dealerName} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                   <td className="px-5 py-2.5 font-medium">
                     <button
                       onClick={() => navigate(`/dealer/${encodeURIComponent(d.dealerName)}`)}
@@ -88,7 +90,8 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
                   </td>
                   <td className="px-3 py-2.5 text-center font-semibold">{d.currentScore}%</td>
                   <td className="px-3 py-2.5 text-center">
-                    <span className={`font-semibold ${d.changeFromStart < 0 ? "text-rag-red" : "text-muted-foreground"}`}>
+                    <span className={`font-semibold flex items-center justify-center gap-1 ${d.changeFromStart < 0 ? "text-rag-red" : "text-muted-foreground"}`}>
+                      {d.changeFromStart < 0 && <TrendingDown className="w-3.5 h-3.5" />}
                       {d.changeFromStart > 0 ? "+" : ""}{d.changeFromStart}%
                     </span>
                   </td>

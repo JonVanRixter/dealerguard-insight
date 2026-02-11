@@ -1,8 +1,9 @@
-import { ChevronDown, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useState } from "react";
 import { MobileSidebar } from "./MobileSidebar";
 import { GlobalSearch } from "./GlobalSearch";
 import { NotificationsDropdown } from "./NotificationsDropdown";
+import { UserProfileDropdown } from "./UserProfileDropdown";
 
 export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -28,16 +29,7 @@ export function AppHeader() {
 
         <div className="flex items-center gap-3">
           <NotificationsDropdown />
-          <div className="flex items-center gap-2 pl-3 border-l border-border">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-medium text-primary-foreground">
-              JK
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-sm font-medium text-foreground leading-tight">Joel Knight</p>
-              <p className="text-[11px] text-muted-foreground leading-tight">Lender Admin</p>
-            </div>
-            <ChevronDown className="w-4 h-4 text-muted-foreground hidden sm:block" />
-          </div>
+          <UserProfileDropdown />
         </div>
       </header>
 
