@@ -13,6 +13,8 @@ const FIELD_CONFIG: { key: string; label: string }[] = [
   { key: "fcaFrn", label: "FCA Status" },
   { key: "fcaPermissions", label: "FCA Permissions" },
   { key: "fcaIndividuals", label: "FCA Individuals" },
+  { key: "companyName", label: "Company Name" },
+  { key: "companyStatus", label: "Company Status" },
 ];
 
 interface Props {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -52,7 +52,24 @@ function ChecklistSection({
   onChecksChange: (checks: boolean[]) => void;
   screeningDataMap?: Record<string, string>;
 }) {
-  const checks = savedChecks.length === items.length ? savedChecks : new Array(items.length).fill(false);
+  // Auto-tick items that have screening data populated
+  const checks = useMemo(() => {
+    const base = savedChecks.length === items.length ? [...savedChecks] : new Array(items.length).fill(false);
+    items.forEach((item, i) => {
+      if (item.dataKey && screeningDataMap?.[item.dataKey] && !base[i]) {
+        base[i] = true;
+      }
+    });
+    return base;
+  }, [savedChecks, items, screeningDataMap]);
+
+  // Sync auto-ticked items back to parent
+  useEffect(() => {
+    const orig = savedChecks.length === items.length ? savedChecks : new Array(items.length).fill(false);
+    const hasChange = checks.some((v, i) => v !== orig[i]);
+    if (hasChange) onChecksChange(checks);
+  }, [checks]);
+
   const toggle = (i: number) => {
     const next = checks.map((v: boolean, j: number) => (j === i ? !v : v));
     onChecksChange(next);
@@ -76,31 +93,45 @@ function ChecklistSection({
         <Progress value={(done / items.length) * 100} className="h-2" />
 
         <div className="space-y-2">
-          {items.map((item, i) => (
-            <div key={i}>
-              <label
-                className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
-                  checks[i] ? "border-primary/40 bg-primary/5" : "border-border hover:border-primary/20"
-                }`}
-              >
-                <Checkbox checked={checks[i]} onCheckedChange={() => toggle(i)} className="mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">{item.label}</p>
-                  {item.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+          {items.map((item, i) => {
+            const hasScreeningData = !!(item.dataKey && screeningDataMap?.[item.dataKey]);
+            return (
+              <div key={i}>
+                <label
+                  className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
+                    hasScreeningData
+                      ? "border-emerald-500/40 bg-emerald-500/5"
+                      : checks[i]
+                        ? "border-primary/40 bg-primary/5"
+                        : "border-border hover:border-primary/20"
+                  }`}
+                >
+                  {hasScreeningData ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
+                  ) : (
+                    <Checkbox checked={checks[i]} onCheckedChange={() => toggle(i)} className="mt-0.5" />
                   )}
-                  {item.dataKey && screeningDataMap?.[item.dataKey] && (
-                    <ScreeningDataBadge label="From screening" value={screeningDataMap[item.dataKey]} />
-                  )}
-                </div>
-              </label>
-              {item.docCategory && dealerName && (
-                <div className="ml-9 mt-2 mb-1">
-                  <OnboardingDocUpload dealerName={dealerName} category={item.docCategory} compact />
-                </div>
-              )}
-            </div>
-          ))}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{item.label}</p>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                    )}
+                    {hasScreeningData && (
+                      <div className="mt-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
+                        <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">{screeningDataMap![item.dataKey!]}</p>
+                        <p className="text-[10px] text-emerald-600/70 dark:text-emerald-500/70 mt-0.5">✓ Auto-populated from screening</p>
+                      </div>
+                    )}
+                  </div>
+                </label>
+                {item.docCategory && dealerName && (
+                  <div className="ml-9 mt-2 mb-1">
+                    <OnboardingDocUpload dealerName={dealerName} category={item.docCategory} compact />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {dealerName && (
@@ -199,6 +230,7 @@ export default function Onboarding() {
         if (cs.regNo) map.companyRegNo = cs.regNo;
         if (cs.score) map.creditScore = `${cs.score}/${cs.maxScore || "100"} (${cs.riskLevel || "N/A"})`;
         if (cs.companyName) map.companyName = cs.companyName;
+        if (cs.status) map.companyStatus = cs.status;
       } catch {}
     }
 
@@ -216,6 +248,21 @@ export default function Onboarding() {
         if (fca.companiesHouseNumber) {
           map.companyRegNo = map.companyRegNo || fca.companiesHouseNumber;
         }
+        // Registered address from FCA
+        if (fca.address) {
+          const addr = typeof fca.address === 'string' ? fca.address : Object.values(fca.address || {}).filter(Boolean).join(", ");
+          if (addr) map.registeredAddress = addr;
+        }
+      } catch {}
+    }
+
+    // Companies House data
+    if (results.companiesHouse) {
+      try {
+        const ch = JSON.parse(results.companiesHouse);
+        if (ch.registeredAddress) map.registeredAddress = map.registeredAddress || ch.registeredAddress;
+        if (ch.vatNumber) map.vatRegistration = ch.vatNumber;
+        if (ch.companyNumber) map.companyRegNo = map.companyRegNo || ch.companyNumber;
       } catch {}
     }
 
@@ -331,7 +378,8 @@ export default function Onboarding() {
               <FcaRegisterCard
                 dealerName={dealerName}
                 onDataLoaded={(data) => {
-                  update({ screeningResults: { ...state.screeningResults, fca: JSON.stringify(data) } });
+                  const fcaData: any = { ...data };
+                  update({ screeningResults: { ...state.screeningResults, fca: JSON.stringify(fcaData) } });
                 }}
               />
             </div>
