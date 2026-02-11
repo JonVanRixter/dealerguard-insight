@@ -21,6 +21,9 @@ import { useToast } from "@/hooks/use-toast";
 import { DemoOnboardingWizard } from "@/components/onboarding/DemoOnboardingWizard";
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import {
   Users, Phone, ShieldCheck, Building2, PoundSterling,
   CheckCircle2, AlertTriangle, XCircle, ArrowRight, Search,
   ClipboardList, FileSearch, Landmark, FileUp, ShieldBan,
@@ -232,7 +235,6 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
   const navigate = useNavigate();
   const { toast } = useToast();
   const [statuses, setStatuses] = useState<Record<string, CheckStatus>>(() => {
-    // Restore from saved screening results
     const restored: Record<string, CheckStatus> = {
       companiesHouse: "pending",
       openBanking: "pending",
@@ -342,7 +344,6 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
           ))}
         </div>
 
-        {/* Full Dealer Enrichment — auto-triggers when dealer name is entered */}
         <div className="space-y-2">
           <Label className="flex items-center gap-2"><Search className="w-4 h-4" /> Automatic Dealer Enrichment</Label>
           <p className="text-xs text-muted-foreground">Automatically searches FCA, Companies House &amp; CreditSafe when you enter a dealer name.</p>
@@ -361,13 +362,11 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
           />
         </div>
 
-        {/* CreditSafe Search */}
         <div className="space-y-2">
           <Label className="flex items-center gap-2"><Building2 className="w-4 h-4" /> CreditSafe Report</Label>
           <CreditSafeSearch defaultSearch={dealerName} companyNumber={companyNumber} onResult={handleCreditSafeResult} />
         </div>
 
-        {/* FCA Register Search */}
         <div className="space-y-2">
           <Label className="flex items-center gap-2"><Landmark className="w-4 h-4" /> FCA Register Check</Label>
           <FcaRegisterCard dealerName={dealerName} onDataLoaded={handleFcaData} />
@@ -424,6 +423,35 @@ export default function PreOnboarding() {
   const { state, update, applications, loading, saving, loadApplication, createNew, save } = useOnboardingPersistence();
   const [failed, setFailed] = useState(false);
   const { demoMode } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [newAppOpen, setNewAppOpen] = useState(false);
+  const [newApp, setNewApp] = useState({
+    dealerName: "",
+    tradingName: "",
+    fcaRef: "",
+    companyNumber: "",
+    contactEmail: "",
+    contactPhone: "",
+  });
+
+  const handleNewAppSubmit = () => {
+    if (!newApp.dealerName.trim()) return;
+    setNewAppOpen(false);
+    toast({
+      title: "Application Submitted",
+      description: `Application submitted for ${newApp.dealerName}. Status: Pending Documents.`,
+    });
+    // Navigate to onboarding with the new dealer info
+    navigate("/onboarding", {
+      state: {
+        dealerName: newApp.dealerName,
+        companyNumber: newApp.companyNumber,
+        screeningResults: {},
+      },
+    });
+    setNewApp({ dealerName: "", tradingName: "", fcaRef: "", companyNumber: "", contactEmail: "", contactPhone: "" });
+  };
 
   return (
     <DashboardLayout>
@@ -435,11 +463,55 @@ export default function PreOnboarding() {
           </div>
           <div className="flex items-center gap-2">
             {saving && <span className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Saving…</span>}
-            <Button variant="outline" size="sm" className="gap-2" onClick={createNew}>
+            <Button size="sm" className="gap-2" onClick={() => setNewAppOpen(true)}>
               <Plus className="w-4 h-4" /> New Application
             </Button>
           </div>
         </div>
+
+        {/* New Application Dialog */}
+        <Dialog open={newAppOpen} onOpenChange={setNewAppOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>New Dealer Application</DialogTitle>
+              <DialogDescription>Enter the dealer details to start the onboarding process.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Dealer Name *</Label>
+                <Input placeholder="e.g. Apex Motors Ltd" value={newApp.dealerName} onChange={(e) => setNewApp({ ...newApp, dealerName: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Trading Name</Label>
+                <Input placeholder="e.g. Apex" value={newApp.tradingName} onChange={(e) => setNewApp({ ...newApp, tradingName: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>FCA Reference</Label>
+                  <Input placeholder="e.g. 123456" value={newApp.fcaRef} onChange={(e) => setNewApp({ ...newApp, fcaRef: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Company Number</Label>
+                  <Input placeholder="e.g. 12345678" value={newApp.companyNumber} onChange={(e) => setNewApp({ ...newApp, companyNumber: e.target.value })} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Contact Email</Label>
+                <Input type="email" placeholder="e.g. contact@dealer.co.uk" value={newApp.contactEmail} onChange={(e) => setNewApp({ ...newApp, contactEmail: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Contact Phone</Label>
+                <Input type="tel" placeholder="e.g. 01234 567890" value={newApp.contactPhone} onChange={(e) => setNewApp({ ...newApp, contactPhone: e.target.value })} />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setNewAppOpen(false)}>Cancel</Button>
+                <Button onClick={handleNewAppSubmit} disabled={!newApp.dealerName.trim()} className="gap-2">
+                  <ArrowRight className="w-4 h-4" /> Start Onboarding
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Saved applications */}
         {applications.length > 0 && (
@@ -476,7 +548,6 @@ export default function PreOnboarding() {
           <DemoOnboardingWizard />
         ) : (
           <>
-            {/* Dealer name input */}
             <Card>
               <CardContent className="pt-6">
                 <div className="flex gap-4 items-end">

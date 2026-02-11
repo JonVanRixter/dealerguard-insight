@@ -34,7 +34,7 @@ export function AppSidebar() {
   const { signOut } = useAuth();
 
   return (
-    <aside className="hidden md:flex w-60 flex-col bg-sidebar text-sidebar-foreground min-h-screen shrink-0">
+    <aside className="hidden md:flex w-60 flex-col bg-sidebar text-sidebar-foreground min-h-screen shrink-0 sticky top-0 h-screen overflow-y-auto">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-4 border-b border-sidebar-border">
         <img src={logo} alt="The Compliance Guys" className="h-10 w-auto" />

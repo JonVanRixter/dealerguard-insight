@@ -19,9 +19,13 @@ import { generateOnboardingPdf } from "@/utils/onboardingPdfExport";
 import { DemoOnboardingWizard } from "@/components/onboarding/DemoOnboardingWizard";
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import {
   Building2, PoundSterling, Users, FileText,
   CheckCircle2, FileUp, ArrowLeft, ArrowRight, Loader2, ShieldCheck, Download,
-  XCircle, AlertTriangle,
+  XCircle, AlertTriangle, Mail, Send,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -31,7 +35,6 @@ interface CheckItem {
   label: string;
   description?: string;
   docCategory?: string;
-  /** Key in screeningDataMap to auto-populate value from screening results */
   dataKey?: string;
 }
 
@@ -56,7 +59,6 @@ function ChecklistSection({
   onChecksChange: (checks: boolean[]) => void;
   screeningDataMap?: Record<string, string>;
 }) {
-  // Auto-tick items that have screening data populated
   const checks = useMemo(() => {
     const base = savedChecks.length === items.length ? [...savedChecks] : new Array(items.length).fill(false);
     items.forEach((item, i) => {
@@ -67,7 +69,6 @@ function ChecklistSection({
     return base;
   }, [savedChecks, items, screeningDataMap]);
 
-  // Sync auto-ticked items back to parent
   useEffect(() => {
     const orig = savedChecks.length === items.length ? savedChecks : new Array(items.length).fill(false);
     const hasChange = checks.some((v, i) => v !== orig[i]);
@@ -99,7 +100,6 @@ function ChecklistSection({
         <div className="space-y-2">
           {items.map((item, i) => {
             const hasScreeningData = !!(item.dataKey && screeningDataMap?.[item.dataKey]);
-            // Enrichment has run but this field was NOT found
             const enrichmentRan = !!(screeningDataMap?.["_enrichment"]);
             const isMissing = !!(item.dataKey && enrichmentRan && !screeningDataMap?.[item.dataKey]);
 
@@ -214,6 +214,184 @@ const SECTIONS = [
 ];
 
 /* ------------------------------------------------------------------ */
+/*  Detail modal data for demo mode                                    */
+/* ------------------------------------------------------------------ */
+const SECTION_DETAILS: Record<string, { title: string; content: React.ReactNode }> = {
+  "Legal Status": {
+    title: "Legal Status — Details",
+    content: (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div><p className="text-muted-foreground">Company Status</p><p className="font-medium text-foreground">Active</p></div>
+          <div><p className="text-muted-foreground">Incorporation Date</p><p className="font-medium text-foreground">12 Mar 2018</p></div>
+          <div><p className="text-muted-foreground">Company Number</p><p className="font-medium text-foreground">11234567</p></div>
+          <div><p className="text-muted-foreground">Last Verified</p><p className="font-medium text-foreground">10 Feb 2026</p></div>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground mb-1">Directors</p>
+          <ul className="text-sm space-y-1">
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> James Thompson — Appointed 12 Mar 2018</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Sarah Mitchell — Appointed 05 Jun 2020</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> David Chen — Appointed 14 Jan 2023</li>
+          </ul>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground mb-1">Persons of Significant Control</p>
+          <ul className="text-sm space-y-1">
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> James Thompson — 75%+ shares</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Sarah Mitchell — 25%+ shares</li>
+          </ul>
+        </div>
+      </div>
+    ),
+  },
+  "FCA Authorisation": {
+    title: "FCA Authorisation — Details",
+    content: (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div><p className="text-muted-foreground">FCA Reference</p><p className="font-medium text-foreground">FRN: 123456</p></div>
+          <div><p className="text-muted-foreground">Status</p><p className="font-medium text-rag-green">Authorised</p></div>
+          <div><p className="text-muted-foreground">Last Checked</p><p className="font-medium text-foreground">10 Feb 2026</p></div>
+          <div><p className="text-muted-foreground">Warnings</p><p className="font-medium text-foreground">None</p></div>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground mb-1">Permissions</p>
+          <ul className="text-sm space-y-1">
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Consumer Credit</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Credit Broking</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Debt Administration</li>
+          </ul>
+        </div>
+      </div>
+    ),
+  },
+  "Financial Checks": {
+    title: "Financial Checks — Details",
+    content: (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div><p className="text-muted-foreground">Credit Score</p><p className="font-medium text-rag-amber">62 / 100</p></div>
+          <div><p className="text-muted-foreground">Risk Band</p><p className="font-medium text-rag-amber">Medium</p></div>
+          <div><p className="text-muted-foreground">Report Status</p><p className="font-medium text-rag-amber">Awaiting full report</p></div>
+          <div><p className="text-muted-foreground">Last Updated</p><p className="font-medium text-foreground">08 Feb 2026</p></div>
+        </div>
+        <div className="rounded-lg border border-rag-amber/30 bg-rag-amber-bg p-3">
+          <p className="text-sm text-rag-amber-text flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Full credit report is pending. Preliminary score retrieved.</p>
+        </div>
+      </div>
+    ),
+  },
+  "DBS / Background": {
+    title: "DBS / Background Checks — Details",
+    content: (
+      <div className="space-y-4">
+        <div>
+          <p className="text-sm text-muted-foreground mb-2">Staff Requiring Enhanced DBS Checks</p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">Mark Roberts — Sales Manager</p>
+                <p className="text-xs text-muted-foreground">Enhanced DBS required</p>
+              </div>
+              <Badge variant="destructive" className="text-xs">Missing</Badge>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">Lisa Evans — Sales Executive</p>
+                <p className="text-xs text-muted-foreground">Enhanced DBS required</p>
+              </div>
+              <Badge variant="destructive" className="text-xs">Missing</Badge>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div><p className="text-muted-foreground">Deadline</p><p className="font-medium text-destructive">14 days remaining</p></div>
+          <div><p className="text-muted-foreground">Status</p><p className="font-medium text-destructive">Action Required</p></div>
+        </div>
+        <Button variant="outline" size="sm" className="gap-2"><FileUp className="w-4 h-4" /> Upload DBS Certificate</Button>
+      </div>
+    ),
+  },
+  "Training & Competency": {
+    title: "Training & Competency — Details",
+    content: (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div><p className="text-muted-foreground">Certificates Uploaded</p><p className="font-medium text-foreground">1</p></div>
+          <div><p className="text-muted-foreground">Status</p><p className="font-medium text-rag-amber">Under Review</p></div>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground mb-2">Staff Training Records</p>
+          <div className="rounded-lg border border-border p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">J. Smith (Director)</p>
+                <p className="text-xs text-muted-foreground">TCF Annual Refresher 2025</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-rag-amber/15 text-rag-amber border-rag-amber/30 text-xs">Under Review</Badge>
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1"><Download className="w-3 h-3" /> View</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border border-rag-amber/30 bg-rag-amber-bg p-3">
+          <p className="text-sm text-rag-amber-text">TCG Operations team is reviewing the uploaded certificate. Expected completion: 2 business days.</p>
+        </div>
+      </div>
+    ),
+  },
+  "Complaints Handling": {
+    title: "Complaints Handling — Details",
+    content: (
+      <div className="space-y-4 text-sm">
+        <p className="text-muted-foreground">This is a new dealer with no complaint history. Section marked as N/A.</p>
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+          <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> No action required at this stage.</p>
+        </div>
+      </div>
+    ),
+  },
+  "Marketing & Promotions": {
+    title: "Marketing & Promotions — Details",
+    content: (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div><p className="text-muted-foreground">Website</p><p className="font-medium text-foreground">www.newstartmotors.co.uk</p></div>
+          <div><p className="text-muted-foreground">Last Checked</p><p className="font-medium text-foreground">09 Feb 2026</p></div>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground mb-1">Compliance Checklist</p>
+          <ul className="text-sm space-y-1">
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Representative APR displayed</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Commission disclosure visible</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> FCA registration number on site</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Privacy policy compliant</li>
+          </ul>
+        </div>
+      </div>
+    ),
+  },
+  "KYC / AML": {
+    title: "KYC / AML — Details",
+    content: (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div><p className="text-muted-foreground">Sanctions Check</p><p className="font-medium text-rag-green">Clear</p></div>
+          <div><p className="text-muted-foreground">PEP Check</p><p className="font-medium text-rag-green">Clear</p></div>
+          <div><p className="text-muted-foreground">AML Risk Rating</p><p className="font-medium text-rag-green">Low</p></div>
+          <div><p className="text-muted-foreground">Last Verified</p><p className="font-medium text-foreground">10 Feb 2026</p></div>
+        </div>
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+          <p className="text-sm flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> All KYC/AML checks passed. No adverse findings.</p>
+        </div>
+      </div>
+    ),
+  },
+};
+
+/* ------------------------------------------------------------------ */
 /*  Main page                                                          */
 /* ------------------------------------------------------------------ */
 export default function Onboarding() {
@@ -225,11 +403,15 @@ export default function Onboarding() {
 
   const { state, update, saving, save } = useOnboardingPersistence();
   const [activeTab, setActiveTab] = useState("business");
+  const [detailModal, setDetailModal] = useState<string | null>(null);
+  const [requestInfoOpen, setRequestInfoOpen] = useState(false);
+  const [emailBody, setEmailBody] = useState(
+    `Dear NewStart Motors Ltd,\n\nThank you for your application to join our dealer network.\n\nFollowing our review, we require the following additional information before we can proceed:\n\n• Enhanced DBS certificates for 2 staff members (Sales Manager, Sales Executive)\n• Latest management accounts (Q4 2025)\n\nPlease submit these documents within 14 business days.\n\nIf you have any questions, please don't hesitate to contact us.\n\nKind regards,\nJoel Knight\nThe Compliance Guys`
+  );
 
   const dealerName = state.dealerName || locState?.dealerName || "";
   const companyNumber = state.companyNumber || locState?.companyNumber || "";
 
-  // If navigated from pre-onboarding with state, seed it
   const [seeded, setSeeded] = useState(false);
   if (!seeded && locState?.dealerName && !state.dealerName) {
     setSeeded(true);
@@ -241,12 +423,9 @@ export default function Onboarding() {
     });
   }
 
-  // Parse screening data into a flat map for checklist display
   const screeningDataMap = useMemo(() => {
     const results = state.screeningResults || locState?.screeningResults || {};
     const map: Record<string, string> = {};
-
-    // CreditSafe data
     if (results.creditSafe) {
       try {
         const cs = JSON.parse(results.creditSafe);
@@ -256,8 +435,6 @@ export default function Onboarding() {
         if (cs.status) map.companyStatus = cs.status;
       } catch {}
     }
-
-    // FCA data
     if (results.fca) {
       try {
         const fca = JSON.parse(results.fca);
@@ -268,18 +445,13 @@ export default function Onboarding() {
         if (fca.individuals?.length > 0) {
           map.fcaIndividuals = fca.individuals.slice(0, 3).map((i: any) => i.name).join(", ") + (fca.individuals.length > 3 ? ` (+${fca.individuals.length - 3} more)` : "");
         }
-        if (fca.companiesHouseNumber) {
-          map.companyRegNo = map.companyRegNo || fca.companiesHouseNumber;
-        }
-        // Registered address from FCA
+        if (fca.companiesHouseNumber) map.companyRegNo = map.companyRegNo || fca.companiesHouseNumber;
         if (fca.address) {
           const addr = typeof fca.address === 'string' ? fca.address : Object.values(fca.address || {}).filter(Boolean).join(", ");
           if (addr) map.registeredAddress = addr;
         }
       } catch {}
     }
-
-    // Companies House data
     if (results.companiesHouse) {
       try {
         const ch = JSON.parse(results.companiesHouse);
@@ -288,38 +460,21 @@ export default function Onboarding() {
         if (ch.companyNumber) map.companyRegNo = map.companyRegNo || ch.companyNumber;
       } catch {}
     }
-
-    // Company number from state
-    if (!map.companyRegNo && companyNumber) {
-      map.companyRegNo = companyNumber;
-    }
-
-    // Apply manual overrides
+    if (!map.companyRegNo && companyNumber) map.companyRegNo = companyNumber;
     if (results._overrides) {
-      try {
-        const overrides = JSON.parse(results._overrides);
-        Object.assign(map, overrides);
-      } catch {}
+      try { Object.assign(map, JSON.parse(results._overrides)); } catch {}
     }
-
-    // Pass through enrichment flag so checklist knows enrichment ran
-    if (results._enrichment) {
-      map._enrichment = "true";
-    }
-
-    // Also merge any directly set screening keys from enrichment
+    if (results._enrichment) map._enrichment = "true";
     for (const [k, v] of Object.entries(results)) {
       if (!k.startsWith("_") && k !== "creditSafe" && k !== "fca" && k !== "companiesHouse" && typeof v === "string" && v && !map[k]) {
         map[k] = v;
       }
     }
-
     return map;
   }, [state.screeningResults, locState?.screeningResults, companyNumber]);
 
   const tabOrder = SECTIONS.map((s) => s.key);
   const currentIdx = tabOrder.indexOf(activeTab);
-
   const checklistProgress = (state.checklistProgress || {}) as Record<string, boolean[]>;
 
   const updateChecks = (sectionKey: string, checks: boolean[]) => {
@@ -333,13 +488,14 @@ export default function Onboarding() {
     toast({ title: "Application Complete", description: `${dealerName} application marked as complete.` });
   };
 
-  // Calculate overall progress
   const totalItems = SECTIONS.reduce((sum, s) => sum + s.items.length, 0);
   const completedItems = SECTIONS.reduce((sum, s) => {
     const checks = checklistProgress[s.key] || [];
     return sum + checks.filter(Boolean).length;
   }, 0);
   const overallPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+  const detailData = detailModal ? SECTION_DETAILS[detailModal] : null;
 
   if (demoMode) {
     return (
@@ -363,8 +519,12 @@ export default function Onboarding() {
             </div>
             <Progress value={75} className="h-3 mb-3" />
             <div className="flex gap-3">
-              <Button className="gap-2"><CheckCircle2 className="w-4 h-4" /> Approve Dealer</Button>
-              <Button variant="outline" className="gap-2"><AlertTriangle className="w-4 h-4" /> Request More Info</Button>
+              <Button className="gap-2" onClick={() => toast({ title: "Dealer Approved", description: "NewStart Motors Ltd has been approved and added to the active portfolio." })}>
+                <CheckCircle2 className="w-4 h-4" /> Approve Dealer
+              </Button>
+              <Button variant="outline" className="gap-2" onClick={() => setRequestInfoOpen(true)}>
+                <Mail className="w-4 h-4" /> Request More Info
+              </Button>
             </div>
           </div>
 
@@ -398,13 +558,59 @@ export default function Onboarding() {
                   }`}>
                     {section.status === "complete" ? "✓ Complete" : section.status === "pending" ? "⚠ Pending" : "✗ Failed"}
                   </span>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs">View Details</Button>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setDetailModal(section.name)}>View Details</Button>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Still show the wizard below */}
+          {/* Detail Modal */}
+          <Dialog open={!!detailModal} onOpenChange={(open) => !open && setDetailModal(null)}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{detailData?.title}</DialogTitle>
+                <DialogDescription>Detailed compliance information for this section.</DialogDescription>
+              </DialogHeader>
+              {detailData?.content}
+            </DialogContent>
+          </Dialog>
+
+          {/* Request More Info Modal */}
+          <Dialog open={requestInfoOpen} onOpenChange={setRequestInfoOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Request Additional Information</DialogTitle>
+                <DialogDescription>Send an email to the dealer requesting missing documents or information.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground mb-1">To</p>
+                    <p className="font-medium text-foreground">contact@newstartmotors.co.uk</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground mb-1">Subject</p>
+                    <p className="font-medium text-foreground">Additional Information Required — Dealer Onboarding</p>
+                  </div>
+                </div>
+                <Textarea
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  className="min-h-[250px] text-sm"
+                />
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setRequestInfoOpen(false)}>Cancel</Button>
+                  <Button className="gap-2" onClick={() => {
+                    setRequestInfoOpen(false);
+                    toast({ title: "Request Sent", description: "Email sent to contact@newstartmotors.co.uk" });
+                  }}>
+                    <Send className="w-4 h-4" /> Send Request
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <DemoOnboardingWizard />
         </div>
       </DashboardLayout>
@@ -444,7 +650,6 @@ export default function Onboarding() {
           </div>
         </div>
 
-        {/* Context from pre-onboarding */}
         <Card>
           <CardContent className="pt-6 space-y-4">
             <div className="flex items-center justify-between">
@@ -466,7 +671,6 @@ export default function Onboarding() {
                 <Progress value={overallPct} className="h-2 w-32" />
               </div>
             </div>
-            {/* Full Enrichment — auto-triggers */}
             <div className="pt-2 border-t border-border">
               <p className="text-xs font-medium text-muted-foreground mb-2">Automatic Dealer Enrichment</p>
               <DealerEnrichment
@@ -483,7 +687,6 @@ export default function Onboarding() {
                 }}
               />
             </div>
-            {/* CreditSafe */}
             <div className="pt-2 border-t border-border">
               <p className="text-xs font-medium text-muted-foreground mb-2">CreditSafe Report</p>
               <CreditSafeSearch
@@ -494,7 +697,6 @@ export default function Onboarding() {
                 }}
               />
             </div>
-            {/* FCA Register */}
             <div className="pt-2 border-t border-border">
               <p className="text-xs font-medium text-muted-foreground mb-2">FCA Register</p>
               <FcaRegisterCard
@@ -505,8 +707,6 @@ export default function Onboarding() {
                 }}
               />
             </div>
-
-            {/* Screening data summary */}
             {Object.keys(screeningDataMap).length > 0 && (
               <div className="pt-2 border-t border-border">
                 <ScreeningDataEditor
@@ -546,7 +746,6 @@ export default function Onboarding() {
           ))}
         </Tabs>
 
-        {/* Stage navigation */}
         <div className="flex justify-between">
           <Button
             variant="outline"
