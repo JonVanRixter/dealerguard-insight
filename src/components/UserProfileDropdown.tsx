@@ -22,6 +22,8 @@ export function UserProfileDropdown() {
   const { toast } = useToast();
   const [helpOpen, setHelpOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [prefsOpen, setPrefsOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
@@ -48,10 +50,10 @@ export function UserProfileDropdown() {
           <DropdownMenuItem onClick={() => navigate("/settings")} className="gap-2 cursor-pointer">
             <User className="w-4 h-4" /> My Profile
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate("/settings")} className="gap-2 cursor-pointer">
+          <DropdownMenuItem onClick={() => setNotifOpen(true)} className="gap-2 cursor-pointer">
             <Bell className="w-4 h-4" /> Notifications
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate("/settings")} className="gap-2 cursor-pointer">
+          <DropdownMenuItem onClick={() => setPrefsOpen(true)} className="gap-2 cursor-pointer">
             <Settings className="w-4 h-4" /> Preferences
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setActivityOpen(true)} className="gap-2 cursor-pointer">
@@ -81,7 +83,7 @@ export function UserProfileDropdown() {
             </div>
             <div>
               <p className="text-muted-foreground mb-1">Phone</p>
-              <p className="font-medium text-foreground">01929 26040</p>
+              <p className="font-medium text-foreground">01792 926 040</p>
             </div>
             <div>
               <p className="text-muted-foreground mb-1">Knowledge Base</p>
@@ -117,6 +119,55 @@ export function UserProfileDropdown() {
                 <p className="text-muted-foreground text-xs shrink-0 ml-4">{item.time}</p>
               </div>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Notifications Modal */}
+      <Dialog open={notifOpen} onOpenChange={setNotifOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Notification Preferences</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            {[
+              { label: "Email notifications", defaultOn: true },
+              { label: "Push notifications", defaultOn: false },
+              { label: "RAG status change alerts", defaultOn: true },
+              { label: "Weekly digest summary", defaultOn: true },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center justify-between">
+                <span className="text-foreground">{item.label}</span>
+                <Switch defaultChecked={item.defaultOn} />
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preferences Modal */}
+      <Dialog open={prefsOpen} onOpenChange={setPrefsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Preferences</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-foreground">Dark mode</span>
+              <Switch />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-foreground">Compact view</span>
+              <Switch />
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-1">Date format</p>
+              <p className="font-medium text-foreground">DD/MM/YYYY</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-1">Timezone</p>
+              <p className="font-medium text-foreground">GMT (London)</p>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
