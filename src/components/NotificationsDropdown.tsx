@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Bell, ArrowRight, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { RagBadge } from "./RagBadge";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -87,6 +86,12 @@ export function NotificationsDropdown() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  const markAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
   const handleRerunAudit = (notif: Notification) => {
     setRerunning(notif.id);
     setTimeout(() => {
@@ -130,15 +135,21 @@ export function NotificationsDropdown() {
           {notifications.map((notif) => (
             <div
               key={notif.id}
-              className={`px-4 py-3 transition-colors ${
-                notif.read ? "bg-background" : "bg-primary/5"
+              onClick={() => markAsRead(notif.id)}
+              className={`px-4 py-3 transition-colors cursor-pointer ${
+                notif.read
+                  ? "bg-background opacity-70"
+                  : "bg-primary/5 border-l-[3px] border-l-primary"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {notif.dealerName}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    {!notif.read && <span className="w-2 h-2 rounded-full bg-primary shrink-0" />}
+                    <p className={`text-sm text-foreground truncate ${notif.read ? "font-normal" : "font-semibold"}`}>
+                      {notif.dealerName}
+                    </p>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-0.5">{notif.message}</p>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="text-xs font-semibold text-muted-foreground">
@@ -159,7 +170,7 @@ export function NotificationsDropdown() {
                   size="sm"
                   className="shrink-0 h-7 text-xs gap-1"
                   disabled={rerunning === notif.id}
-                  onClick={() => handleRerunAudit(notif)}
+                  onClick={(e) => { e.stopPropagation(); handleRerunAudit(notif); }}
                 >
                   {rerunning === notif.id ? (
                     <Loader2 className="w-3 h-3 animate-spin" />

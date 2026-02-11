@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,14 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip, TooltipContent, TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { CreditSafeSearch } from "@/components/onboarding/CreditSafeSearch";
 import {
-  ShieldBan, Plus, Trash2, Building2, User, Search, AlertTriangle,
+  ShieldBan, Plus, Trash2, Building2, User, Search, AlertTriangle, XCircle, AlertCircle,
 } from "lucide-react";
 
 interface BannedEntity {
@@ -35,6 +37,19 @@ interface BannedEntity {
   notes: string | null;
   credit_score?: number;
 }
+
+const DND_REASONS = [
+  "FCA Breach - Misleading Advertising",
+  "Disqualified Director",
+  "Sanctions List Match",
+  "CCJ Judgment Unpaid",
+  "Enhanced DBS - Criminal Record",
+  "FCA Final Notice",
+  "Bankruptcy Proceedings",
+  "Adverse Media - Investigation",
+  "Previous FCA Prohibition",
+  "Other",
+];
 
 const MOCK_BANNED: BannedEntity[] = [
   { id: "m1", entity_type: "dealer", entity_name: "QuickCars Ltd", company_name: "QuickCars Ltd", reason: "FCA authorisation revoked", failed_checks: ["FCA Status", "Credit Score"], banned_at: "2025-11-14", notes: null, credit_score: 18 },
@@ -59,11 +74,56 @@ const MOCK_BANNED: BannedEntity[] = [
   { id: "m20", entity_type: "director", entity_name: "Andrew Patel", company_name: "ValueDrive UK Ltd", reason: "Sanctions list match", failed_checks: ["Sanctions Screening", "AML Check"], banned_at: "2025-05-25", notes: "Match confirmed with OFSI consolidated list", credit_score: undefined },
 ];
 
+const CRITICAL_CHECKS = ["FCA Status", "Sanctions", "Sanctions Screening", "AML Check", "Director Disqualification", "Insolvency Check", "Director Bankruptcy", "Passport Verification", "ID Check", "ID Verification"];
+
 function getCreditScoreColor(score: number | undefined) {
   if (score === undefined) return "";
   if (score >= 60) return "text-[hsl(142,71%,45%)]";
   if (score >= 40) return "text-[hsl(38,92%,50%)]";
   return "text-destructive";
+}
+
+function FailedChecksBadges({ checks }: { checks: string[] }) {
+  const MAX_VISIBLE = 3;
+  const visible = checks.slice(0, MAX_VISIBLE);
+  const remaining = checks.length - MAX_VISIBLE;
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {visible.map((c) => {
+        const isCritical = CRITICAL_CHECKS.includes(c);
+        return (
+          <span
+            key={c}
+            className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${
+              isCritical
+                ? "bg-destructive/10 text-destructive border-destructive/20"
+                : "bg-[hsl(38,92%,50%)]/10 text-[hsl(38,92%,50%)] border-[hsl(38,92%,50%)]/20"
+            }`}
+          >
+            {isCritical ? <XCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+            {c}
+          </span>
+        );
+      })}
+      {remaining > 0 && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-full border border-border bg-muted text-muted-foreground font-medium cursor-default">
+              +{remaining} more
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div className="space-y-1">
+              {checks.slice(MAX_VISIBLE).map((c) => (
+                <p key={c} className="text-xs">{c}</p>
+              ))}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </div>
+  );
 }
 
 export default function BannedList() {
@@ -81,6 +141,7 @@ export default function BannedList() {
     company_name: "",
     reason: "",
     notes: "",
+    fca_ref: "",
   });
 
   const fetchEntities = async () => {
@@ -100,11 +161,31 @@ export default function BannedList() {
   useEffect(() => { fetchEntities(); }, [demoMode]);
 
   const handleAdd = async () => {
+    if (demoMode) {
+      const newEntity: BannedEntity = {
+        id: `demo-${Date.now()}`,
+        entity_type: form.entity_type,
+        entity_name: form.entity_name,
+        company_name: form.company_name || null,
+        reason: form.reason,
+        failed_checks: [form.reason.split(" - ")[0] || form.reason],
+        banned_at: new Date().toISOString().split("T")[0],
+        notes: form.notes || null,
+        credit_score: undefined,
+      };
+      setEntities((prev) => [newEntity, ...prev]);
+      toast({ title: "Added to DND", description: `${form.entity_name} added to Do Not Deal list.` });
+      setForm({ entity_type: "dealer", entity_name: "", company_name: "", reason: "", notes: "", fca_ref: "" });
+      setDialogOpen(false);
+      return;
+    }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const { error } = await supabase.from("banned_entities").insert({
-      ...form,
+      entity_type: form.entity_type,
+      entity_name: form.entity_name,
       company_name: form.company_name || null,
+      reason: form.reason,
       notes: form.notes || null,
       banned_by: user.id,
     });
@@ -112,13 +193,17 @@ export default function BannedList() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Added to DND", description: `${form.entity_name} added to Do Not Deal list.` });
-      setForm({ entity_type: "dealer", entity_name: "", company_name: "", reason: "", notes: "" });
+      setForm({ entity_type: "dealer", entity_name: "", company_name: "", reason: "", notes: "", fca_ref: "" });
       setDialogOpen(false);
       fetchEntities();
     }
   };
 
   const handleDelete = async (id: string) => {
+    if (demoMode) {
+      setEntities((prev) => prev.filter((e) => e.id !== id));
+      return;
+    }
     await supabase.from("banned_entities").delete().eq("id", id);
     fetchEntities();
   };
@@ -128,34 +213,34 @@ export default function BannedList() {
     return !q || e.entity_name.toLowerCase().includes(q) || (e.company_name || "").toLowerCase().includes(q) || e.reason.toLowerCase().includes(q);
   });
 
-  const dealers = filtered.filter((e) => e.entity_type === "dealer");
+  const dealerships = filtered.filter((e) => e.entity_type === "dealer");
   const directors = filtered.filter((e) => e.entity_type === "director");
 
   const renderTable = (items: BannedEntity[]) => (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
+          <TableHead>{items[0]?.entity_type === "director" ? "Director Name" : "Dealership Name"}</TableHead>
           <TableHead>Company</TableHead>
           <TableHead>Credit Score</TableHead>
           <TableHead>Reason</TableHead>
-          <TableHead>Date Banned</TableHead>
+          <TableHead>Date Added</TableHead>
           <TableHead>Failed Checks</TableHead>
           <TableHead className="w-10" />
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.length === 0 ? (
-          <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No entries found.</TableCell></TableRow>
+          <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No dealerships on DND list.</TableCell></TableRow>
         ) : items.map((e) => (
           <TableRow key={e.id}>
             <TableCell className="font-medium">{e.entity_name}</TableCell>
             <TableCell>{e.company_name || "—"}</TableCell>
             <TableCell>
-              {demoMode && e.credit_score !== undefined ? (
+              {e.credit_score !== undefined ? (
                 <span className={`font-semibold ${getCreditScoreColor(e.credit_score)}`}>{e.credit_score}/100</span>
               ) : (
-                <CreditSafeSearch defaultSearch={e.entity_name} companyNumber={e.company_name || undefined} variant="score-only" />
+                <span className="text-muted-foreground">—</span>
               )}
             </TableCell>
             <TableCell>
@@ -164,11 +249,7 @@ export default function BannedList() {
             </TableCell>
             <TableCell className="text-sm">{new Date(e.banned_at).toLocaleDateString()}</TableCell>
             <TableCell>
-              <div className="flex flex-wrap gap-1">
-                {(e.failed_checks || []).map((c) => (
-                  <Badge key={c} variant="destructive" className="text-[10px]">{c}</Badge>
-                ))}
-              </div>
+              <FailedChecksBadges checks={e.failed_checks || []} />
             </TableCell>
             <TableCell>
               <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => handleDelete(e.id)}>
@@ -187,31 +268,31 @@ export default function BannedList() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <ShieldBan className="w-6 h-6 text-destructive" /> Do Not Deal (DND)
+              <ShieldBan className="w-6 h-6 text-destructive" /> Do Not Deal List
             </h1>
             <p className="text-muted-foreground mt-1">
-              Dealers and directors who have failed checks or been flagged — {entities.length} total entries.
+              Dealerships and directors who have failed checks or been flagged — {entities.length} total entries.
             </p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2"><Plus className="w-4 h-4" /> Add Entry</Button>
+              <Button className="gap-2"><Plus className="w-4 h-4" /> Add Dealership to DND</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
-              <DialogHeader><DialogTitle>Add to DND List</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>Add to Do Not Deal List</DialogTitle></DialogHeader>
               <div className="space-y-4 mt-2">
                 <div>
-                  <Label>Type</Label>
+                  <Label>Entity Type</Label>
                   <Select value={form.entity_type} onValueChange={(v) => setForm({ ...form, entity_type: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="dealer">Dealer</SelectItem>
+                      <SelectItem value="dealer">Business</SelectItem>
                       <SelectItem value="director">Director</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>{form.entity_type === "dealer" ? "Dealer Name" : "Director Name"}</Label>
+                  <Label>{form.entity_type === "dealer" ? "Dealership Name" : "Director Name"}</Label>
                   <Input value={form.entity_name} onChange={(e) => setForm({ ...form, entity_name: e.target.value })} />
                 </div>
                 <div>
@@ -219,15 +300,26 @@ export default function BannedList() {
                   <Input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} placeholder="Optional" />
                 </div>
                 <div>
-                  <Label>Reason for Ban</Label>
-                  <Textarea value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} rows={2} />
+                  <Label>Reason for DND</Label>
+                  <Select value={form.reason} onValueChange={(v) => setForm({ ...form, reason: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select reason..." /></SelectTrigger>
+                    <SelectContent>
+                      {DND_REASONS.map((r) => (
+                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <Label>Additional Notes</Label>
+                  <Label>Additional Details</Label>
                   <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} placeholder="Optional" />
                 </div>
+                <div>
+                  <Label>FCA Reference (if applicable)</Label>
+                  <Input value={form.fca_ref} onChange={(e) => setForm({ ...form, fca_ref: e.target.value })} placeholder="Optional" />
+                </div>
                 <Button onClick={handleAdd} disabled={!form.entity_name || !form.reason} className="w-full">
-                Add to DND List
+                  Add to DND List
                 </Button>
               </div>
             </DialogContent>
@@ -238,7 +330,7 @@ export default function BannedList() {
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           {[
             { label: "Total DND", value: entities.length, icon: ShieldBan },
-            { label: "Dealers", value: entities.filter(e => e.entity_type === "dealer").length, icon: Building2 },
+            { label: "Dealerships", value: entities.filter(e => e.entity_type === "dealer").length, icon: Building2 },
             { label: "Directors", value: entities.filter(e => e.entity_type === "director").length, icon: User },
             {
               label: "Avg Credit Score",
@@ -266,13 +358,13 @@ export default function BannedList() {
         {/* Search */}
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search DND list…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Search dealerships…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
 
         <Tabs defaultValue="dealers" className="space-y-4">
           <TabsList>
             <TabsTrigger value="dealers" className="gap-2">
-              <Building2 className="w-4 h-4" /> Dealers ({dealers.length})
+              <Building2 className="w-4 h-4" /> Dealerships ({dealerships.length})
             </TabsTrigger>
             <TabsTrigger value="directors" className="gap-2">
               <User className="w-4 h-4" /> Directors ({directors.length})
@@ -280,7 +372,7 @@ export default function BannedList() {
           </TabsList>
           <TabsContent value="dealers">
             <Card>
-              <CardContent className="p-0">{renderTable(dealers)}</CardContent>
+              <CardContent className="p-0">{renderTable(dealerships)}</CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="directors">
