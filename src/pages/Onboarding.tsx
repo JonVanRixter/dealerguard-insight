@@ -351,6 +351,60 @@ export default function Onboarding() {
               Structured dealer application pack — collect and verify all required information.
             </p>
           </div>
+
+          {/* Onboarding Score Card */}
+          <div className="bg-card rounded-xl border border-border p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">NewStart Motors Ltd — Onboarding Progress</h2>
+                <p className="text-sm text-muted-foreground">6 of 8 sections complete</p>
+              </div>
+              <Badge className="bg-rag-amber/15 text-rag-amber border-rag-amber/30 text-sm px-3 py-1">Pending Documents</Badge>
+            </div>
+            <Progress value={75} className="h-3 mb-3" />
+            <div className="flex gap-3">
+              <Button className="gap-2"><CheckCircle2 className="w-4 h-4" /> Approve Dealer</Button>
+              <Button variant="outline" className="gap-2"><AlertTriangle className="w-4 h-4" /> Request More Info</Button>
+            </div>
+          </div>
+
+          {/* 8-Section Onboarding Checklist */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { name: "Legal Status", status: "complete" as const, score: "100%", detail: "Company House verified" },
+              { name: "FCA Authorisation", status: "complete" as const, score: "100%", detail: "FRN: 123456" },
+              { name: "Financial Checks", status: "pending" as const, score: "50%", detail: "Awaiting credit report" },
+              { name: "DBS / Background", status: "failed" as const, score: "0%", detail: "2 staff need Enhanced DBS" },
+              { name: "Training & Competency", status: "pending" as const, score: "60%", detail: "Certificates under review" },
+              { name: "Complaints Handling", status: "complete" as const, score: "N/A", detail: "New dealer — not applicable" },
+              { name: "Marketing & Promotions", status: "complete" as const, score: "100%", detail: "Website checked" },
+              { name: "KYC / AML", status: "complete" as const, score: "100%", detail: "Sanctions clear" },
+            ].map((section) => (
+              <div key={section.name} className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 mb-2">
+                  {section.status === "complete" ? (
+                    <CheckCircle2 className="w-5 h-5 text-rag-green" />
+                  ) : section.status === "pending" ? (
+                    <AlertTriangle className="w-5 h-5 text-rag-amber" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-rag-red" />
+                  )}
+                  <h3 className="text-sm font-semibold text-foreground">{section.name}</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">{section.detail}</p>
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-semibold ${
+                    section.status === "complete" ? "text-rag-green" : section.status === "pending" ? "text-rag-amber" : "text-rag-red"
+                  }`}>
+                    {section.status === "complete" ? "✓ Complete" : section.status === "pending" ? "⚠ Pending" : "✗ Failed"}
+                  </span>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs">View Details</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Still show the wizard below */}
           <DemoOnboardingWizard />
         </div>
       </DashboardLayout>

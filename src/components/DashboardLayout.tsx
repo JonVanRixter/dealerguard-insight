@@ -1,5 +1,6 @@
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
+import { AppFooter } from "./AppFooter";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <main className="flex-1 p-4 md:p-6 overflow-auto">
           {children}
         </main>
+        <AppFooter />
       </div>
     </div>
   );

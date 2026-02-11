@@ -1,7 +1,8 @@
-import { Bell, ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import { useState } from "react";
 import { MobileSidebar } from "./MobileSidebar";
 import { GlobalSearch } from "./GlobalSearch";
+import { NotificationsDropdown } from "./NotificationsDropdown";
 
 export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -26,10 +27,7 @@ export function AppHeader() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="relative p-2 rounded-lg hover:bg-muted transition-colors">
-            <Bell className="w-[18px] h-[18px] text-muted-foreground" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rag-red rounded-full" />
-          </button>
+          <NotificationsDropdown />
           <div className="flex items-center gap-2 pl-3 border-l border-border">
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-medium text-primary-foreground">
               JK
