@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { RagBadge } from "@/components/RagBadge";
 import { generateDealerAudit, DealerAudit } from "@/data/auditFramework";
 import { dealers, Dealer } from "@/data/dealers";
@@ -20,11 +21,16 @@ interface DealerSummaryResult {
 }
 
 async function fetchSummaryForDealer(audit: DealerAudit, abortSignal?: AbortSignal): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error("Not authenticated. Please sign in.");
+  }
+
   const resp = await fetch(CHAT_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: `Bearer ${session.access_token}`,
     },
     body: JSON.stringify({ auditData: audit }),
     signal: abortSignal,

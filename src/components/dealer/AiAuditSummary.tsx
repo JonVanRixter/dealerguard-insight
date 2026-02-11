@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Sparkles, Loader2, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import type { DealerAudit } from "@/data/auditFramework";
 import ReactMarkdown from "react-markdown";
 
@@ -25,11 +26,19 @@ export function AiAuditSummary({ audit, onSummaryChange }: AiAuditSummaryProps) 
     setHasGenerated(true);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast({ title: "Not authenticated", description: "Please sign in to generate summaries.", variant: "destructive" });
+        setIsLoading(false);
+        setHasGenerated(false);
+        return;
+      }
+
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ auditData: audit }),
       });
