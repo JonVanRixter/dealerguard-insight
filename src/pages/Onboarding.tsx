@@ -13,9 +13,11 @@ import { ScreeningDataBadge } from "@/components/onboarding/ScreeningDataBadge";
 import { FcaRegisterCard } from "@/components/dealer/FcaRegisterCard";
 import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
 import { useToast } from "@/hooks/use-toast";
+import { ScreeningDataEditor } from "@/components/onboarding/ScreeningDataEditor";
+import { generateOnboardingPdf } from "@/utils/onboardingPdfExport";
 import {
   Building2, PoundSterling, Users, FileText,
-  CheckCircle2, FileUp, ArrowLeft, ArrowRight, Loader2, ShieldCheck,
+  CheckCircle2, FileUp, ArrowLeft, ArrowRight, Loader2, ShieldCheck, Download,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -222,6 +224,14 @@ export default function Onboarding() {
       map.companyRegNo = companyNumber;
     }
 
+    // Apply manual overrides
+    if (results._overrides) {
+      try {
+        const overrides = JSON.parse(results._overrides);
+        Object.assign(map, overrides);
+      } catch {}
+    }
+
     return map;
   }, [state.screeningResults, locState?.screeningResults, companyNumber]);
 
@@ -261,6 +271,21 @@ export default function Onboarding() {
           </div>
           <div className="flex items-center gap-2">
             {saving && <span className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Saving…</span>}
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() =>
+                generateOnboardingPdf({
+                  dealerName,
+                  companyNumber,
+                  screeningDataMap,
+                  checklistProgress,
+                  sections: SECTIONS.map((s) => ({ key: s.key, title: s.title, items: s.items })),
+                })
+              }
+            >
+              <Download className="w-4 h-4" /> Export PDF
+            </Button>
             <Button variant="outline" className="gap-2" onClick={() => navigate("/pre-onboarding")}>
               <ArrowLeft className="w-4 h-4" /> Back to Pre‑Onboarding
             </Button>
@@ -314,33 +339,12 @@ export default function Onboarding() {
             {/* Screening data summary */}
             {Object.keys(screeningDataMap).length > 0 && (
               <div className="pt-2 border-t border-border">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Collected Screening Data</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {screeningDataMap.companyRegNo && (
-                    <div className="rounded-md bg-muted/30 px-3 py-2">
-                      <p className="text-[10px] text-muted-foreground">Company Reg No</p>
-                      <p className="text-sm font-medium">{screeningDataMap.companyRegNo}</p>
-                    </div>
-                  )}
-                  {screeningDataMap.creditScore && (
-                    <div className="rounded-md bg-muted/30 px-3 py-2">
-                      <p className="text-[10px] text-muted-foreground">Credit Score</p>
-                      <p className="text-sm font-medium">{screeningDataMap.creditScore}</p>
-                    </div>
-                  )}
-                  {screeningDataMap.fcaFrn && (
-                    <div className="rounded-md bg-muted/30 px-3 py-2">
-                      <p className="text-[10px] text-muted-foreground">FCA Status</p>
-                      <p className="text-sm font-medium">{screeningDataMap.fcaFrn}</p>
-                    </div>
-                  )}
-                  {screeningDataMap.fcaPermissions && (
-                    <div className="rounded-md bg-muted/30 px-3 py-2">
-                      <p className="text-[10px] text-muted-foreground">FCA Permissions</p>
-                      <p className="text-sm font-medium">{screeningDataMap.fcaPermissions}</p>
-                    </div>
-                  )}
-                </div>
+                <ScreeningDataEditor
+                  screeningDataMap={screeningDataMap}
+                  onUpdate={(updated) => {
+                    update({ screeningResults: { ...state.screeningResults, _overrides: JSON.stringify(updated) } });
+                  }}
+                />
               </div>
             )}
           </CardContent>
