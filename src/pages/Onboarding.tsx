@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { OnboardingDocUpload } from "@/components/onboarding/OnboardingDocUpload";
 import { CreditSafeSearch } from "@/components/onboarding/CreditSafeSearch";
+import { DealerEnrichment } from "@/components/onboarding/DealerEnrichment";
 import { ScreeningDataBadge } from "@/components/onboarding/ScreeningDataBadge";
 import { FcaRegisterCard } from "@/components/dealer/FcaRegisterCard";
 import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
@@ -163,10 +164,13 @@ const businessItems: CheckItem[] = [
   { label: "Trading address(es)", description: "All physical trading locations" },
   { label: "VAT registration", description: "VAT number and registration certificate", docCategory: "Financial", dataKey: "vatRegistration" },
   { label: "FCA permissions", description: "If offering retail finance — FCA registration details", docCategory: "Compliance", dataKey: "fcaPermissions" },
+  { label: "FCA FRN & Status", description: "FCA Firm Reference Number and authorisation status", dataKey: "fcaFrn" },
+  { label: "Company name & status", description: "Official registered name and current status", dataKey: "companyName" },
   { label: "Organisational chart", description: "Company structure showing key personnel and reporting lines", docCategory: "Compliance" },
 ];
 
 const financialItems: CheckItem[] = [
+  { label: "Credit score & risk band", description: "CreditSafe credit score and risk assessment", dataKey: "creditScore" },
   { label: "Last 3 years audited accounts", description: "Filed accounts for the most recent 3 financial years", docCategory: "Financial" },
   { label: "Latest management accounts", description: "Most recent month-end or quarter-end management accounts", docCategory: "Financial" },
   { label: "Stock audit statements", description: "Required if changing funder — current stock position and valuations", docCategory: "Financial" },
@@ -360,6 +364,22 @@ export default function Onboarding() {
                 <span className="text-muted-foreground">{overallPct}% complete</span>
                 <Progress value={overallPct} className="h-2 w-32" />
               </div>
+            </div>
+            {/* Full Enrichment */}
+            <div className="pt-2 border-t border-border">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Full Dealer Enrichment</p>
+              <DealerEnrichment
+                dealerName={dealerName}
+                companyNumber={companyNumber}
+                onEnriched={(result, screeningMap) => {
+                  const enrichmentData: Record<string, string> = {};
+                  for (const [k, v] of Object.entries(screeningMap)) {
+                    if (v) enrichmentData[k] = v;
+                  }
+                  enrichmentData._enrichment = JSON.stringify(result);
+                  update({ screeningResults: { ...state.screeningResults, ...enrichmentData } });
+                }}
+              />
             </div>
             {/* CreditSafe */}
             <div className="pt-2 border-t border-border">
