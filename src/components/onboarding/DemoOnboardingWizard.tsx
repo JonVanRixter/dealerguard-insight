@@ -209,6 +209,41 @@ function StepResults({ results }: { results: SearchResults }) {
   const found = results.fields.filter(f => f.value);
   const missing = results.fields.filter(f => !f.value);
 
+  // Compute overall risk from CreditSafe RAG statuses
+  const creditSafeRags = found.map(getCreditSafeRag).filter(Boolean) as ("green" | "amber" | "red")[];
+  const hasRed = creditSafeRags.includes("red");
+  const hasAmber = creditSafeRags.includes("amber");
+  const overallRisk: "green" | "amber" | "red" = hasRed ? "red" : hasAmber ? "amber" : "green";
+
+  const riskConfig = {
+    green: {
+      label: "Low Risk",
+      desc: "All CreditSafe indicators within acceptable thresholds.",
+      border: "border-[hsl(142,71%,45%)]/40",
+      bg: "bg-[hsl(142,71%,45%)]/10",
+      text: "text-[hsl(142,71%,45%)]",
+      Icon: CheckCircle2,
+    },
+    amber: {
+      label: "Medium Risk",
+      desc: "Some CreditSafe indicators require attention.",
+      border: "border-[hsl(38,92%,50%)]/40",
+      bg: "bg-[hsl(38,92%,50%)]/10",
+      text: "text-[hsl(38,92%,50%)]",
+      Icon: AlertTriangle,
+    },
+    red: {
+      label: "High Risk",
+      desc: "Critical CreditSafe indicators flagged — enhanced due diligence recommended.",
+      border: "border-destructive/40",
+      bg: "bg-destructive/10",
+      text: "text-destructive",
+      Icon: XCircle,
+    },
+  };
+
+  const rc = riskConfig[overallRisk];
+
   return (
     <Card>
       <CardHeader>
@@ -221,6 +256,22 @@ function StepResults({ results }: { results: SearchResults }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Overall risk banner */}
+        {creditSafeRags.length > 0 && (
+          <div className={`rounded-lg border ${rc.border} ${rc.bg} p-4 flex items-center gap-3`}>
+            <rc.Icon className={`w-6 h-6 ${rc.text} shrink-0`} />
+            <div>
+              <p className={`text-sm font-semibold ${rc.text}`}>Overall Risk: {rc.label}</p>
+              <p className="text-xs text-muted-foreground">{rc.desc}</p>
+            </div>
+            <div className="ml-auto flex gap-1.5">
+              {creditSafeRags.map((r, i) => (
+                <span key={i} className={`w-2.5 h-2.5 rounded-full ${ragStyles[r].text} bg-current`} />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-4 text-sm">
           <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400 gap-1">
             <CheckCircle2 className="w-3 h-3" /> {found.length} Found
