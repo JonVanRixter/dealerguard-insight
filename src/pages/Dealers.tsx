@@ -412,6 +412,7 @@ const Dealers = () => {
                       <SortHeader label="CSS" sortKeyVal="css" />
                       <SortHeader label="Region" sortKeyVal="region" />
                        <th className="text-left px-3 py-3 font-medium hidden lg:table-cell">Last Audit</th>
+                      <th className="text-left px-3 py-3 font-medium hidden xl:table-cell">Credit Score</th>
                       <th className="text-center px-3 py-3 font-medium">Trend</th>
                       <th className="px-3 py-3 font-medium"><span className="sr-only">Actions</span></th>
                     </tr>
@@ -464,6 +465,14 @@ const Dealers = () => {
                             </td>
                             <td className="px-3 py-3 text-muted-foreground">{dealer.region}</td>
                             <td className="px-3 py-3 text-muted-foreground hidden lg:table-cell">{dealer.lastAudit}</td>
+                            <td className="px-3 py-3 hidden xl:table-cell">
+                              {(() => {
+                                // Deterministic mock credit score based on dealer compliance score
+                                const cs = Math.min(100, Math.max(1, Math.round(dealer.score * 0.85 + (dealer.name.charCodeAt(0) % 20))));
+                                const color = cs >= 71 ? "text-emerald-600" : cs >= 40 ? "text-amber-600" : "text-destructive";
+                                return <span className={`font-semibold text-sm ${color}`}>{cs}</span>;
+                              })()}
+                            </td>
                             <td className="px-3 py-3 text-center"><TrendIcon trend={dealer.trend} /></td>
                             <td className="px-3 py-3 text-right">
                               <Button
@@ -486,7 +495,7 @@ const Dealers = () => {
                       })
                     ) : (
                       <tr>
-                        <td colSpan={7} className="px-5 py-8 text-center text-muted-foreground">
+                        <td colSpan={8} className="px-5 py-8 text-center text-muted-foreground">
                           No dealers found matching your criteria.
                         </td>
                       </tr>

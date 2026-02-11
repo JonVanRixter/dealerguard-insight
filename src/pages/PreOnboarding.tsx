@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { OnboardingDocUpload } from "@/components/onboarding/OnboardingDocUpload";
+import { CreditSafeSearch } from "@/components/onboarding/CreditSafeSearch";
 import { useOnboardingPersistence, type SegData } from "@/hooks/useOnboardingPersistence";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -322,6 +323,12 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
               </div>
             </div>
           ))}
+        </div>
+
+        {/* CreditSafe Search */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2"><Building2 className="w-4 h-4" /> CreditSafe Report</Label>
+          <CreditSafeSearch defaultSearch={dealerName} companyNumber={companyNumber} />
         </div>
 
         <div className="space-y-2">
