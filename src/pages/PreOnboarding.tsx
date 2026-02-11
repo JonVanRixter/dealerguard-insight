@@ -291,7 +291,7 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
       banned_by: user.id,
     });
     onFail(failedKeys);
-    toast({ title: "Dealer Flagged", description: `${dealerName || "Dealer"} added to banned list.`, variant: "destructive" });
+    toast({ title: "Dealer Flagged", description: `${dealerName || "Dealer"} added to DND list.`, variant: "destructive" });
   };
 
   const checks = [
@@ -403,9 +403,9 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
                   <p className="text-muted-foreground">Failed: {failedKeys.join(", ")}. This dealer cannot proceed.</p>
                   <div className="flex gap-2">
                     <Button variant="destructive" size="sm" className="gap-2" onClick={handleBanDealer}>
-                      <ShieldBan className="w-4 h-4" /> Add to Banned List
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => navigate("/banned-list")}>View Banned List</Button>
+                       <ShieldBan className="w-4 h-4" /> Add to DND List
+                     </Button>
+                     <Button variant="outline" size="sm" onClick={() => navigate("/banned-list")}>View DND List</Button>
                   </div>
                 </div>
               </>
