@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import Documents from "./pages/Documents";
 import Auth from "./pages/Auth";
 import PreOnboarding from "./pages/PreOnboarding";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const AppRoutes = () => (
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
     <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
     <Route path="/pre-onboarding" element={<ProtectedRoute><PreOnboarding /></ProtectedRoute>} />
+    <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
     <Route path="/dealer/:name" element={<ProtectedRoute><DealerDetail /></ProtectedRoute>} />
     <Route path="/dealers/:name" element={<DealersRedirect />} />
     <Route path="*" element={<NotFound />} />

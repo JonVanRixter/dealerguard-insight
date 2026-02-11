@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -195,6 +196,7 @@ function QualificationCall() {
 type CheckStatus = "pending" | "pass" | "fail" | "running";
 
 function PreScreeningChecks() {
+  const navigate = useNavigate();
   const [companyNumber, setCompanyNumber] = useState("");
   const [statuses, setStatuses] = useState<Record<string, CheckStatus>>({
     companiesHouse: "pending",
@@ -306,6 +308,9 @@ function PreScreeningChecks() {
                 <div className="text-sm">
                   <p className="font-medium text-emerald-700 dark:text-emerald-400">All checks passed</p>
                   <p className="text-muted-foreground mt-1">This dealer is cleared to proceed to full onboarding.</p>
+                  <Button onClick={() => navigate("/onboarding")} className="mt-3 gap-2">
+                    <ArrowRight className="w-4 h-4" /> Proceed to Application &amp; Due Diligence
+                  </Button>
                 </div>
               </>
             ) : (
