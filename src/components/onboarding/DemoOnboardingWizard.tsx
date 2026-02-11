@@ -77,6 +77,11 @@ function StepSearch({
       { label: "FCA Status", value: "Authorised", source: "FCA Register" },
       { label: "FCA Permissions", value: "Credit broking; Consumer hire; Debt adjusting (+2 more)", source: "FCA Register" },
       { label: "Approved Individuals", value: "John Smith; Sarah Johnson", source: "FCA Register" },
+      { label: "Credit Score", value: "72 / 100", source: "CreditSafe" },
+      { label: "Risk Rating", value: "Low", source: "CreditSafe" },
+      { label: "Credit Limit", value: "£250,000", source: "CreditSafe" },
+      { label: "CCJs", value: "0 (None found)", source: "CreditSafe" },
+      { label: "Days Beyond Terms (DBT)", value: "12 days", source: "CreditSafe" },
       // Intentionally missing fields to demo the red highlights
       { label: "VAT Registration", value: "", source: "" },
       { label: "Trading Address", value: "", source: "" },
