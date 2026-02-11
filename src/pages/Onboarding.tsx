@@ -19,6 +19,7 @@ import { generateOnboardingPdf } from "@/utils/onboardingPdfExport";
 import {
   Building2, PoundSterling, Users, FileText,
   CheckCircle2, FileUp, ArrowLeft, ArrowRight, Loader2, ShieldCheck, Download,
+  XCircle, AlertTriangle,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -96,24 +97,32 @@ function ChecklistSection({
         <div className="space-y-2">
           {items.map((item, i) => {
             const hasScreeningData = !!(item.dataKey && screeningDataMap?.[item.dataKey]);
+            // Enrichment has run but this field was NOT found
+            const enrichmentRan = !!(screeningDataMap?.["_enrichment"]);
+            const isMissing = !!(item.dataKey && enrichmentRan && !screeningDataMap?.[item.dataKey]);
+
             return (
               <div key={i}>
                 <label
                   className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
                     hasScreeningData
                       ? "border-emerald-500/40 bg-emerald-500/5"
-                      : checks[i]
-                        ? "border-primary/40 bg-primary/5"
-                        : "border-border hover:border-primary/20"
+                      : isMissing
+                        ? "border-destructive/40 bg-destructive/5"
+                        : checks[i]
+                          ? "border-primary/40 bg-primary/5"
+                          : "border-border hover:border-primary/20"
                   }`}
                 >
                   {hasScreeningData ? (
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
+                  ) : isMissing ? (
+                    <XCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
                   ) : (
                     <Checkbox checked={checks[i]} onCheckedChange={() => toggle(i)} className="mt-0.5" />
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{item.label}</p>
+                    <p className={`text-sm font-medium ${isMissing ? "text-destructive" : ""}`}>{item.label}</p>
                     {item.description && (
                       <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
                     )}
@@ -121,6 +130,13 @@ function ChecklistSection({
                       <div className="mt-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
                         <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">{screeningDataMap![item.dataKey!]}</p>
                         <p className="text-[10px] text-emerald-600/70 dark:text-emerald-500/70 mt-0.5">✓ Auto-populated from screening</p>
+                      </div>
+                    )}
+                    {isMissing && (
+                      <div className="mt-1.5 rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2">
+                        <p className="text-xs text-destructive font-medium flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" /> NOT FOUND — requires manual input
+                        </p>
                       </div>
                     )}
                   </div>
@@ -283,6 +299,18 @@ export default function Onboarding() {
       } catch {}
     }
 
+    // Pass through enrichment flag so checklist knows enrichment ran
+    if (results._enrichment) {
+      map._enrichment = "true";
+    }
+
+    // Also merge any directly set screening keys from enrichment
+    for (const [k, v] of Object.entries(results)) {
+      if (!k.startsWith("_") && k !== "creditSafe" && k !== "fca" && k !== "companiesHouse" && typeof v === "string" && v && !map[k]) {
+        map[k] = v;
+      }
+    }
+
     return map;
   }, [state.screeningResults, locState?.screeningResults, companyNumber]);
 
@@ -365,12 +393,13 @@ export default function Onboarding() {
                 <Progress value={overallPct} className="h-2 w-32" />
               </div>
             </div>
-            {/* Full Enrichment */}
+            {/* Full Enrichment — auto-triggers */}
             <div className="pt-2 border-t border-border">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Full Dealer Enrichment</p>
+              <p className="text-xs font-medium text-muted-foreground mb-2">Automatic Dealer Enrichment</p>
               <DealerEnrichment
                 dealerName={dealerName}
                 companyNumber={companyNumber}
+                autoTrigger
                 onEnriched={(result, screeningMap) => {
                   const enrichmentData: Record<string, string> = {};
                   for (const [k, v] of Object.entries(screeningMap)) {

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,8 @@ export interface EnrichmentResult {
 interface Props {
   dealerName: string;
   companyNumber?: string;
+  /** If true, automatically triggers enrichment when dealerName changes (debounced) */
+  autoTrigger?: boolean;
   onEnriched?: (result: EnrichmentResult, screeningMap: Record<string, string>) => void;
 }
 
@@ -67,7 +69,7 @@ function FieldRow({ label, value }: { label: string; value: unknown }) {
 /* ------------------------------------------------------------------ */
 /*  Main Component                                                     */
 /* ------------------------------------------------------------------ */
-export function DealerEnrichment({ dealerName, companyNumber, onEnriched }: Props) {
+export function DealerEnrichment({ dealerName, companyNumber, autoTrigger = false, onEnriched }: Props) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -76,11 +78,28 @@ export function DealerEnrichment({ dealerName, companyNumber, onEnriched }: Prop
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     business: true, financial: true, directors: true, docs: true,
   });
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastEnrichedName = useRef("");
 
   const toggleSection = (key: string) =>
     setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
-  const runEnrichment = useCallback(async () => {
+  // Auto-trigger enrichment when dealerName changes (debounced 1.5s)
+  useEffect(() => {
+    if (!autoTrigger || !dealerName || dealerName.length < 3) return;
+    if (dealerName === lastEnrichedName.current) return;
+    if (loading) return;
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      lastEnrichedName.current = dealerName;
+      runEnrichmentFn();
+    }, 1500);
+
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [dealerName, autoTrigger, loading]);
+
+  const runEnrichmentFn = useCallback(async () => {
     if (!dealerName) return;
     setLoading(true);
     setProgress(0);
@@ -438,7 +457,7 @@ export function DealerEnrichment({ dealerName, companyNumber, onEnriched }: Prop
       {!result && (
         <div className="space-y-3">
           <Button
-            onClick={runEnrichment}
+            onClick={runEnrichmentFn}
             disabled={loading || !dealerName}
             className="gap-2 w-full sm:w-auto"
             size="lg"
