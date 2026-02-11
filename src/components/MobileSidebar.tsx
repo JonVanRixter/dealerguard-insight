@@ -8,12 +8,14 @@ import {
   Settings,
   X,
   FolderOpen,
+  UserPlus,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import logo from "@/assets/logo-light.png";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Pre‑Onboarding", url: "/pre-onboarding", icon: UserPlus },
   { title: "Dealer Portfolio", url: "/dealers", icon: Building2 },
   { title: "Documents", url: "/documents", icon: FolderOpen },
   { title: "Alerts", url: "/alerts", icon: Bell },

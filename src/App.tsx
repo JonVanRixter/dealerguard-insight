@@ -14,6 +14,7 @@ import Trends from "./pages/Trends";
 import Settings from "./pages/Settings";
 import Documents from "./pages/Documents";
 import Auth from "./pages/Auth";
+import PreOnboarding from "./pages/PreOnboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const AppRoutes = () => (
     <Route path="/trends" element={<ProtectedRoute><Trends /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
     <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+    <Route path="/pre-onboarding" element={<ProtectedRoute><PreOnboarding /></ProtectedRoute>} />
     <Route path="/dealer/:name" element={<ProtectedRoute><DealerDetail /></ProtectedRoute>} />
     <Route path="/dealers/:name" element={<DealersRedirect />} />
     <Route path="*" element={<NotFound />} />
