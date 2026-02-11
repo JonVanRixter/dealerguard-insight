@@ -49,182 +49,49 @@ function StepSearch({
     setLoading(true);
     setProgress(0);
 
-    const fields: FieldResult[] = [];
-    let companyNumber = "";
-    let dealerName = query;
+    // Simulate API delay with progress
+    setProgressLabel("Searching Companies House…");
+    setProgress(15);
+    await new Promise(r => setTimeout(r, 600));
+    setProgress(40);
+    setProgressLabel("Searching FCA Register…");
+    await new Promise(r => setTimeout(r, 600));
+    setProgress(70);
+    setProgressLabel("Compiling results…");
+    await new Promise(r => setTimeout(r, 400));
+    setProgress(100);
+    setProgressLabel("Search complete");
 
-    try {
-      // --- Companies House ---
-      setProgressLabel("Searching Companies House…");
-      setProgress(15);
+    const dealerName = query.trim();
 
-      try {
-        const searchBody: Record<string, string> = { action: "search", query: query.trim() };
-        const { data: chSearch } = await supabase.functions.invoke("companies-house", { body: searchBody });
-        const items = chSearch?.items || [];
-        if (items.length > 0) {
-          const co = items[0];
-          companyNumber = co.company_number || "";
-          dealerName = co.title || query;
-          fields.push(
-            { label: "Company Name", value: co.title || "", source: "Companies House" },
-            { label: "Company Number", value: companyNumber, source: "Companies House" },
-            { label: "Company Status", value: co.company_status || "", source: "Companies House" },
-          );
-          if (co.address_snippet) {
-            fields.push({ label: "Registered Address", value: co.address_snippet, source: "Companies House" });
-          }
-          if (co.date_of_creation) {
-            fields.push({ label: "Incorporation Date", value: co.date_of_creation, source: "Companies House" });
-          }
-        }
-      } catch (e) {
-        console.warn("CH search failed:", e);
-      }
+    const fields: FieldResult[] = [
+      { label: "Company Name", value: `${dealerName} Motors Ltd`, source: "Companies House" },
+      { label: "Company Number", value: "09876543", source: "Companies House" },
+      { label: "Company Status", value: "Active", source: "Companies House" },
+      { label: "Registered Address", value: "Unit 4, Riverside Business Park, Manchester, M1 2AB", source: "Companies House" },
+      { label: "Incorporation Date", value: "2015-03-12", source: "Companies House" },
+      { label: "SIC Codes", value: "45111 - Sale of new cars and light motor vehicles", source: "Companies House" },
+      { label: "Active Directors", value: "John Smith (director); Sarah Johnson (secretary)", source: "Companies House" },
+      { label: "Persons of Significant Control", value: "John Smith (75% ownership)", source: "Companies House" },
+      { label: "FCA FRN", value: "654321", source: "FCA Register" },
+      { label: "FCA Status", value: "Authorised", source: "FCA Register" },
+      { label: "FCA Permissions", value: "Credit broking; Consumer hire; Debt adjusting (+2 more)", source: "FCA Register" },
+      { label: "Approved Individuals", value: "John Smith; Sarah Johnson", source: "FCA Register" },
+      // Intentionally missing fields to demo the red highlights
+      { label: "VAT Registration", value: "", source: "" },
+      { label: "Trading Address", value: "", source: "" },
+      { label: "Insurance Details", value: "", source: "" },
+    ];
 
-      // Get full profile if we have a company number
-      if (companyNumber) {
-        setProgress(30);
-        try {
-          const { data: profile } = await supabase.functions.invoke("companies-house", {
-            body: { action: "profile", companyNumber },
-          });
-          if (profile && profile.status !== "not_found") {
-            if (profile.registered_office_address) {
-              const a = profile.registered_office_address;
-              const addr = [a.address_line_1, a.address_line_2, a.locality, a.region, a.postal_code].filter(Boolean).join(", ");
-              const existing = fields.find(f => f.label === "Registered Address");
-              if (existing) existing.value = addr;
-              else fields.push({ label: "Registered Address", value: addr, source: "Companies House" });
-            }
-            if (profile.sic_codes?.length) {
-              fields.push({ label: "SIC Codes", value: profile.sic_codes.join(", "), source: "Companies House" });
-            }
-          }
-        } catch {}
+    onResults({ fields, companyNumber: "09876543", dealerName });
 
-        setProgress(40);
-        // Officers
-        try {
-          const { data: officers } = await supabase.functions.invoke("companies-house", {
-            body: { action: "officers", companyNumber },
-          });
-          const active = (officers?.items || []).filter((o: any) => !o.resigned_on);
-          if (active.length > 0) {
-            fields.push({
-              label: "Active Directors",
-              value: active.map((o: any) => `${o.name} (${o.officer_role})`).join("; "),
-              source: "Companies House",
-            });
-          }
-        } catch {}
+    toast({
+      title: "Search Complete",
+      description: `Found ${fields.filter(f => f.value).length} fields, ${fields.filter(f => !f.value).length} missing.`,
+    });
 
-        setProgress(50);
-        // PSCs
-        try {
-          const { data: pscs } = await supabase.functions.invoke("companies-house", {
-            body: { action: "pscs", companyNumber },
-          });
-          const items = pscs?.items || [];
-          if (items.length > 0) {
-            fields.push({
-              label: "Persons of Significant Control",
-              value: items.map((p: any) => p.name).filter(Boolean).join("; "),
-              source: "Companies House",
-            });
-          }
-        } catch {}
-      }
-
-      // --- FCA Register ---
-      setProgressLabel("Searching FCA Register…");
-      setProgress(60);
-
-      try {
-        const fcaQuery = searchType === "frn" ? query.trim() : dealerName;
-        const fcaAction = searchType === "frn" ? "firm" : "search";
-        const fcaBody = searchType === "frn"
-          ? { action: fcaAction, frn: fcaQuery }
-          : { action: fcaAction, query: fcaQuery, type: "firm" };
-
-        const { data: fcaData } = await supabase.functions.invoke("fca-register", { body: fcaBody });
-
-        const fcaResults = fcaData?.Data || [];
-        if (fcaResults.length > 0) {
-          const firm = fcaResults[0];
-          const frn = firm["FRN"] || firm["Firm Reference Number"] || "";
-          if (frn) {
-            fields.push({ label: "FCA FRN", value: frn, source: "FCA Register" });
-
-            const status = firm["Current Status"] || firm["Status"] || "";
-            if (status) fields.push({ label: "FCA Status", value: status, source: "FCA Register" });
-
-            // Get permissions
-            setProgress(75);
-            try {
-              const { data: permResult } = await supabase.functions.invoke("fca-register", {
-                body: { action: "firm-permissions", frn },
-              });
-              const perms = permResult?.Data || [];
-              if (perms.length > 0) {
-                const permNames = perms.map((p: any) => p["Permission"] || p["Regulated Activity"] || "Unknown");
-                fields.push({
-                  label: "FCA Permissions",
-                  value: permNames.slice(0, 5).join("; ") + (permNames.length > 5 ? ` (+${permNames.length - 5} more)` : ""),
-                  source: "FCA Register",
-                });
-              }
-            } catch {}
-
-            // Individuals
-            try {
-              const { data: indResult } = await supabase.functions.invoke("fca-register", {
-                body: { action: "firm-individuals", frn },
-              });
-              const inds = indResult?.Data || [];
-              if (inds.length > 0) {
-                fields.push({
-                  label: "Approved Individuals",
-                  value: inds.slice(0, 5).map((i: any) => i["Full Name"] || i["Name"] || "").filter(Boolean).join("; "),
-                  source: "FCA Register",
-                });
-              }
-            } catch {}
-          }
-        }
-      } catch (e) {
-        console.warn("FCA search failed:", e);
-      }
-
-      setProgress(100);
-      setProgressLabel("Search complete");
-
-      // Add known required fields that are missing
-      const requiredLabels = [
-        "Company Name", "Company Number", "Registered Address", "Company Status",
-        "Active Directors", "FCA FRN", "FCA Status", "FCA Permissions",
-        "VAT Registration", "Trading Address", "Insurance Details",
-      ];
-      const foundLabels = new Set(fields.map(f => f.label));
-      for (const label of requiredLabels) {
-        if (!foundLabels.has(label)) {
-          fields.push({ label, value: "", source: "" });
-        }
-      }
-
-      onResults({ fields, companyNumber, dealerName });
-
-      toast({
-        title: "Search Complete",
-        description: `Found ${fields.filter(f => f.value).length} fields, ${fields.filter(f => !f.value).length} missing.`,
-      });
-    } catch (e) {
-      console.error("Search error:", e);
-      toast({ title: "Search Failed", description: String(e), variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  }, [query, searchType, onResults, toast]);
+    setLoading(false);
+  }, [query, onResults, toast]);
 
   return (
     <Card>
