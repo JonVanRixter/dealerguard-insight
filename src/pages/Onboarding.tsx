@@ -16,6 +16,8 @@ import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
 import { useToast } from "@/hooks/use-toast";
 import { ScreeningDataEditor } from "@/components/onboarding/ScreeningDataEditor";
 import { generateOnboardingPdf } from "@/utils/onboardingPdfExport";
+import { DemoOnboardingWizard } from "@/components/onboarding/DemoOnboardingWizard";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Building2, PoundSterling, Users, FileText,
   CheckCircle2, FileUp, ArrowLeft, ArrowRight, Loader2, ShieldCheck, Download,
@@ -219,6 +221,7 @@ export default function Onboarding() {
   const location = useLocation();
   const locState = location.state as { dealerName?: string; companyNumber?: string; screeningResults?: Record<string, string> } | null;
   const { toast } = useToast();
+  const { demoMode } = useAuth();
 
   const { state, update, saving, save } = useOnboardingPersistence();
   const [activeTab, setActiveTab] = useState("business");
@@ -337,6 +340,22 @@ export default function Onboarding() {
     return sum + checks.filter(Boolean).length;
   }, 0);
   const overallPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+  if (demoMode) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Application &amp; Due Diligence</h1>
+            <p className="text-muted-foreground mt-1">
+              Structured dealer application pack — collect and verify all required information.
+            </p>
+          </div>
+          <DemoOnboardingWizard />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
