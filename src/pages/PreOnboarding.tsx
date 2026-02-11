@@ -18,6 +18,8 @@ import { DealerEnrichment } from "@/components/onboarding/DealerEnrichment";
 import { useOnboardingPersistence, type SegData } from "@/hooks/useOnboardingPersistence";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { DemoOnboardingWizard } from "@/components/onboarding/DemoOnboardingWizard";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Users, Phone, ShieldCheck, Building2, PoundSterling,
   CheckCircle2, AlertTriangle, XCircle, ArrowRight, Search,
@@ -421,6 +423,7 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
 export default function PreOnboarding() {
   const { state, update, applications, loading, saving, loadApplication, createNew, save } = useOnboardingPersistence();
   const [failed, setFailed] = useState(false);
+  const { demoMode } = useAuth();
 
   return (
     <DashboardLayout>
@@ -468,64 +471,71 @@ export default function PreOnboarding() {
           </Card>
         )}
 
-        {/* Dealer name input */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex gap-4 items-end">
-              <div className="flex-1 space-y-2">
-                <Label>Dealer / Company Name</Label>
-                <Input
-                  placeholder="Enter dealer name to begin…"
-                  value={state.dealerName}
-                  onChange={(e) => update({ dealerName: e.target.value })}
-                  className="max-w-md"
+        {/* Demo mode: 3-step wizard */}
+        {demoMode ? (
+          <DemoOnboardingWizard />
+        ) : (
+          <>
+            {/* Dealer name input */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex gap-4 items-end">
+                  <div className="flex-1 space-y-2">
+                    <Label>Dealer / Company Name</Label>
+                    <Input
+                      placeholder="Enter dealer name to begin…"
+                      value={state.dealerName}
+                      onChange={(e) => update({ dealerName: e.target.value })}
+                      className="max-w-md"
+                    />
+                  </div>
+                  {(failed || state.status === "failed") && (
+                    <Badge variant="destructive" className="gap-1 mb-2">
+                      <ShieldBan className="w-3 h-3" /> Failed — Banned
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Tabs defaultValue="segmentation" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="segmentation" className="gap-2"><Users className="w-4 h-4" />Segmentation</TabsTrigger>
+                <TabsTrigger value="qualification" className="gap-2"><ClipboardList className="w-4 h-4" />Qualification Call</TabsTrigger>
+                <TabsTrigger value="screening" className="gap-2"><FileSearch className="w-4 h-4" />Pre‑Screening</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="segmentation">
+                <DealerSegmentation
+                  seg={state.segmentation}
+                  onChange={(seg) => update({ segmentation: seg })}
+                  dealerName={state.dealerName}
                 />
-              </div>
-              {(failed || state.status === "failed") && (
-                <Badge variant="destructive" className="gap-1 mb-2">
-                  <ShieldBan className="w-3 h-3" /> Failed — Banned
-                </Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Tabs defaultValue="segmentation" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="segmentation" className="gap-2"><Users className="w-4 h-4" />Segmentation</TabsTrigger>
-            <TabsTrigger value="qualification" className="gap-2"><ClipboardList className="w-4 h-4" />Qualification Call</TabsTrigger>
-            <TabsTrigger value="screening" className="gap-2"><FileSearch className="w-4 h-4" />Pre‑Screening</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="segmentation">
-            <DealerSegmentation
-              seg={state.segmentation}
-              onChange={(seg) => update({ segmentation: seg })}
-              dealerName={state.dealerName}
-            />
-          </TabsContent>
-          <TabsContent value="qualification">
-            <QualificationCall
-              notes={state.qualificationNotes}
-              onNotesChange={(n) => update({ qualificationNotes: n })}
-              dealerName={state.dealerName}
-            />
-          </TabsContent>
-          <TabsContent value="screening">
-            <PreScreeningChecks
-              dealerName={state.dealerName}
-              companyNumber={state.companyNumber}
-              setCompanyNumber={(v) => update({ companyNumber: v })}
-              screeningResults={state.screeningResults}
-              onScreeningUpdate={(r) => update({ screeningResults: r })}
-              onPass={() => update({ stage: "application", status: "passed" })}
-              onFail={(checks) => {
-                setFailed(true);
-                update({ status: "failed", stage: "failed", failureReason: `Failed checks: ${checks.join(", ")}` });
-              }}
-            />
-          </TabsContent>
-        </Tabs>
+              </TabsContent>
+              <TabsContent value="qualification">
+                <QualificationCall
+                  notes={state.qualificationNotes}
+                  onNotesChange={(n) => update({ qualificationNotes: n })}
+                  dealerName={state.dealerName}
+                />
+              </TabsContent>
+              <TabsContent value="screening">
+                <PreScreeningChecks
+                  dealerName={state.dealerName}
+                  companyNumber={state.companyNumber}
+                  setCompanyNumber={(v) => update({ companyNumber: v })}
+                  screeningResults={state.screeningResults}
+                  onScreeningUpdate={(r) => update({ screeningResults: r })}
+                  onPass={() => update({ stage: "application", status: "passed" })}
+                  onFail={(checks) => {
+                    setFailed(true);
+                    update({ status: "failed", stage: "failed", failureReason: `Failed checks: ${checks.join(", ")}` });
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
