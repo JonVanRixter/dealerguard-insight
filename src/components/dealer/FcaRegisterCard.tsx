@@ -53,6 +53,7 @@ interface Props {
     statusDate?: string;
     firmType?: string;
     companiesHouseNumber?: string;
+    address?: string;
     individuals: { name: string; irn?: string; status?: string }[];
     permissions: string[];
   }) => void;
@@ -142,6 +143,7 @@ export function FcaRegisterCard({ dealerName, fcaRef, onDataLoaded }: Props) {
         statusDate: firm["Status Effective Date"],
         firmType: firm["Firm Type"],
         companiesHouseNumber: firm["Companies House Number"],
+        address: firm["Address"] ? Object.values(firm["Address"]).filter(Boolean).join(", ") : undefined,
         individuals: loadedIndividuals.map((ind: IndividualData) => ({
           name: ind["Name"] || "Unknown",
           irn: ind["IRN"],
