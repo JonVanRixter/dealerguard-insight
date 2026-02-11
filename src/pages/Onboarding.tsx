@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { OnboardingDocUpload } from "@/components/onboarding/OnboardingDocUpload";
+import { CreditSafeSearch } from "@/components/onboarding/CreditSafeSearch";
 import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -214,7 +215,7 @@ export default function Onboarding() {
 
         {/* Context from pre-onboarding */}
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4 text-sm">
                 {dealerName && (
@@ -233,6 +234,11 @@ export default function Onboarding() {
                 <span className="text-muted-foreground">{overallPct}% complete</span>
                 <Progress value={overallPct} className="h-2 w-32" />
               </div>
+            </div>
+            {/* CreditSafe */}
+            <div className="pt-2 border-t border-border">
+              <p className="text-xs font-medium text-muted-foreground mb-2">CreditSafe Report</p>
+              <CreditSafeSearch defaultSearch={dealerName} companyNumber={companyNumber} />
             </div>
           </CardContent>
         </Card>

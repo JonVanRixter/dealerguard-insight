@@ -18,6 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { CreditSafeSearch } from "@/components/onboarding/CreditSafeSearch";
 import {
   ShieldBan, Plus, Trash2, Building2, User, Search, AlertTriangle,
 } from "lucide-react";
@@ -98,6 +99,7 @@ export default function BannedList() {
         <TableRow>
           <TableHead>Name</TableHead>
           <TableHead>Company</TableHead>
+          <TableHead>Credit Score</TableHead>
           <TableHead>Reason</TableHead>
           <TableHead>Date Banned</TableHead>
           <TableHead>Failed Checks</TableHead>
@@ -106,11 +108,14 @@ export default function BannedList() {
       </TableHeader>
       <TableBody>
         {items.length === 0 ? (
-          <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No entries found.</TableCell></TableRow>
+          <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No entries found.</TableCell></TableRow>
         ) : items.map((e) => (
           <TableRow key={e.id}>
             <TableCell className="font-medium">{e.entity_name}</TableCell>
             <TableCell>{e.company_name || "—"}</TableCell>
+            <TableCell>
+              <CreditSafeSearch defaultSearch={e.entity_name} companyNumber={e.company_name || undefined} variant="score-only" />
+            </TableCell>
             <TableCell>
               <span className="text-sm">{e.reason}</span>
               {e.notes && <p className="text-xs text-muted-foreground mt-0.5">{e.notes}</p>}
