@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { IVendiWelcome } from "@/components/IVendiWelcome";
 import logo from "@/assets/logo.png";
 
 const Auth = () => {
   const { signIn, signUp, enterDemoMode } = useAuth();
+  const [showWelcome, setShowWelcome] = useState(false);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
@@ -39,6 +41,14 @@ const Auth = () => {
     }
     setLoading(false);
   };
+
+  const handleDemoBypass = useCallback(() => setShowWelcome(true), []);
+  const handleWelcomeComplete = useCallback(() => {
+    setShowWelcome(false);
+    enterDemoMode();
+  }, [enterDemoMode]);
+
+  if (showWelcome) return <IVendiWelcome onComplete={handleWelcomeComplete} />;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -97,7 +107,7 @@ const Auth = () => {
           <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">or</span></div>
         </div>
 
-        <Button variant="outline" className="w-full" onClick={enterDemoMode}>
+        <Button variant="outline" className="w-full" onClick={handleDemoBypass}>
           View Demo
         </Button>
       </div>
