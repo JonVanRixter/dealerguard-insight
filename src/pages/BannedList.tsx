@@ -111,7 +111,7 @@ export default function BannedList() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Entity Banned", description: `${form.entity_name} added to banned list.` });
+      toast({ title: "Added to DND", description: `${form.entity_name} added to Do Not Deal list.` });
       setForm({ entity_type: "dealer", entity_name: "", company_name: "", reason: "", notes: "" });
       setDialogOpen(false);
       fetchEntities();
@@ -187,7 +187,7 @@ export default function BannedList() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <ShieldBan className="w-6 h-6 text-destructive" /> Banned List
+              <ShieldBan className="w-6 h-6 text-destructive" /> Do Not Deal (DND)
             </h1>
             <p className="text-muted-foreground mt-1">
               Dealers and directors who have failed checks or been flagged — {entities.length} total entries.
@@ -198,7 +198,7 @@ export default function BannedList() {
               <Button className="gap-2"><Plus className="w-4 h-4" /> Add Entry</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
-              <DialogHeader><DialogTitle>Add to Banned List</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>Add to DND List</DialogTitle></DialogHeader>
               <div className="space-y-4 mt-2">
                 <div>
                   <Label>Type</Label>
@@ -227,7 +227,7 @@ export default function BannedList() {
                   <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} placeholder="Optional" />
                 </div>
                 <Button onClick={handleAdd} disabled={!form.entity_name || !form.reason} className="w-full">
-                  Add to Banned List
+                Add to DND List
                 </Button>
               </div>
             </DialogContent>
@@ -237,7 +237,7 @@ export default function BannedList() {
         {/* Summary Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           {[
-            { label: "Total Banned", value: entities.length, icon: ShieldBan },
+            { label: "Total DND", value: entities.length, icon: ShieldBan },
             { label: "Dealers", value: entities.filter(e => e.entity_type === "dealer").length, icon: Building2 },
             { label: "Directors", value: entities.filter(e => e.entity_type === "director").length, icon: User },
             {
@@ -266,7 +266,7 @@ export default function BannedList() {
         {/* Search */}
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search banned list…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Search DND list…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
 
         <Tabs defaultValue="dealers" className="space-y-4">
