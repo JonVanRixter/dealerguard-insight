@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { OnboardingDocUpload } from "@/components/onboarding/OnboardingDocUpload";
 import { CreditSafeSearch } from "@/components/onboarding/CreditSafeSearch";
 import { FcaRegisterCard } from "@/components/dealer/FcaRegisterCard";
+import { DealerEnrichment } from "@/components/onboarding/DealerEnrichment";
 import { useOnboardingPersistence, type SegData } from "@/hooks/useOnboardingPersistence";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -337,6 +338,26 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Full Dealer Enrichment */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2"><Search className="w-4 h-4" /> Full Dealer Enrichment</Label>
+          <p className="text-xs text-muted-foreground">Auto-search FCA, Companies House &amp; CreditSafe in one click.</p>
+          <DealerEnrichment
+            dealerName={dealerName}
+            companyNumber={companyNumber}
+            onEnriched={(result, screeningMap) => {
+              // Merge enrichment results into screening data
+              const enrichmentData: Record<string, string> = {};
+              for (const [k, v] of Object.entries(screeningMap)) {
+                if (v) enrichmentData[k] = v;
+              }
+              // Store the full enrichment JSON too
+              enrichmentData._enrichment = JSON.stringify(result);
+              onScreeningUpdate({ ...screeningResults, ...enrichmentData });
+            }}
+          />
         </div>
 
         {/* CreditSafe Search */}
