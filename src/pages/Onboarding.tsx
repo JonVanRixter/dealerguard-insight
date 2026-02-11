@@ -8,9 +8,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { OnboardingDocUpload } from "@/components/onboarding/OnboardingDocUpload";
+import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
+import { useToast } from "@/hooks/use-toast";
 import {
   Building2, PoundSterling, Users, FileText,
-  CheckCircle2, FileUp, ArrowLeft, ArrowRight,
+  CheckCircle2, FileUp, ArrowLeft, ArrowRight, Loader2,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -24,19 +26,28 @@ interface CheckItem {
 
 function ChecklistSection({
   title,
+  sectionKey,
   description,
   icon: Icon,
   items,
   dealerName,
+  savedChecks,
+  onChecksChange,
 }: {
   title: string;
+  sectionKey: string;
   description: string;
   icon: React.ElementType;
   items: CheckItem[];
   dealerName: string;
+  savedChecks: boolean[];
+  onChecksChange: (checks: boolean[]) => void;
 }) {
-  const [checks, setChecks] = useState<boolean[]>(new Array(items.length).fill(false));
-  const toggle = (i: number) => setChecks((c) => c.map((v, j) => (j === i ? !v : v)));
+  const checks = savedChecks.length === items.length ? savedChecks : new Array(items.length).fill(false);
+  const toggle = (i: number) => {
+    const next = checks.map((v: boolean, j: number) => (j === i ? !v : v));
+    onChecksChange(next);
+  };
   const done = checks.filter(Boolean).length;
 
   return (
@@ -71,7 +82,6 @@ function ChecklistSection({
                   )}
                 </div>
               </label>
-              {/* Inline doc upload per item if it has a docCategory */}
               {item.docCategory && dealerName && (
                 <div className="ml-9 mt-2 mb-1">
                   <OnboardingDocUpload dealerName={dealerName} category={item.docCategory} compact />
@@ -81,7 +91,6 @@ function ChecklistSection({
           ))}
         </div>
 
-        {/* Section-level upload */}
         {dealerName && (
           <div className="space-y-2 pt-2 border-t border-border">
             <p className="text-sm font-medium flex items-center gap-2">
@@ -132,20 +141,58 @@ const supportingItems: CheckItem[] = [
   { label: "Dealer website & digital footprint", description: "Website URL, social media presence, online reviews" },
 ];
 
+const SECTIONS = [
+  { key: "business", label: "Business Info", icon: Building2, title: "A. Business Information", desc: "Core company registration and structure details.", items: businessItems },
+  { key: "financial", label: "Financial Info", icon: PoundSterling, title: "B. Financial Information", desc: "Financial statements and banking evidence.", items: financialItems },
+  { key: "directors", label: "Directors & Shareholders", icon: Users, title: "C. Directors & Shareholders", desc: "Identity verification and personal guarantee requirements.", items: directorsItems },
+  { key: "supporting", label: "Supporting Docs", icon: FileText, title: "D. Supporting Documents", desc: "Insurance, web presence, and additional evidence.", items: supportingItems },
+];
+
 /* ------------------------------------------------------------------ */
 /*  Main page                                                          */
 /* ------------------------------------------------------------------ */
 export default function Onboarding() {
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as { dealerName?: string; companyNumber?: string } | null;
+  const locState = location.state as { dealerName?: string; companyNumber?: string } | null;
+  const { toast } = useToast();
+
+  const { state, update, saving, save } = useOnboardingPersistence();
   const [activeTab, setActiveTab] = useState("business");
 
-  const dealerName = state?.dealerName || "";
-  const companyNumber = state?.companyNumber || "";
+  const dealerName = state.dealerName || locState?.dealerName || "";
+  const companyNumber = state.companyNumber || locState?.companyNumber || "";
 
-  const tabOrder = ["business", "financial", "directors", "supporting"];
+  // If navigated from pre-onboarding with state, seed it
+  const [seeded, setSeeded] = useState(false);
+  if (!seeded && locState?.dealerName && !state.dealerName) {
+    setSeeded(true);
+    update({ dealerName: locState.dealerName, companyNumber: locState.companyNumber || "", stage: "application" });
+  }
+
+  const tabOrder = SECTIONS.map((s) => s.key);
   const currentIdx = tabOrder.indexOf(activeTab);
+
+  const checklistProgress = (state.checklistProgress || {}) as Record<string, boolean[]>;
+
+  const updateChecks = (sectionKey: string, checks: boolean[]) => {
+    const next = { ...checklistProgress, [sectionKey]: checks };
+    update({ checklistProgress: next });
+  };
+
+  const handleComplete = () => {
+    update({ stage: "completed", status: "passed" });
+    save();
+    toast({ title: "Application Complete", description: `${dealerName} application marked as complete.` });
+  };
+
+  // Calculate overall progress
+  const totalItems = SECTIONS.reduce((sum, s) => sum + s.items.length, 0);
+  const completedItems = SECTIONS.reduce((sum, s) => {
+    const checks = checklistProgress[s.key] || [];
+    return sum + checks.filter(Boolean).length;
+  }, 0);
+  const overallPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
   return (
     <DashboardLayout>
@@ -157,19 +204,24 @@ export default function Onboarding() {
               Structured dealer application pack — collect and verify all required information.
             </p>
           </div>
-          <Button variant="outline" className="gap-2" onClick={() => navigate("/pre-onboarding")}>
-            <ArrowLeft className="w-4 h-4" /> Back to Pre‑Onboarding
-          </Button>
+          <div className="flex items-center gap-2">
+            {saving && <span className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Saving…</span>}
+            <Button variant="outline" className="gap-2" onClick={() => navigate("/pre-onboarding")}>
+              <ArrowLeft className="w-4 h-4" /> Back to Pre‑Onboarding
+            </Button>
+          </div>
         </div>
 
         {/* Context from pre-onboarding */}
-        {dealerName && (
-          <Card>
-            <CardContent className="pt-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-4 text-sm">
-                <Badge variant="secondary" className="gap-1">
-                  <Building2 className="w-3 h-3" /> {dealerName}
-                </Badge>
+                {dealerName && (
+                  <Badge variant="secondary" className="gap-1">
+                    <Building2 className="w-3 h-3" /> {dealerName}
+                  </Badge>
+                )}
                 {companyNumber && (
                   <span className="text-muted-foreground">Co. #{companyNumber}</span>
                 )}
@@ -177,30 +229,37 @@ export default function Onboarding() {
                   Pre-Screening Passed
                 </Badge>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-muted-foreground">{overallPct}% complete</span>
+                <Progress value={overallPct} className="h-2 w-32" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex-wrap">
-            <TabsTrigger value="business" className="gap-2"><Building2 className="w-4 h-4" />Business Info</TabsTrigger>
-            <TabsTrigger value="financial" className="gap-2"><PoundSterling className="w-4 h-4" />Financial Info</TabsTrigger>
-            <TabsTrigger value="directors" className="gap-2"><Users className="w-4 h-4" />Directors &amp; Shareholders</TabsTrigger>
-            <TabsTrigger value="supporting" className="gap-2"><FileText className="w-4 h-4" />Supporting Docs</TabsTrigger>
+            {SECTIONS.map((s) => (
+              <TabsTrigger key={s.key} value={s.key} className="gap-2">
+                <s.icon className="w-4 h-4" />{s.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
-          <TabsContent value="business">
-            <ChecklistSection title="A. Business Information" description="Core company registration and structure details." icon={Building2} items={businessItems} dealerName={dealerName} />
-          </TabsContent>
-          <TabsContent value="financial">
-            <ChecklistSection title="B. Financial Information" description="Financial statements and banking evidence." icon={PoundSterling} items={financialItems} dealerName={dealerName} />
-          </TabsContent>
-          <TabsContent value="directors">
-            <ChecklistSection title="C. Directors & Shareholders" description="Identity verification and personal guarantee requirements." icon={Users} items={directorsItems} dealerName={dealerName} />
-          </TabsContent>
-          <TabsContent value="supporting">
-            <ChecklistSection title="D. Supporting Documents" description="Insurance, web presence, and additional evidence." icon={FileText} items={supportingItems} dealerName={dealerName} />
-          </TabsContent>
+          {SECTIONS.map((s) => (
+            <TabsContent key={s.key} value={s.key}>
+              <ChecklistSection
+                title={s.title}
+                sectionKey={s.key}
+                description={s.desc}
+                icon={s.icon}
+                items={s.items}
+                dealerName={dealerName}
+                savedChecks={checklistProgress[s.key] || []}
+                onChecksChange={(checks) => updateChecks(s.key, checks)}
+              />
+            </TabsContent>
+          ))}
         </Tabs>
 
         {/* Stage navigation */}
@@ -218,7 +277,7 @@ export default function Onboarding() {
               Next Section <ArrowRight className="w-4 h-4" />
             </Button>
           ) : (
-            <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+            <Button className="gap-2" onClick={handleComplete} disabled={overallPct < 100}>
               <CheckCircle2 className="w-4 h-4" /> Mark Application Complete
             </Button>
           )}

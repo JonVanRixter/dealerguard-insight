@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,31 +12,22 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { OnboardingDocUpload } from "@/components/onboarding/OnboardingDocUpload";
+import { useOnboardingPersistence, type SegData } from "@/hooks/useOnboardingPersistence";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Users, Phone, ShieldCheck, Building2, Car, PoundSterling,
+  Users, Phone, ShieldCheck, Building2, PoundSterling,
   CheckCircle2, AlertTriangle, XCircle, ArrowRight, Search,
   ClipboardList, FileSearch, Landmark, FileUp, ShieldBan,
+  Loader2, Plus, FolderOpen,
 } from "lucide-react";
-
-/* ------------------------------------------------------------------ */
-/*  Shared state for dealer name across tabs                           */
-/* ------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------ */
 /*  1.1  Dealer Segmentation                                          */
 /* ------------------------------------------------------------------ */
-interface SegData {
-  franchise: string;
-  size: string;
-  stockType: string[];
-  existingFinance: string;
-}
-
-function DealerSegmentation({ seg, setSeg, dealerName }: { seg: SegData; setSeg: (s: SegData) => void; dealerName: string }) {
+function DealerSegmentation({ seg, onChange, dealerName }: { seg: SegData; onChange: (s: SegData) => void; dealerName: string }) {
   const toggleStock = (val: string) =>
-    setSeg({
+    onChange({
       ...seg,
       stockType: seg.stockType.includes(val)
         ? seg.stockType.filter((v) => v !== val)
@@ -59,7 +50,7 @@ function DealerSegmentation({ seg, setSeg, dealerName }: { seg: SegData; setSeg:
 
         <div className="space-y-2">
           <Label>Franchise Status</Label>
-          <Select value={seg.franchise} onValueChange={(v) => setSeg({ ...seg, franchise: v })}>
+          <Select value={seg.franchise} onValueChange={(v) => onChange({ ...seg, franchise: v })}>
             <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="franchised">Franchised</SelectItem>
@@ -70,7 +61,7 @@ function DealerSegmentation({ seg, setSeg, dealerName }: { seg: SegData; setSeg:
 
         <div className="space-y-2">
           <Label>Size (units sold annually)</Label>
-          <Select value={seg.size} onValueChange={(v) => setSeg({ ...seg, size: v })}>
+          <Select value={seg.size} onValueChange={(v) => onChange({ ...seg, size: v })}>
             <SelectTrigger><SelectValue placeholder="Select size band" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="small">Small (&lt; 250 units)</SelectItem>
@@ -95,7 +86,7 @@ function DealerSegmentation({ seg, setSeg, dealerName }: { seg: SegData; setSeg:
 
         <div className="space-y-2">
           <Label>Existing Finance Relationships</Label>
-          <Select value={seg.existingFinance} onValueChange={(v) => setSeg({ ...seg, existingFinance: v })}>
+          <Select value={seg.existingFinance} onValueChange={(v) => onChange({ ...seg, existingFinance: v })}>
             <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">None</SelectItem>
@@ -105,7 +96,6 @@ function DealerSegmentation({ seg, setSeg, dealerName }: { seg: SegData; setSeg:
           </Select>
         </div>
 
-        {/* Documents */}
         <div className="space-y-2">
           <Label className="flex items-center gap-2"><FileUp className="w-4 h-4" /> Supporting Documents</Label>
           {dealerName ? (
@@ -136,7 +126,7 @@ function DealerSegmentation({ seg, setSeg, dealerName }: { seg: SegData; setSeg:
 /* ------------------------------------------------------------------ */
 /*  1.2  Initial Qualification Call                                    */
 /* ------------------------------------------------------------------ */
-function QualificationCall({ notes, setNotes, dealerName }: { notes: string; setNotes: (n: string) => void; dealerName: string }) {
+function QualificationCall({ notes, onNotesChange, dealerName }: { notes: string; onNotesChange: (n: string) => void; dealerName: string }) {
   const objectives = [
     { label: "Understand dealer profile & stocking needs", icon: Building2 },
     { label: "Confirm minimum criteria met", icon: CheckCircle2 },
@@ -183,11 +173,10 @@ function QualificationCall({ notes, setNotes, dealerName }: { notes: string; set
             placeholder="Record key findings, concerns, and next steps…"
             className="min-h-[100px]"
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={(e) => onNotesChange(e.target.value)}
           />
         </div>
 
-        {/* Documents */}
         <div className="space-y-2">
           <Label className="flex items-center gap-2"><FileUp className="w-4 h-4" /> Call Evidence / Documents</Label>
           {dealerName ? (
@@ -213,24 +202,39 @@ function QualificationCall({ notes, setNotes, dealerName }: { notes: string; set
 /* ------------------------------------------------------------------ */
 type CheckStatus = "pending" | "pass" | "fail" | "running";
 
-function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFail }: {
+function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFail, onPass, screeningResults, onScreeningUpdate }: {
   dealerName: string;
   companyNumber: string;
   setCompanyNumber: (v: string) => void;
   onFail: (failedChecks: string[]) => void;
+  onPass: () => void;
+  screeningResults: Record<string, string>;
+  onScreeningUpdate: (results: Record<string, string>) => void;
 }) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [statuses, setStatuses] = useState<Record<string, CheckStatus>>({
-    companiesHouse: "pending",
-    openBanking: "pending",
-    aml: "pending",
+  const [statuses, setStatuses] = useState<Record<string, CheckStatus>>(() => {
+    // Restore from saved screening results
+    const restored: Record<string, CheckStatus> = {
+      companiesHouse: "pending",
+      openBanking: "pending",
+      aml: "pending",
+    };
+    for (const [k, v] of Object.entries(screeningResults)) {
+      if (v === "pass" || v === "fail") restored[k] = v;
+    }
+    return restored;
   });
 
   const runCheck = (key: string) => {
     setStatuses((s) => ({ ...s, [key]: "running" }));
     setTimeout(() => {
-      setStatuses((s) => ({ ...s, [key]: Math.random() > 0.15 ? "pass" : "fail" }));
+      const result: CheckStatus = Math.random() > 0.15 ? "pass" : "fail";
+      setStatuses((s) => {
+        const next = { ...s, [key]: result };
+        onScreeningUpdate(Object.fromEntries(Object.entries(next).filter(([, v]) => v === "pass" || v === "fail")));
+        return next;
+      });
     }, 1500 + Math.random() * 1000);
   };
 
@@ -320,7 +324,6 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
           ))}
         </div>
 
-        {/* Documents */}
         <div className="space-y-2">
           <Label className="flex items-center gap-2"><FileUp className="w-4 h-4" /> Pre-Screening Documents</Label>
           {dealerName ? (
@@ -331,20 +334,14 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
         </div>
 
         {allDone && (
-          <div
-            className={`rounded-lg border p-4 flex items-start gap-3 ${
-              allPass
-                ? "border-emerald-500/30 bg-emerald-500/5"
-                : "border-destructive/30 bg-destructive/5"
-            }`}
-          >
+          <div className={`rounded-lg border p-4 flex items-start gap-3 ${allPass ? "border-emerald-500/30 bg-emerald-500/5" : "border-destructive/30 bg-destructive/5"}`}>
             {allPass ? (
               <>
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
                 <div className="text-sm">
                   <p className="font-medium text-emerald-700 dark:text-emerald-400">All checks passed</p>
                   <p className="text-muted-foreground mt-1">This dealer is cleared to proceed to full onboarding.</p>
-                  <Button onClick={() => navigate("/onboarding", { state: { dealerName, companyNumber } })} className="mt-3 gap-2">
+                  <Button onClick={() => { onPass(); navigate("/onboarding", { state: { dealerName, companyNumber } }); }} className="mt-3 gap-2">
                     <ArrowRight className="w-4 h-4" /> Proceed to Application &amp; Due Diligence
                   </Button>
                 </div>
@@ -354,16 +351,12 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
                 <XCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
                 <div className="text-sm space-y-2">
                   <p className="font-medium text-destructive">One or more checks failed</p>
-                  <p className="text-muted-foreground">
-                    Failed: {failedKeys.join(", ")}. This dealer cannot proceed.
-                  </p>
+                  <p className="text-muted-foreground">Failed: {failedKeys.join(", ")}. This dealer cannot proceed.</p>
                   <div className="flex gap-2">
                     <Button variant="destructive" size="sm" className="gap-2" onClick={handleBanDealer}>
                       <ShieldBan className="w-4 h-4" /> Add to Banned List
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => navigate("/banned-list")}>
-                      View Banned List
-                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => navigate("/banned-list")}>View Banned List</Button>
                   </div>
                 </div>
               </>
@@ -379,22 +372,56 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
 /*  Main page                                                          */
 /* ------------------------------------------------------------------ */
 export default function PreOnboarding() {
-  const [dealerName, setDealerName] = useState("");
-  const [companyNumber, setCompanyNumber] = useState("");
-  const [seg, setSeg] = useState<SegData>({ franchise: "", size: "", stockType: [], existingFinance: "" });
-  const [qualNotes, setQualNotes] = useState("");
+  const { state, update, applications, loading, saving, loadApplication, createNew, save } = useOnboardingPersistence();
   const [failed, setFailed] = useState(false);
-  const [failedChecks, setFailedChecks] = useState<string[]>([]);
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Pre‑Onboarding</h1>
-          <p className="text-muted-foreground mt-1">Attraction &amp; Qualification — assess new dealer prospects before full onboarding.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Pre‑Onboarding</h1>
+            <p className="text-muted-foreground mt-1">Attraction &amp; Qualification — assess new dealer prospects before full onboarding.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {saving && <span className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Saving…</span>}
+            <Button variant="outline" size="sm" className="gap-2" onClick={createNew}>
+              <Plus className="w-4 h-4" /> New Application
+            </Button>
+          </div>
         </div>
 
-        {/* Dealer name input — shared across all tabs */}
+        {/* Saved applications */}
+        {applications.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <FolderOpen className="w-4 h-4" /> Saved Applications ({applications.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {applications.map((app) => (
+                  <Button
+                    key={app.id}
+                    variant={state.id === app.id ? "default" : "outline"}
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => loadApplication(app)}
+                  >
+                    <Building2 className="w-3 h-3" />
+                    {app.dealerName}
+                    <Badge variant={app.status === "failed" ? "destructive" : app.status === "passed" ? "default" : "secondary"} className="text-[10px] ml-1">
+                      {app.stage}
+                    </Badge>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Dealer name input */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex gap-4 items-end">
@@ -402,12 +429,12 @@ export default function PreOnboarding() {
                 <Label>Dealer / Company Name</Label>
                 <Input
                   placeholder="Enter dealer name to begin…"
-                  value={dealerName}
-                  onChange={(e) => setDealerName(e.target.value)}
+                  value={state.dealerName}
+                  onChange={(e) => update({ dealerName: e.target.value })}
                   className="max-w-md"
                 />
               </div>
-              {failed && (
+              {(failed || state.status === "failed") && (
                 <Badge variant="destructive" className="gap-1 mb-2">
                   <ShieldBan className="w-3 h-3" /> Failed — Banned
                 </Badge>
@@ -424,17 +451,31 @@ export default function PreOnboarding() {
           </TabsList>
 
           <TabsContent value="segmentation">
-            <DealerSegmentation seg={seg} setSeg={setSeg} dealerName={dealerName} />
+            <DealerSegmentation
+              seg={state.segmentation}
+              onChange={(seg) => update({ segmentation: seg })}
+              dealerName={state.dealerName}
+            />
           </TabsContent>
           <TabsContent value="qualification">
-            <QualificationCall notes={qualNotes} setNotes={setQualNotes} dealerName={dealerName} />
+            <QualificationCall
+              notes={state.qualificationNotes}
+              onNotesChange={(n) => update({ qualificationNotes: n })}
+              dealerName={state.dealerName}
+            />
           </TabsContent>
           <TabsContent value="screening">
             <PreScreeningChecks
-              dealerName={dealerName}
-              companyNumber={companyNumber}
-              setCompanyNumber={setCompanyNumber}
-              onFail={(checks) => { setFailed(true); setFailedChecks(checks); }}
+              dealerName={state.dealerName}
+              companyNumber={state.companyNumber}
+              setCompanyNumber={(v) => update({ companyNumber: v })}
+              screeningResults={state.screeningResults}
+              onScreeningUpdate={(r) => update({ screeningResults: r })}
+              onPass={() => update({ stage: "application", status: "passed" })}
+              onFail={(checks) => {
+                setFailed(true);
+                update({ status: "failed", stage: "failed", failureReason: `Failed checks: ${checks.join(", ")}` });
+              }}
             />
           </TabsContent>
         </Tabs>
