@@ -15,6 +15,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [signupData, setSignupData] = useState({ email: "", password: "", confirmPassword: "" });
+  const [demoPassword, setDemoPassword] = useState("");
+  const [showDemoPassword, setShowDemoPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +44,14 @@ const Auth = () => {
     setLoading(false);
   };
 
-  const handleDemoBypass = useCallback(() => setShowWelcome(true), []);
+  const handleDemoBypass = useCallback(() => {
+    if (demoPassword === "TCG1234") {
+      setShowDemoPassword(false);
+      setShowWelcome(true);
+    } else {
+      toast({ title: "Incorrect Password", description: "Please enter the correct demo password.", variant: "destructive" });
+    }
+  }, [demoPassword, toast]);
   const handleWelcomeComplete = useCallback(() => {
     setShowWelcome(false);
     enterDemoMode();
@@ -107,9 +116,19 @@ const Auth = () => {
           <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">or</span></div>
         </div>
 
-        <Button variant="outline" className="w-full" onClick={handleDemoBypass}>
-          View Demo
-        </Button>
+        {!showDemoPassword ? (
+          <Button variant="outline" className="w-full" onClick={() => setShowDemoPassword(true)}>
+            View Demo
+          </Button>
+        ) : (
+          <form onSubmit={(e) => { e.preventDefault(); handleDemoBypass(); }} className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="demo-password">Demo Password</Label>
+              <Input id="demo-password" type="password" placeholder="Enter demo password" value={demoPassword} onChange={(e) => setDemoPassword(e.target.value)} autoFocus />
+            </div>
+            <Button type="submit" variant="outline" className="w-full">Enter Demo</Button>
+          </form>
+        )}
       </div>
     </div>
   );
