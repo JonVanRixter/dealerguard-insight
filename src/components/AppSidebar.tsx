@@ -37,7 +37,7 @@ export function AppSidebar() {
     <aside className="hidden md:flex w-60 flex-col bg-sidebar text-sidebar-foreground min-h-screen shrink-0 sticky top-0 h-screen overflow-y-auto">
       {/* Logo */}
       <div className="flex items-center px-4 py-4 border-b border-sidebar-border">
-        <img src={klassifyProLogo} alt="Klassify Pro" className="h-10 w-auto" />
+        <img src={klassifyProLogo} alt="Klassify Pro" className="h-10 w-auto rounded-lg" style={{ mixBlendMode: 'multiply' }} />
       </div>
 
       {/* Navigation */}
