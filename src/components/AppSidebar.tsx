@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
-import klassifyLogo from "@/assets/klassify-dark-logo.png";
+import klassifyProLogo from "@/assets/klassify-pro-logo.png";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -36,9 +36,8 @@ export function AppSidebar() {
   return (
     <aside className="hidden md:flex w-60 flex-col bg-sidebar text-sidebar-foreground min-h-screen shrink-0 sticky top-0 h-screen overflow-y-auto">
       {/* Logo */}
-      <div className="flex items-center gap-2 px-4 py-4 border-b border-sidebar-border">
-        <img src={klassifyLogo} alt="Klassify" className="h-10 w-auto" />
-        <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 800, fontSize: '0.6rem', letterSpacing: '0.05em' }} className="text-sidebar-foreground uppercase opacity-80">Pro</span>
+      <div className="flex items-center px-4 py-4 border-b border-sidebar-border">
+        <img src={klassifyProLogo} alt="Klassify Pro" className="h-10 w-auto" />
       </div>
 
       {/* Navigation */}

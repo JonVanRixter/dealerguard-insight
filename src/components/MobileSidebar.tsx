@@ -13,7 +13,7 @@ import {
   ShieldBan,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import klassifyLogo from "@/assets/klassify-dark-logo.png";
+import klassifyProLogo from "@/assets/klassify-pro-logo.png";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -42,10 +42,7 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
       <div className="absolute inset-0 bg-foreground/30" onClick={onClose} />
       <aside className="relative w-64 h-full bg-sidebar text-sidebar-foreground flex flex-col">
         <div className="flex items-center justify-between px-4 py-4 border-b border-sidebar-border">
-          <div className="flex items-center gap-2">
-            <img src={klassifyLogo} alt="Klassify" className="h-8 w-auto" />
-            <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 800, fontSize: '0.5rem', letterSpacing: '0.05em' }} className="text-sidebar-foreground uppercase opacity-80">Pro</span>
-          </div>
+          <img src={klassifyProLogo} alt="Klassify Pro" className="h-8 w-auto" />
           <button onClick={onClose}>
             <X className="w-5 h-5 text-sidebar-muted" />
           </button>
