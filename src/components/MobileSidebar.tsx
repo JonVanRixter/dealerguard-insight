@@ -42,7 +42,7 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
       <div className="absolute inset-0 bg-foreground/30" onClick={onClose} />
       <aside className="relative w-64 h-full bg-sidebar text-sidebar-foreground flex flex-col">
         <div className="flex items-center justify-between px-4 py-4 border-b border-sidebar-border">
-          <img src={klassifyProLogo} alt="Klassify Pro" className="h-8 w-auto rounded-lg" style={{ mixBlendMode: 'multiply' }} />
+          <img src={klassifyProLogo} alt="Klassify Pro" className="h-8 w-auto rounded-lg" />
           <button onClick={onClose}>
             <X className="w-5 h-5 text-sidebar-muted" />
           </button>
