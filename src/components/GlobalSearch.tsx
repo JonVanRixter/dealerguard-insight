@@ -26,6 +26,7 @@ import {
   Navigation,
 } from "lucide-react";
 import { dealers } from "@/data/dealers";
+import klassifyLogo from "@/assets/klassify-logo.png";
 
 const RECENT_SEARCHES_KEY = "global-search-recent";
 const MAX_RECENT = 8;
@@ -126,7 +127,7 @@ export function GlobalSearch() {
         onClick={() => setOpen(true)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted transition-colors text-sm text-muted-foreground w-56"
       >
-        <Search className="w-3.5 h-3.5" />
+        <img src={klassifyLogo} alt="Klassify" className="h-5 w-auto" />
         <span className="flex-1 text-left">Search...</span>
         <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
           ⌘K
