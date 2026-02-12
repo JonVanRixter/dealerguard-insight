@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,9 +9,63 @@ const corsHeaders = {
 
 const FCA_BASE = "https://register.fca.org.uk/services";
 
+// Input validation helpers
+function validateFrn(frn: unknown): string {
+  if (typeof frn !== "string" || !/^\d{1,7}$/.test(frn)) {
+    throw new ValidationError("FRN must be 1-7 digits");
+  }
+  return frn;
+}
+
+function validateQuery(query: unknown): string {
+  if (typeof query !== "string" || query.length === 0 || query.length > 200) {
+    throw new ValidationError("Query must be 1-200 characters");
+  }
+  return query;
+}
+
+function validateType(type: unknown): string {
+  const allowed = ["firm", "individual"];
+  if (type !== undefined && (typeof type !== "string" || !allowed.includes(type))) {
+    throw new ValidationError("Type must be 'firm' or 'individual'");
+  }
+  return (type as string) || "firm";
+}
+
+class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Authenticate the calling user
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+  if (claimsError || !claimsData?.claims) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -19,7 +74,12 @@ serve(async (req) => {
       throw new Error("FCA_API_KEY is not configured");
     }
 
-    const { action, ...params } = await req.json();
+    const body = await req.json();
+    const action = body.action;
+
+    if (typeof action !== "string") {
+      throw new ValidationError("action is required");
+    }
 
     const headers: Record<string, string> = {
       "X-Auth-Email": FCA_API_KEY,
@@ -31,14 +91,14 @@ serve(async (req) => {
 
     switch (action) {
       case "search": {
-        const q = encodeURIComponent(params.query || "");
-        const type = params.type || "firm";
+        const q = encodeURIComponent(validateQuery(body.query));
+        const type = validateType(body.type);
         const res = await fetch(
           `${FCA_BASE}/V0.1/Search?q=${q}&type=${type}`,
           { headers }
         );
         if (res.status === 404) {
-          result = { Status: "Not Found", Data: [], Message: `No results found for "${params.query}"` };
+          result = { Status: "Not Found", Data: [], Message: `No results found for "${body.query}"` };
           break;
         }
         if (!res.ok) {
@@ -50,12 +110,10 @@ serve(async (req) => {
       }
 
       case "firm": {
-        if (!params.frn) throw new Error("FRN is required");
-        const res = await fetch(`${FCA_BASE}/V0.1/Firm/${params.frn}`, {
-          headers,
-        });
+        const frn = validateFrn(body.frn);
+        const res = await fetch(`${FCA_BASE}/V0.1/Firm/${frn}`, { headers });
         if (res.status === 404) {
-          result = { Status: "Not Found", Message: `No firm found with FRN ${params.frn}` };
+          result = { Status: "Not Found", Message: `No firm found with FRN ${frn}` };
           break;
         }
         if (!res.ok) {
@@ -67,76 +125,66 @@ serve(async (req) => {
       }
 
       case "firm-individuals": {
-        if (!params.frn) throw new Error("FRN is required");
-        const res = await fetch(
-          `${FCA_BASE}/V0.1/Firm/${params.frn}/Individuals`,
-          { headers }
-        );
+        const frn = validateFrn(body.frn);
+        const res = await fetch(`${FCA_BASE}/V0.1/Firm/${frn}/Individuals`, { headers });
         if (res.status === 404) {
-          result = { Status: "Not Found", Message: `No individuals found for FRN ${params.frn}` };
+          result = { Status: "Not Found", Message: `No individuals found for FRN ${frn}` };
           break;
         }
         if (!res.ok) {
           const text = await res.text();
-          throw new Error(
-            `FCA individuals lookup failed [${res.status}]: ${text}`
-          );
+          throw new Error(`FCA individuals lookup failed [${res.status}]: ${text}`);
         }
         result = await res.json();
         break;
       }
 
       case "firm-permissions": {
-        if (!params.frn) throw new Error("FRN is required");
-        const res = await fetch(
-          `${FCA_BASE}/V0.1/Firm/${params.frn}/Permission`,
-          { headers }
-        );
+        const frn = validateFrn(body.frn);
+        const res = await fetch(`${FCA_BASE}/V0.1/Firm/${frn}/Permission`, { headers });
         if (res.status === 404) {
-          result = { Status: "Not Found", Message: `No permissions found for FRN ${params.frn}` };
+          result = { Status: "Not Found", Message: `No permissions found for FRN ${frn}` };
           break;
         }
         if (!res.ok) {
           const text = await res.text();
-          throw new Error(
-            `FCA permissions lookup failed [${res.status}]: ${text}`
-          );
+          throw new Error(`FCA permissions lookup failed [${res.status}]: ${text}`);
         }
         result = await res.json();
         break;
       }
 
       case "firm-activities": {
-        if (!params.frn) throw new Error("FRN is required");
-        const res = await fetch(
-          `${FCA_BASE}/V0.1/Firm/${params.frn}/Activities`,
-          { headers }
-        );
+        const frn = validateFrn(body.frn);
+        const res = await fetch(`${FCA_BASE}/V0.1/Firm/${frn}/Activities`, { headers });
         if (res.status === 404) {
-          result = { Status: "Not Found", Message: `No activities found for FRN ${params.frn}` };
+          result = { Status: "Not Found", Message: `No activities found for FRN ${frn}` };
           break;
         }
         if (!res.ok) {
           const text = await res.text();
-          throw new Error(
-            `FCA activities lookup failed [${res.status}]: ${text}`
-          );
+          throw new Error(`FCA activities lookup failed [${res.status}]: ${text}`);
         }
         result = await res.json();
         break;
       }
 
       default:
-        throw new Error(`Unknown action: ${action}`);
+        throw new ValidationError(`Unknown action: ${action}`);
     }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
+    if (e instanceof ValidationError) {
+      return new Response(JSON.stringify({ error: e.message }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     console.error("fca-register error:", e);
-    const message = e instanceof Error ? e.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

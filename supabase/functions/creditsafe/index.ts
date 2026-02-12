@@ -9,6 +9,13 @@ const corsHeaders = {
 
 const SANDBOX_BASE = "https://connect.sandbox.creditsafe.com/v1";
 
+class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
+
 /** Cache token in-memory for the function instance lifetime */
 let cachedToken: string | null = null;
 let tokenExpiry = 0;
@@ -75,6 +82,32 @@ async function getCompanyReport(token: string, connectId: string) {
   return await res.json();
 }
 
+// Input validation
+function validateSearchParams(params: Record<string, unknown>) {
+  const validated: { name?: string; regNo?: string; country?: string } = {};
+  if (params.name !== undefined) {
+    if (typeof params.name !== "string" || params.name.length > 200) throw new ValidationError("name must be a string under 200 chars");
+    validated.name = params.name;
+  }
+  if (params.regNo !== undefined) {
+    if (typeof params.regNo !== "string" || params.regNo.length > 50) throw new ValidationError("regNo must be a string under 50 chars");
+    validated.regNo = params.regNo;
+  }
+  if (params.country !== undefined) {
+    if (typeof params.country !== "string" || !/^[A-Z]{2}$/i.test(params.country)) throw new ValidationError("country must be a 2-letter code");
+    validated.country = params.country;
+  }
+  if (!validated.name && !validated.regNo) throw new ValidationError("name or regNo is required");
+  return validated;
+}
+
+function validateConnectId(id: unknown): string {
+  if (typeof id !== "string" || id.length === 0 || id.length > 100) {
+    throw new ValidationError("connectId must be 1-100 characters");
+  }
+  return id;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -105,33 +138,45 @@ serve(async (req) => {
   }
 
   try {
-    const { action, ...params } = await req.json();
+    const body = await req.json();
+    const action = body.action;
+
+    if (typeof action !== "string") {
+      throw new ValidationError("action is required");
+    }
+
     const csToken = await authenticate();
 
     let result: unknown;
 
     switch (action) {
       case "search": {
+        const searchParams = validateSearchParams(body);
         result = await searchCompanies(csToken, {
-          name: params.name,
-          regNo: params.regNo,
-          country: params.country || "GB",
+          ...searchParams,
+          country: searchParams.country || "GB",
         });
         break;
       }
       case "report": {
-        if (!params.connectId) throw new Error("connectId is required");
-        result = await getCompanyReport(csToken, params.connectId);
+        const connectId = validateConnectId(body.connectId);
+        result = await getCompanyReport(csToken, connectId);
         break;
       }
       default:
-        throw new Error(`Unknown action: ${action}`);
+        throw new ValidationError(`Unknown action: ${action}`);
     }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
+    if (e instanceof ValidationError) {
+      return new Response(JSON.stringify({ error: e.message }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     console.error("creditsafe error:", e);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
