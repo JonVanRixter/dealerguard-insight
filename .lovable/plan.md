@@ -1,34 +1,26 @@
 
 
-## Fix: Left Column Overflowing Report Summary Height
+## Fix: Bridge the Height Gap by Expanding Report Summary Header
 
 ### Problem
-The Customer Sentiment card + Action Status Chart stacked together now exceed the height of the Report Summary table on the right. The left column is taller than its sibling.
+The left column's two stacked cards are slightly shorter than the Report Summary table, and the current `h-0 min-h-full overflow-hidden` approach forces a hard clip on the Action Status card, making it look "squared off" and unnatural.
 
-### Solution
-Compact both left-column cards and make the Action Status Chart adapt to fill only the remaining space rather than having a fixed-height chart.
+### Approach
+Instead of forcing the left column to clip, increase the Report Summary table's header area to naturally grow taller and bridge the small gap. This is a subtle, elegant fix -- add more vertical padding and spacing to the Report Summary card header so the table becomes slightly taller, matching the natural height of the two left-column cards.
 
 ### Changes
 
-**1. `src/components/dealer/CustomerSentimentCard.tsx` -- Tighten spacing**
-- Reduce the ScoreRing size from 120px to 100px
-- Reduce padding from `p-5` to `p-4`
-- Reduce margin-bottom on header from `mb-4` to `mb-3`
-- Reduce spacing between main score area and breakdown from `mb-4` to `mb-3`
-- Reduce category row spacing from `space-y-2` to `space-y-1.5`
-- Reduce MiniRing size from 28px to 24px
-- Remove the RAG legend (0-3.3 / 3.4-6.6 / 6.7-10) as it's redundant -- the color coding is self-explanatory
+**1. `src/pages/DealerDetail.tsx` -- Remove the forced height clamp**
+- Change the left column from `lg:h-0 lg:min-h-full overflow-hidden` back to just `min-h-0` so the cards render at their natural height without clipping.
 
-**2. `src/components/dealer/ActionStatusChart.tsx` -- Make compact and fill remaining space**
-- Add `flex-1` to the root container so it stretches to fill remaining column space
-- Reduce the chart height from 140px to 120px
-- Reduce the donut inner/outer radius slightly (32/54)
-- Reduce padding from `p-5` to `p-4`
-- Combine the status legend and priority summary into a tighter layout
-- Reduce gap between chart and legend from `gap-4` to `gap-3`
+**2. `src/components/dealer/ReportSummaryCard.tsx` -- Expand the header area**
+- Increase header padding from `px-5 py-4` to `px-5 py-5` (adds ~8px total height).
+- Bump the title text from `text-sm` to `text-base` for a slightly more prominent header.
+- Add a subtle description line beneath the title (e.g. "Section-by-section compliance breakdown") in `text-xs text-muted-foreground` to add another ~20px of natural height.
+- Increase table row vertical padding from `py-3` to `py-3.5` across thead and tbody rows, adding ~8px per row across 8+ rows (~64px total).
 
-**3. `src/pages/DealerDetail.tsx` -- Minor layout tweak**
-- Ensure the left column flex container uses `min-h-0` to prevent overflow and the ActionStatusChart card uses `flex-1` to fill remaining space naturally
+Combined, these tweaks add roughly 90-100px of natural height to the Report Summary, which should close the gap with the two left-column cards without any forced clipping or overflow hacks.
 
 ### Result
-Both cards will be compact enough to fit within the height of the Report Summary table. The Action Status Chart will flex to fill exactly the remaining space after the Sentiment card, keeping both columns aligned.
+Both columns will render at their natural heights. The Report Summary table gains a slightly more spacious, premium feel via its expanded header and row padding, and its total height will match (or very slightly exceed) the left-column stack. No content gets clipped or squared off.
+
