@@ -5,16 +5,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { RagBadge } from "@/components/RagBadge";
+import { ScoreBadge } from "@/components/ScoreBadge";
 import { generateDealerAudit, DealerAudit } from "@/data/auditFramework";
-import { dealers, Dealer } from "@/data/dealers";
+import { dealers, Dealer, getScoreBand } from "@/data/dealers";
 import ReactMarkdown from "react-markdown";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-audit-summary`;
 
 interface DealerSummaryResult {
   dealerName: string;
-  rag: string;
+  score: number;
   summary: string;
   status: "pending" | "generating" | "done" | "error";
   error?: string;
@@ -95,12 +95,12 @@ export function BatchAiSummary() {
     });
   };
 
-  const selectPreset = (preset: "red" | "amber" | "all-risk") => {
+  const selectPreset = (preset: "low" | "mid" | "all-risk") => {
     const indices = new Set<number>();
     candidateDealers.forEach((d, i) => {
-      if (preset === "red" && d.rag === "red") indices.add(i);
-      if (preset === "amber" && (d.rag === "amber" || d.rag === "red")) indices.add(i);
-      if (preset === "all-risk" && d.rag !== "green") indices.add(i);
+      if (preset === "low" && d.score < 55) indices.add(i);
+      if (preset === "mid" && d.score < 80) indices.add(i);
+      if (preset === "all-risk" && d.score < 80) indices.add(i);
     });
     setSelectedDealers(indices);
   };
@@ -123,7 +123,7 @@ export function BatchAiSummary() {
     const dealerList = Array.from(selectedDealers).map(i => candidateDealers[i]);
     const initialResults: DealerSummaryResult[] = dealerList.map(d => ({
       dealerName: d.name,
-      rag: d.rag,
+      score: d.score,
       summary: "",
       status: "pending",
     }));
@@ -165,7 +165,7 @@ export function BatchAiSummary() {
     if (completed.length === 0) return;
 
     const content = completed.map(r =>
-      `${"=".repeat(60)}\n${r.dealerName} (${r.rag.toUpperCase()})\n${"=".repeat(60)}\n\n${r.summary}\n\n`
+      `${"=".repeat(60)}\n${r.dealerName} (Score: ${r.score})\n${"=".repeat(60)}\n\n${r.summary}\n\n`
     ).join("");
 
     const blob = new Blob([content], { type: "text/plain" });
@@ -203,14 +203,14 @@ export function BatchAiSummary() {
             <div className="px-5 py-4 space-y-4">
               <div className="flex flex-wrap gap-2 items-center">
                 <span className="text-xs text-muted-foreground">Quick select:</span>
-                <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => selectPreset("red")}>
-                  All Red
+                <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => selectPreset("low")}>
+                  Score &lt; 55
                 </Button>
-                <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => selectPreset("amber")}>
-                  Red + Amber
+                <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => selectPreset("mid")}>
+                  Score &lt; 80
                 </Button>
                 <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => selectPreset("all-risk")}>
-                  All Non-Green
+                  All At-Risk
                 </Button>
                 <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedDealers(new Set())}>
                   Clear
@@ -231,7 +231,7 @@ export function BatchAiSummary() {
                       onCheckedChange={() => toggleDealer(i)}
                     />
                     <span className="flex-1 text-sm font-medium text-foreground truncate">{dealer.name}</span>
-                    <RagBadge status={dealer.rag} size="sm" />
+                    <ScoreBadge score={dealer.score} size="sm" />
                     <span className="text-xs text-muted-foreground w-10 text-right">{dealer.score}%</span>
                   </label>
                 ))}

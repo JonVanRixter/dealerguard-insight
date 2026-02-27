@@ -26,8 +26,6 @@ export interface DealerBenchmarkData {
   comparisonName: string;
   comparisonScore: number;
   scoreDifference: number;
-  dealerRag: "green" | "amber" | "red";
-  comparisonRag?: "green" | "amber" | "red";
   sectionBenchmarks: SectionBenchmark[];
   mode: ComparisonMode;
 }
@@ -38,8 +36,8 @@ function getDealerSectionPassRates(dealerName: string) {
   const audit = generateDealerAudit(dealerName, dealerIndex);
   const rates: Record<string, number> = {};
   audit.sections.forEach((section) => {
-    const total = section.summary.green + section.summary.amber + section.summary.red;
-    rates[section.id] = total > 0 ? Math.round((section.summary.green / total) * 100) : 0;
+    const total = section.summary.pass + section.summary.attention + section.summary.fail;
+    rates[section.id] = total > 0 ? Math.round((section.summary.pass / total) * 100) : 0;
   });
   return rates;
 }
@@ -51,20 +49,20 @@ const Comparison = () => {
 
   // Calculate portfolio section averages
   const portfolioSectionAverages = useMemo(() => {
-    const sectionData: Record<string, { green: number; total: number }> = {};
+    const sectionData: Record<string, { pass: number; total: number }> = {};
     dealers.forEach((dealer, index) => {
       const audit = generateDealerAudit(dealer.name, index);
       audit.sections.forEach((section) => {
         if (!sectionData[section.id]) {
-          sectionData[section.id] = { green: 0, total: 0 };
+          sectionData[section.id] = { pass: 0, total: 0 };
         }
-        sectionData[section.id].green += section.summary.green;
+        sectionData[section.id].pass += section.summary.pass;
         sectionData[section.id].total +=
-          section.summary.green + section.summary.amber + section.summary.red;
+          section.summary.pass + section.summary.attention + section.summary.fail;
       });
     });
     return Object.entries(sectionData).reduce((acc, [id, data]) => {
-      acc[id] = Math.round((data.green / data.total) * 100);
+      acc[id] = Math.round((data.pass / data.total) * 100);
       return acc;
     }, {} as Record<string, number>);
   }, []);
@@ -83,8 +81,8 @@ const Comparison = () => {
       const dealer2Rates = getDealerSectionPassRates(dealer2.name);
 
       const sectionBenchmarks: SectionBenchmark[] = audit.sections.map((section) => {
-        const total = section.summary.green + section.summary.amber + section.summary.red;
-        const dealerPassRate = total > 0 ? Math.round((section.summary.green / total) * 100) : 0;
+        const total = section.summary.pass + section.summary.attention + section.summary.fail;
+        const dealerPassRate = total > 0 ? Math.round((section.summary.pass / total) * 100) : 0;
         const comparisonPassRate = dealer2Rates[section.id] || 0;
         return {
           id: section.id,
@@ -102,8 +100,6 @@ const Comparison = () => {
         comparisonName: dealer2.name,
         comparisonScore: dealer2.score,
         scoreDifference: dealer.score - dealer2.score,
-        dealerRag: dealer.rag,
-        comparisonRag: dealer2.rag,
         sectionBenchmarks,
         mode: "dealer",
       };
@@ -111,8 +107,8 @@ const Comparison = () => {
 
     // Portfolio mode
     const sectionBenchmarks: SectionBenchmark[] = audit.sections.map((section) => {
-      const total = section.summary.green + section.summary.amber + section.summary.red;
-      const dealerPassRate = total > 0 ? Math.round((section.summary.green / total) * 100) : 0;
+      const total = section.summary.pass + section.summary.attention + section.summary.fail;
+      const dealerPassRate = total > 0 ? Math.round((section.summary.pass / total) * 100) : 0;
       const comparisonPassRate = portfolioSectionAverages[section.id] || 0;
       return {
         id: section.id,
@@ -130,7 +126,6 @@ const Comparison = () => {
       comparisonName: "Portfolio Avg",
       comparisonScore: portfolioStats.avgScore,
       scoreDifference: dealer.score - portfolioStats.avgScore,
-      dealerRag: dealer.rag,
       sectionBenchmarks,
       mode: "portfolio",
     };

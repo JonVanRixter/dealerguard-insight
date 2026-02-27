@@ -35,7 +35,6 @@ import {
 } from "lucide-react";
 import { dealers } from "@/data/dealers";
 import { generateDealerAudit, AUDIT_SECTIONS, ControlCheck, AuditSection } from "@/data/auditFramework";
-import { RagStatus } from "@/data/dealers";
 import { getOverdueRechecks } from "@/utils/recheckSchedule";
 import { useCompletedRechecks } from "@/hooks/useCompletedRechecks";
 import { DuplicateFlagsBanner } from "@/components/dealer/DuplicateFlagsBanner";
@@ -50,7 +49,7 @@ interface Alert {
   controlArea: string;
   objective: string;
   result: "pass" | "fail" | "partial";
-  riskRating: RagStatus;
+  riskRating: string;
   comments: string;
   automated: boolean;
   frequency: string;
@@ -75,7 +74,7 @@ const Alerts = () => {
       audit.sections.forEach((section) => {
         section.controls.forEach((control) => {
           // Only include amber and red alerts
-          if (control.riskRating === "amber" || control.riskRating === "red") {
+          if (control.riskRating === "attention" || control.riskRating === "fail") {
             alerts.push({
               id: `${dealer.name}-${section.id}-${control.id}`,
               dealerName: dealer.name,
@@ -97,8 +96,8 @@ const Alerts = () => {
 
     // Sort by severity (red first) then by dealer name
     return alerts.sort((a, b) => {
-      if (a.riskRating === "red" && b.riskRating !== "red") return -1;
-      if (a.riskRating !== "red" && b.riskRating === "red") return 1;
+      if (a.riskRating === "fail" && b.riskRating !== "fail") return -1;
+      if (a.riskRating !== "fail" && b.riskRating === "fail") return 1;
       return a.dealerName.localeCompare(b.dealerName);
     });
   }, []);
@@ -153,8 +152,8 @@ const Alerts = () => {
   };
 
   // Stats
-  const criticalCount = allAlerts.filter((a) => a.riskRating === "red").length;
-  const warningCount = allAlerts.filter((a) => a.riskRating === "amber").length;
+  const criticalCount = allAlerts.filter((a) => a.riskRating === "fail").length;
+  const warningCount = allAlerts.filter((a) => a.riskRating === "attention").length;
 
   // Overdue re-checks
   const { isCompleted, markComplete } = useCompletedRechecks();
@@ -387,8 +386,8 @@ const Alerts = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Severity</SelectItem>
-                  <SelectItem value="red">Critical</SelectItem>
-                  <SelectItem value="amber">Warning</SelectItem>
+                  <SelectItem value="fail">Critical</SelectItem>
+                  <SelectItem value="attention">Warning</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={sectionFilter} onValueChange={handleFilterChange(setSectionFilter)}>

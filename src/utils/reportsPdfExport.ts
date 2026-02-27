@@ -49,9 +49,9 @@ export interface ReportsExportData {
   portfolioStats: {
     total: number;
     avgScore: number;
-    green: number;
-    amber: number;
-    red: number;
+    high: number;
+    mid: number;
+    low: number;
   };
   overallPassRate: number;
   totalAlerts: number;
@@ -159,19 +159,19 @@ export function generateReportsAnalyticsPDF(data: ReportsExportData): void {
   doc.setTextColor(0);
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("Portfolio RAG Distribution", 14, yPosition);
+  doc.text("Portfolio Score Distribution", 14, yPosition);
   yPosition += 8;
 
-  const ragData = [
-    ["Safe (Green)", data.portfolioStats.green.toString(), `${Math.round((data.portfolioStats.green / data.portfolioStats.total) * 100)}%`],
-    ["Warning (Amber)", data.portfolioStats.amber.toString(), `${Math.round((data.portfolioStats.amber / data.portfolioStats.total) * 100)}%`],
-    ["Critical (Red)", data.portfolioStats.red.toString(), `${Math.round((data.portfolioStats.red / data.portfolioStats.total) * 100)}%`],
+  const distData = [
+    ["80–100", data.portfolioStats.high.toString(), `${Math.round((data.portfolioStats.high / data.portfolioStats.total) * 100)}%`],
+    ["55–79", data.portfolioStats.mid.toString(), `${Math.round((data.portfolioStats.mid / data.portfolioStats.total) * 100)}%`],
+    ["0–54", data.portfolioStats.low.toString(), `${Math.round((data.portfolioStats.low / data.portfolioStats.total) * 100)}%`],
   ];
 
   autoTable(doc, {
     startY: yPosition,
-    head: [["Status", "Count", "Percentage"]],
-    body: ragData,
+    head: [["Score Band", "Count", "Percentage"]],
+    body: distData,
     theme: "striped",
     headStyles: { fillColor: [51, 65, 85], fontSize: 9 },
     bodyStyles: { fontSize: 9 },

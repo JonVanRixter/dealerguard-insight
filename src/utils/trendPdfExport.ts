@@ -55,8 +55,8 @@ export function generateTrendPDF(data: TrendExportData): void {
 
   // === KPI SUMMARY BOX ===
   const scoreChange = last.avgScore - first.avgScore;
-  const greenChange = last.greenCount - first.greenCount;
-  const redChange = last.redCount - first.redCount;
+  const highChange = last.highCount - first.highCount;
+  const lowChange = last.lowCount - first.lowCount;
 
   doc.setFillColor(248, 250, 252);
   doc.roundedRect(14, yPosition, pageWidth - 28, 35, 3, 3, "F");
@@ -77,8 +77,8 @@ export function generateTrendPDF(data: TrendExportData): void {
 
   drawKPI(20, "Current Avg", `${last.avgScore}%`);
   drawKPI(20 + colW, "12-Month Δ", `${scoreChange > 0 ? "+" : ""}${scoreChange}%`, scoreChange > 0 ? RAG_COLORS.green : scoreChange < 0 ? RAG_COLORS.red : undefined);
-  drawKPI(20 + colW * 2, "Green Δ", `${greenChange > 0 ? "+" : ""}${greenChange}`, greenChange > 0 ? RAG_COLORS.green : greenChange < 0 ? RAG_COLORS.red : undefined);
-  drawKPI(20 + colW * 3, "Red Δ", `${redChange > 0 ? "+" : ""}${redChange}`, redChange > 0 ? RAG_COLORS.red : redChange < 0 ? RAG_COLORS.green : undefined);
+  drawKPI(20 + colW * 2, "80–100 Δ", `${highChange > 0 ? "+" : ""}${highChange}`, highChange > 0 ? RAG_COLORS.green : highChange < 0 ? RAG_COLORS.red : undefined);
+  drawKPI(20 + colW * 3, "0–54 Δ", `${lowChange > 0 ? "+" : ""}${lowChange}`, lowChange > 0 ? RAG_COLORS.red : lowChange < 0 ? RAG_COLORS.green : undefined);
 
   yPosition += 45;
 
@@ -91,9 +91,9 @@ export function generateTrendPDF(data: TrendExportData): void {
 
   autoTable(doc, {
     startY: yPosition,
-    head: [["Month", "Avg Score", "Green", "Amber", "Red"]],
+    head: [["Month", "Avg Score", "80–100", "55–79", "0–54"]],
     body: data.portfolioTrend.map((p) => [
-      p.month, `${p.avgScore}%`, p.greenCount.toString(), p.amberCount.toString(), p.redCount.toString(),
+      p.month, `${p.avgScore}%`, p.highCount.toString(), p.midCount.toString(), p.lowCount.toString(),
     ]),
     theme: "striped",
     headStyles: { fillColor: [51, 65, 85], fontSize: 9 },
@@ -128,7 +128,7 @@ export function generateTrendPDF(data: TrendExportData): void {
     startY: yPosition,
     head: [["Dealer", "Current Score", "Change", "Status"]],
     body: data.topImprovers.map((d) => [
-      d.dealerName, `${d.currentScore}%`, `+${d.changeFromStart}%`, d.currentRag.toUpperCase(),
+      d.dealerName, `${d.currentScore}%`, `+${d.changeFromStart}%`, d.trend.toUpperCase(),
     ]),
     theme: "striped",
     headStyles: { fillColor: [51, 65, 85], fontSize: 9 },
@@ -167,7 +167,7 @@ export function generateTrendPDF(data: TrendExportData): void {
     startY: yPosition,
     head: [["Dealer", "Current Score", "Change", "Status"]],
     body: data.topDecliners.map((d) => [
-      d.dealerName, `${d.currentScore}%`, `${d.changeFromStart > 0 ? "+" : ""}${d.changeFromStart}%`, d.currentRag.toUpperCase(),
+      d.dealerName, `${d.currentScore}%`, `${d.changeFromStart > 0 ? "+" : ""}${d.changeFromStart}%`, d.trend.toUpperCase(),
     ]),
     theme: "striped",
     headStyles: { fillColor: [51, 65, 85], fontSize: 9 },
