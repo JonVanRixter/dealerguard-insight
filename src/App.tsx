@@ -17,6 +17,8 @@ import Auth from "./pages/Auth";
 import PreOnboarding from "./pages/PreOnboarding";
 import Onboarding from "./pages/Onboarding";
 import BannedList from "./pages/BannedList";
+import TcgOnboardingHub from "./pages/TcgOnboardingHub";
+import TcgOnboardingWorkflow from "./pages/TcgOnboardingWorkflow";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +56,9 @@ const AppRoutes = () => (
     <Route path="/pre-onboarding" element={<ProtectedRoute><PreOnboarding /></ProtectedRoute>} />
     <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
     <Route path="/banned-list" element={<ProtectedRoute><BannedList /></ProtectedRoute>} />
+    <Route path="/tcg/onboarding" element={<ProtectedRoute><TcgOnboardingHub /></ProtectedRoute>} />
+    <Route path="/tcg/onboarding/new" element={<ProtectedRoute><TcgOnboardingWorkflow /></ProtectedRoute>} />
+    <Route path="/tcg/onboarding/:appId/stage-:stage" element={<ProtectedRoute><TcgOnboardingWorkflow /></ProtectedRoute>} />
     <Route path="/dealer/:name" element={<ProtectedRoute><DealerDetail /></ProtectedRoute>} />
     <Route path="/dealers/:name" element={<DealersRedirect />} />
     <Route path="*" element={<NotFound />} />

@@ -11,6 +11,7 @@ import {
   UserPlus,
   ClipboardCheck,
   ShieldBan,
+  UserCheck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +23,7 @@ const navItems = [
   { title: "Onboarding", url: "/onboarding", icon: ClipboardCheck },
   { title: "Do Not Deal", url: "/banned-list", icon: ShieldBan },
   { title: "Dealer Portfolio", url: "/dealers", icon: Building2 },
+  { title: "Dealer Onboarding", url: "/tcg/onboarding", icon: UserCheck },
   { title: "Documents", url: "/documents", icon: FolderOpen },
   { title: "Alerts", url: "/alerts", icon: Bell },
   { title: "Reports", url: "/reports", icon: FileBarChart },

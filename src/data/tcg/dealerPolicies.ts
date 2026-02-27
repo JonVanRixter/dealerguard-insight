@@ -19,7 +19,7 @@ export interface DealerPolicyRecord {
 }
 
 // Master policy template — all 26 policies
-const masterPolicies: Omit<DealerPolicy, "exists" | "documentUploaded" | "fileName" | "lastUpdated" | "notes">[] = [
+export const masterPolicyList: Omit<DealerPolicy, "exists" | "documentUploaded" | "fileName" | "lastUpdated" | "notes">[] = [
   { id: "pol01", name: "Compliance Monitoring Policy", category: "Core Compliance" },
   { id: "pol02", name: "Consumer Duty Policy", category: "Core Compliance" },
   { id: "pol03", name: "Treating Customers Fairly (TCF) Policy", category: "Core Compliance" },
@@ -99,7 +99,7 @@ function buildFullPolicies(
   const missingSet = new Set(missingPolicies);
   const noDocExtra = new Set(noDocPolicies);
 
-  return masterPolicies
+  return masterPolicyList
     .filter((p) => !(noInsurance && p.category === "Insurance (if applicable)"))
     .map((p) => {
       const exists = !missingSet.has(p.id);
