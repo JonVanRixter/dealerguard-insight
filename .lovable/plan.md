@@ -1,25 +1,34 @@
 
 
-## Fix: Eliminate Whitespace in Customer Sentiment Section
+## Fix: Left Column Overflowing Report Summary Height
 
 ### Problem
-The Customer Sentiment card sits in a 1-column slot alongside the 2-column Report Summary table (which has 8+ rows and is much taller). Since the Report Summary is non-negotiable, the CSS card finishes early and leaves a large blank gap below it.
+The Customer Sentiment card + Action Status Chart stacked together now exceed the height of the Report Summary table on the right. The left column is taller than its sibling.
 
 ### Solution
-Stack a second compact card below the Customer Sentiment card in the same grid column to fill the vertical space. The best candidate is the **Action Status Chart** (donut chart showing Pending/In Progress/Complete actions) -- it is compact, visually distinct from the ring gauge, and contextually relevant at the top of the profile.
+Compact both left-column cards and make the Action Status Chart adapt to fill only the remaining space rather than having a fixed-height chart.
 
 ### Changes
 
-**1. `src/pages/DealerDetail.tsx` -- Restructure the grid layout**
-- Keep the existing `lg:grid-cols-3` grid for the top cards row.
-- Wrap the left column (col 1) in a `flex flex-col gap-6` container.
-- Place `CustomerSentimentCard` first, then `ActionStatusChart` below it in the same column.
-- Remove the `ActionStatusChart` from the separate "Data Visualizations Row" grid further down the page (which currently has 3 charts in a row).
-- Adjust the Data Visualizations Row to `lg:grid-cols-2` with just the Radar and Controls Breakdown charts remaining.
+**1. `src/components/dealer/CustomerSentimentCard.tsx` -- Tighten spacing**
+- Reduce the ScoreRing size from 120px to 100px
+- Reduce padding from `p-5` to `p-4`
+- Reduce margin-bottom on header from `mb-4` to `mb-3`
+- Reduce spacing between main score area and breakdown from `mb-4` to `mb-3`
+- Reduce category row spacing from `space-y-2` to `space-y-1.5`
+- Reduce MiniRing size from 28px to 24px
+- Remove the RAG legend (0-3.3 / 3.4-6.6 / 6.7-10) as it's redundant -- the color coding is self-explanatory
 
-**2. `src/components/dealer/CustomerSentimentCard.tsx` -- Minor spacing tightening**
-- No major redesign needed -- just ensure it doesn't force extra padding. Remove any `mt-auto` on the breakdown section so it sits tightly.
+**2. `src/components/dealer/ActionStatusChart.tsx` -- Make compact and fill remaining space**
+- Add `flex-1` to the root container so it stretches to fill remaining column space
+- Reduce the chart height from 140px to 120px
+- Reduce the donut inner/outer radius slightly (32/54)
+- Reduce padding from `p-5` to `p-4`
+- Combine the status legend and priority summary into a tighter layout
+- Reduce gap between chart and legend from `gap-4` to `gap-3`
+
+**3. `src/pages/DealerDetail.tsx` -- Minor layout tweak**
+- Ensure the left column flex container uses `min-h-0` to prevent overflow and the ActionStatusChart card uses `flex-1` to fill remaining space naturally
 
 ### Result
-The left column will contain two stacked cards (Sentiment + Action Status donut) that together match the height of the Report Summary table on the right. No blank gaps. The Data Visualizations row below adjusts to two charts instead of three, maintaining a clean layout.
-
+Both cards will be compact enough to fit within the height of the Report Summary table. The Action Status Chart will flex to fill exactly the remaining space after the Sentiment card, keeping both columns aligned.
