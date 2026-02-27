@@ -23,8 +23,11 @@ export function ReportSummaryCard({ sections, overallRag, overallScore }: Report
 
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden">
-      <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">Report Summary</h3>
+      <div className="px-5 py-5 border-b border-border flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-semibold text-foreground">Report Summary</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Section-by-section compliance breakdown</p>
+        </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">Overall:</span>
           <RagBadge status={overallRag} />
@@ -37,17 +40,17 @@ export function ReportSummaryCard({ sections, overallRag, overallScore }: Report
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-muted-foreground">
-              <th className="text-left px-5 py-3 font-medium">Section</th>
-              <th className="text-center px-3 py-3 font-medium w-16">
+              <th className="text-left px-5 py-3.5 font-medium">Section</th>
+              <th className="text-center px-3 py-3.5 font-medium w-16">
                 <span className="inline-block w-2 h-2 rounded-full bg-rag-green" />
               </th>
-              <th className="text-center px-3 py-3 font-medium w-16">
+              <th className="text-center px-3 py-3.5 font-medium w-16">
                 <span className="inline-block w-2 h-2 rounded-full bg-rag-amber" />
               </th>
-              <th className="text-center px-3 py-3 font-medium w-16">
+              <th className="text-center px-3 py-3.5 font-medium w-16">
                 <span className="inline-block w-2 h-2 rounded-full bg-rag-red" />
               </th>
-              <th className="text-center px-3 py-3 font-medium w-24">Status</th>
+              <th className="text-center px-3 py-3.5 font-medium w-24">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -56,30 +59,30 @@ export function ReportSummaryCard({ sections, overallRag, overallScore }: Report
                 key={section.id}
                 className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
               >
-                <td className="px-5 py-3 font-medium text-foreground">{section.name}</td>
-                <td className="px-3 py-3 text-center text-rag-green font-semibold">
+                <td className="px-5 py-3.5 font-medium text-foreground">{section.name}</td>
+                <td className="px-3 py-3.5 text-center text-rag-green font-semibold">
                   {section.summary.green}
                 </td>
-                <td className="px-3 py-3 text-center text-rag-amber font-semibold">
+                <td className="px-3 py-3.5 text-center text-rag-amber font-semibold">
                   {section.summary.amber}
                 </td>
-                <td className="px-3 py-3 text-center text-rag-red font-semibold">
+                <td className="px-3 py-3.5 text-center text-rag-red font-semibold">
                   {section.summary.red}
                 </td>
-                <td className="px-3 py-3 text-center">
+                <td className="px-3 py-3.5 text-center">
                   <RagBadge status={section.summary.ragStatus} size="sm" />
                 </td>
               </tr>
             ))}
             {/* Totals row */}
             <tr className="bg-muted/50 font-semibold">
-              <td className="px-5 py-3 text-foreground">
+              <td className="px-5 py-3.5 text-foreground">
                 Total ({totalControls} controls)
               </td>
-              <td className="px-3 py-3 text-center text-rag-green">{totals.green}</td>
-              <td className="px-3 py-3 text-center text-rag-amber">{totals.amber}</td>
-              <td className="px-3 py-3 text-center text-rag-red">{totals.red}</td>
-              <td className="px-3 py-3 text-center">
+              <td className="px-3 py-3.5 text-center text-rag-green">{totals.green}</td>
+              <td className="px-3 py-3.5 text-center text-rag-amber">{totals.amber}</td>
+              <td className="px-3 py-3.5 text-center text-rag-red">{totals.red}</td>
+              <td className="px-3 py-3.5 text-center">
                 <RagBadge status={overallRag} />
               </td>
             </tr>
