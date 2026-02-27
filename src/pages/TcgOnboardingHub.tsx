@@ -165,7 +165,7 @@ export default function TcgOnboardingHub() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="gap-1">
+                            <Button variant="outline" size="sm" className="gap-1" onClick={() => navigate(`/tcg/dealers/${d.id}`)}>
                               <Eye className="w-3 h-3" /> View
                             </Button>
                             {d.renewalDue && (

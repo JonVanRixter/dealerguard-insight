@@ -45,6 +45,7 @@ import { RegionalSummaryTable } from "@/components/dashboard/RegionalSummaryTabl
 import { PortfolioTrendMini } from "@/components/dashboard/PortfolioTrendMini";
 import { TopRiskDealers } from "@/components/dashboard/TopRiskDealers";
 import { RecheckWidget } from "@/components/dashboard/RecheckWidget";
+import { OnboardingValidityWidget } from "@/components/dashboard/OnboardingValidityWidget";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -391,6 +392,9 @@ const Index = () => {
           <div className="space-y-6">
             {/* Re-Check Schedule */}
             <RecheckWidget />
+
+            {/* Onboarding Validity */}
+            <OnboardingValidityWidget />
 
             {/* Trend Highlights */}
             <TrendHighlightsWidget />
