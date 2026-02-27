@@ -35,19 +35,19 @@ export function ActionStatusChart({ actions }: ActionStatusChartProps) {
   }, [actions]);
 
   return (
-    <div className="bg-card rounded-xl border border-border p-5">
-      <h3 className="text-sm font-semibold text-foreground mb-3">
+    <div className="bg-card rounded-xl border border-border p-4 flex-1 flex flex-col">
+      <h3 className="text-sm font-semibold text-foreground mb-2">
         Action Status Overview
       </h3>
-      <div className="flex flex-col items-center gap-4">
-        <ResponsiveContainer width="100%" height={140}>
+      <div className="flex flex-col items-center gap-3 flex-1">
+        <ResponsiveContainer width="100%" height={120}>
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={36}
-              outerRadius={62}
+              innerRadius={32}
+              outerRadius={54}
               paddingAngle={2}
               dataKey="value"
             >

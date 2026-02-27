@@ -44,7 +44,7 @@ function getLabel(score: number) {
 }
 
 /** Circular progress ring used for the main score */
-function ScoreRing({ score, size = 120 }: { score: number; size?: number }) {
+function ScoreRing({ score, size = 100 }: { score: number; size?: number }) {
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -88,7 +88,7 @@ function ScoreRing({ score, size = 120 }: { score: number; size?: number }) {
 }
 
 /** Mini inline ring for category rows */
-function MiniRing({ score, size = 28 }: { score: number; size?: number }) {
+function MiniRing({ score, size = 24 }: { score: number; size?: number }) {
   const sw = 3;
   const r = (size - sw) / 2;
   const c = 2 * Math.PI * r;
@@ -119,9 +119,9 @@ export function CustomerSentimentCard({
   const isReward = score >= rewardThreshold;
 
   return (
-    <div className="bg-card rounded-xl border border-border p-5 flex flex-col">
+    <div className="bg-card rounded-xl border border-border p-4 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-foreground">Customer Sentiment</h3>
           <Tooltip>
@@ -158,9 +158,9 @@ export function CustomerSentimentCard({
       )}
 
       {/* Main score area */}
-      <div className="flex items-center gap-5 mb-4">
+      <div className="flex items-center gap-4 mb-3">
         <ScoreRing score={score} />
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1">
           <span className={`text-sm font-semibold ${getScoreTextColor(score)}`}>
             {getLabel(score)}
           </span>
@@ -168,25 +168,14 @@ export function CustomerSentimentCard({
             {trend >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
             {trend >= 0 ? "+" : ""}{trend.toFixed(1)} over {periodDays}d
           </div>
-          <div className="flex gap-3 mt-1">
-            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--rag-red))]" /> 0–3.3
-            </span>
-            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--rag-amber))]" /> 3.4–6.6
-            </span>
-            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--rag-green))]" /> 6.7–10
-            </span>
-          </div>
         </div>
       </div>
 
       {/* Category breakdown */}
       {categories.length > 0 && (
-        <div className="border-t border-border pt-3 mt-auto">
-          <p className="text-xs font-semibold text-foreground mb-3">Breakdown</p>
-          <div className="space-y-2">
+        <div className="border-t border-border pt-2">
+          <p className="text-xs font-semibold text-foreground mb-2">Breakdown</p>
+          <div className="space-y-1.5">
             {categories.map((cat) => (
               <div key={cat.label} className="flex items-center gap-2.5">
                 <MiniRing score={cat.score} />
