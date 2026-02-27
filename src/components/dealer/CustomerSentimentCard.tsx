@@ -12,27 +12,27 @@ interface CustomerSentimentCardProps {
 }
 
 function getScoreColor(score: number) {
-  if (score >= 6.7) return "text-[hsl(var(--rag-green))]";
-  if (score >= 3.4) return "text-[hsl(var(--rag-amber))]";
-  return "text-[hsl(var(--rag-red))]";
+  if (score >= 6.7) return "text-outcome-pass";
+  if (score >= 3.4) return "text-outcome-pending";
+  return "text-outcome-fail";
 }
 
 function getScoreTextColor(score: number) {
-  if (score >= 6.7) return "text-[hsl(var(--rag-green-text))]";
-  if (score >= 3.4) return "text-[hsl(var(--rag-amber-text))]";
-  return "text-[hsl(var(--rag-red-text))]";
+  if (score >= 6.7) return "text-outcome-pass-text";
+  if (score >= 3.4) return "text-outcome-pending-text";
+  return "text-outcome-fail-text";
 }
 
 function getScoreBg(score: number) {
-  if (score >= 6.7) return "bg-[hsl(var(--rag-green-bg))]";
-  if (score >= 3.4) return "bg-[hsl(var(--rag-amber-bg))]";
-  return "bg-[hsl(var(--rag-red-bg))]";
+  if (score >= 6.7) return "bg-outcome-pass-bg";
+  if (score >= 3.4) return "bg-outcome-pending-bg";
+  return "bg-outcome-fail-bg";
 }
 
 function getBarHsl(score: number) {
-  if (score >= 6.7) return "hsl(var(--rag-green))";
-  if (score >= 3.4) return "hsl(var(--rag-amber))";
-  return "hsl(var(--rag-red))";
+  if (score >= 6.7) return "hsl(var(--outcome-pass))";
+  if (score >= 3.4) return "hsl(var(--outcome-pending))";
+  return "hsl(var(--outcome-fail))";
 }
 
 function getLabel(score: number) {
@@ -141,17 +141,17 @@ export function CustomerSentimentCard({
 
       {/* Threshold alert */}
       {isOversight && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[hsl(var(--rag-red-bg))] border border-[hsl(var(--rag-red))]/20 mb-4">
-          <ShieldAlert className="w-4 h-4 text-[hsl(var(--rag-red))] shrink-0" />
-          <span className="text-xs font-medium text-[hsl(var(--rag-red-text))]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-outcome-fail-bg border border-outcome-fail/20 mb-4">
+          <ShieldAlert className="w-4 h-4 text-outcome-fail shrink-0" />
+          <span className="text-xs font-medium text-outcome-fail-text">
             Enhanced Oversight — below {oversightThreshold.toFixed(1)}
           </span>
         </div>
       )}
       {isReward && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[hsl(var(--rag-green-bg))] border border-[hsl(var(--rag-green))]/20 mb-4">
-          <Award className="w-4 h-4 text-[hsl(var(--rag-green))] shrink-0" />
-          <span className="text-xs font-medium text-[hsl(var(--rag-green-text))]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-outcome-pass-bg border border-outcome-pass/20 mb-4">
+          <Award className="w-4 h-4 text-outcome-pass shrink-0" />
+          <span className="text-xs font-medium text-outcome-pass-text">
             Positive Reward — above {rewardThreshold.toFixed(1)}
           </span>
         </div>
@@ -164,7 +164,7 @@ export function CustomerSentimentCard({
           <span className={`text-sm font-semibold ${getScoreTextColor(score)}`}>
             {getLabel(score)}
           </span>
-          <div className={`inline-flex items-center gap-1 text-xs font-medium ${trend >= 0 ? "text-[hsl(var(--rag-green-text))]" : "text-[hsl(var(--rag-red-text))]"}`}>
+          <div className={`inline-flex items-center gap-1 text-xs font-medium ${trend >= 0 ? "text-score-up" : "text-score-down"}`}>
             {trend >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
             {trend >= 0 ? "+" : ""}{trend.toFixed(1)} over {periodDays}d
           </div>
@@ -182,15 +182,15 @@ export function CustomerSentimentCard({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                      {cat.score < oversightThreshold && <ShieldAlert className="w-3 h-3 text-[hsl(var(--rag-red))]" />}
-                      {cat.score >= rewardThreshold && <Award className="w-3 h-3 text-[hsl(var(--rag-green))]" />}
+                      {cat.score < oversightThreshold && <ShieldAlert className="w-3 h-3 text-outcome-fail" />}
+                      {cat.score >= rewardThreshold && <Award className="w-3 h-3 text-outcome-pass" />}
                       <span className="text-xs text-muted-foreground truncate">{cat.label}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <span className={`text-xs font-semibold tabular-nums ${getScoreTextColor(cat.score)}`}>
                         {cat.score.toFixed(1)}
                       </span>
-                      <span className={`text-[10px] tabular-nums ${cat.trend >= 0 ? "text-[hsl(var(--rag-green-text))]" : "text-[hsl(var(--rag-red-text))]"}`}>
+                      <span className={`text-[10px] tabular-nums ${cat.trend >= 0 ? "text-score-up" : "text-score-down"}`}>
                         {cat.trend >= 0 ? "▲" : "▼"}{Math.abs(cat.trend).toFixed(1)}
                       </span>
                     </div>

@@ -208,7 +208,7 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
 
                         {/* If exists=no: amber highlight */}
                         {pol.exists === "no" && (
-                          <div className="p-2 rounded bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))] text-xs">
+                          <div className="p-2 rounded bg-outcome-pending-bg text-outcome-pending-text text-xs">
                             Policy not held — note reason below
                           </div>
                         )}
@@ -241,10 +241,10 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
               <Progress value={pct} className="flex-1" />
               <span className="text-sm font-medium shrink-0">{confirmed} of {total} confirmed</span>
               {unanswered > 0 && (
-                <Badge className="bg-[hsl(var(--rag-red-bg))] text-[hsl(var(--rag-red-text))]">{unanswered} unanswered</Badge>
+                <Badge className="bg-outcome-fail-bg text-outcome-fail-text">{unanswered} unanswered</Badge>
               )}
               {notHeld > 0 && (
-                <Badge className="bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))]">{notHeld} not held</Badge>
+                <Badge className="bg-outcome-pending-bg text-outcome-pending-text">{notHeld} not held</Badge>
               )}
             </div>
           </CardContent>

@@ -246,7 +246,7 @@ function DbsDetailContent() {
         <div><p className="text-muted-foreground">Status</p><p className="font-medium text-destructive">{uploaded ? "Certificate received — Under TCG review" : "Action Required"}</p></div>
       </div>
       {uploaded && (
-        <div className="flex items-center gap-2 text-sm text-rag-green">
+        <div className="flex items-center gap-2 text-sm text-outcome-pass">
           <CheckCircle2 className="w-4 h-4" /> {uploaded}
         </div>
       )}
@@ -280,7 +280,7 @@ function TrainingDetailContent() {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4 text-sm">
         <div><p className="text-muted-foreground">Certificates Uploaded</p><p className="font-medium text-foreground">{uploaded ? 2 : 1}</p></div>
-        <div><p className="text-muted-foreground">Status</p><p className="font-medium text-rag-amber">Under Review</p></div>
+        <div><p className="text-muted-foreground">Status</p><p className="font-medium text-outcome-pending">Under Review</p></div>
       </div>
       <div>
         <p className="text-sm text-muted-foreground mb-2">Staff Training Records</p>
@@ -291,7 +291,7 @@ function TrainingDetailContent() {
               <p className="text-xs text-muted-foreground">TCF Annual Refresher 2025</p>
             </div>
             <div className="flex items-center gap-2">
-              <Badge className="bg-rag-amber/15 text-rag-amber border-rag-amber/30 text-xs">Under Review</Badge>
+              <Badge className="bg-outcome-pending/15 text-outcome-pending border-outcome-pending/30 text-xs">Under Review</Badge>
               <Button variant="ghost" size="sm" className="h-7 text-xs gap-1"><Download className="w-3 h-3" /> View</Button>
             </div>
           </div>
@@ -300,19 +300,19 @@ function TrainingDetailContent() {
           <div className="rounded-lg border border-border p-3 mt-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-rag-green" />
+                <CheckCircle2 className="w-4 h-4 text-outcome-pass" />
                 <div>
                   <p className="text-sm font-medium text-foreground">{uploaded}</p>
                   <p className="text-xs text-muted-foreground">Uploaded just now</p>
                 </div>
               </div>
-              <Badge className="bg-rag-amber/15 text-rag-amber border-rag-amber/30 text-xs">Under Review</Badge>
+              <Badge className="bg-outcome-pending/15 text-outcome-pending border-outcome-pending/30 text-xs">Under Review</Badge>
             </div>
           </div>
         )}
       </div>
-      <div className="rounded-lg border border-rag-amber/30 bg-rag-amber-bg p-3">
-        <p className="text-sm text-rag-amber-text">TCG Operations team is reviewing the uploaded certificate. Expected completion: 2 business days.</p>
+      <div className="rounded-lg border border-outcome-pending/30 bg-outcome-pending-bg p-3">
+        <p className="text-sm text-outcome-pending-text">TCG Operations team is reviewing the uploaded certificate. Expected completion: 2 business days.</p>
       </div>
       <input
         ref={fileInputRef}
@@ -349,16 +349,16 @@ const STATIC_SECTION_DETAILS: Record<string, { title: string; content: React.Rea
         <div>
           <p className="text-sm text-muted-foreground mb-1">Directors</p>
           <ul className="text-sm space-y-1">
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> James Thompson — Appointed 12 Mar 2018</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Sarah Mitchell — Appointed 05 Jun 2020</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> David Chen — Appointed 14 Jan 2023</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> James Thompson — Appointed 12 Mar 2018</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Sarah Mitchell — Appointed 05 Jun 2020</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> David Chen — Appointed 14 Jan 2023</li>
           </ul>
         </div>
         <div>
           <p className="text-sm text-muted-foreground mb-1">Persons of Significant Control</p>
           <ul className="text-sm space-y-1">
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> James Thompson — 75%+ shares</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Sarah Mitchell — 25%+ shares</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> James Thompson — 75%+ shares</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Sarah Mitchell — 25%+ shares</li>
           </ul>
         </div>
       </div>
@@ -370,16 +370,16 @@ const STATIC_SECTION_DETAILS: Record<string, { title: string; content: React.Rea
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div><p className="text-muted-foreground">FCA Reference</p><p className="font-medium text-foreground">FRN: 123456</p></div>
-          <div><p className="text-muted-foreground">Status</p><p className="font-medium text-rag-green">Authorised</p></div>
+          <div><p className="text-muted-foreground">Status</p><p className="font-medium text-outcome-pass">Authorised</p></div>
           <div><p className="text-muted-foreground">Last Checked</p><p className="font-medium text-foreground">10 Feb 2026</p></div>
           <div><p className="text-muted-foreground">Warnings</p><p className="font-medium text-foreground">None</p></div>
         </div>
         <div>
           <p className="text-sm text-muted-foreground mb-1">Permissions</p>
           <ul className="text-sm space-y-1">
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Consumer Credit</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Credit Broking</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Debt Administration</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Consumer Credit</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Credit Broking</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Debt Administration</li>
           </ul>
         </div>
       </div>
@@ -390,13 +390,13 @@ const STATIC_SECTION_DETAILS: Record<string, { title: string; content: React.Rea
     content: (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><p className="text-muted-foreground">Credit Score</p><p className="font-medium text-rag-amber">62 / 100</p></div>
-          <div><p className="text-muted-foreground">Risk Band</p><p className="font-medium text-rag-amber">Medium</p></div>
-          <div><p className="text-muted-foreground">Report Status</p><p className="font-medium text-rag-amber">Awaiting full report</p></div>
+          <div><p className="text-muted-foreground">Credit Score</p><p className="font-medium text-outcome-pending">62 / 100</p></div>
+          <div><p className="text-muted-foreground">Risk Band</p><p className="font-medium text-outcome-pending">Medium</p></div>
+          <div><p className="text-muted-foreground">Report Status</p><p className="font-medium text-outcome-pending">Awaiting full report</p></div>
           <div><p className="text-muted-foreground">Last Updated</p><p className="font-medium text-foreground">08 Feb 2026</p></div>
         </div>
-        <div className="rounded-lg border border-rag-amber/30 bg-rag-amber-bg p-3">
-          <p className="text-sm text-rag-amber-text flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Full credit report is pending. Preliminary score retrieved.</p>
+        <div className="rounded-lg border border-outcome-pending/30 bg-outcome-pending-bg p-3">
+          <p className="text-sm text-outcome-pending-text flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Full credit report is pending. Preliminary score retrieved.</p>
         </div>
       </div>
     ),
@@ -423,10 +423,10 @@ const STATIC_SECTION_DETAILS: Record<string, { title: string; content: React.Rea
         <div>
           <p className="text-sm text-muted-foreground mb-1">Compliance Checklist</p>
           <ul className="text-sm space-y-1">
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Representative APR displayed</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Commission disclosure visible</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> FCA registration number on site</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-rag-green" /> Privacy policy compliant</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Representative APR displayed</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Commission disclosure visible</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> FCA registration number on site</li>
+            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Privacy policy compliant</li>
           </ul>
         </div>
       </div>
@@ -437,9 +437,9 @@ const STATIC_SECTION_DETAILS: Record<string, { title: string; content: React.Rea
     content: (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><p className="text-muted-foreground">Sanctions Check</p><p className="font-medium text-rag-green">Clear</p></div>
-          <div><p className="text-muted-foreground">PEP Check</p><p className="font-medium text-rag-green">Clear</p></div>
-          <div><p className="text-muted-foreground">AML Risk Rating</p><p className="font-medium text-rag-green">Low</p></div>
+          <div><p className="text-muted-foreground">Sanctions Check</p><p className="font-medium text-outcome-pass">Clear</p></div>
+          <div><p className="text-muted-foreground">PEP Check</p><p className="font-medium text-outcome-pass">Clear</p></div>
+          <div><p className="text-muted-foreground">AML Risk Rating</p><p className="font-medium text-outcome-pass">Low</p></div>
           <div><p className="text-muted-foreground">Last Verified</p><p className="font-medium text-foreground">10 Feb 2026</p></div>
         </div>
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
@@ -588,7 +588,7 @@ export default function Onboarding() {
                 <h2 className="text-lg font-semibold text-foreground">NewStart Motors Ltd — Onboarding Progress</h2>
                 <p className="text-sm text-muted-foreground">6 of 8 sections complete</p>
               </div>
-              <Badge className="bg-rag-amber/15 text-rag-amber border-rag-amber/30 text-sm px-3 py-1">Pending Documents</Badge>
+              <Badge className="bg-outcome-pending/15 text-outcome-pending border-outcome-pending/30 text-sm px-3 py-1">Pending Documents</Badge>
             </div>
             <Progress value={75} className="h-3 mb-3" />
             <div className="flex gap-3">
@@ -616,18 +616,18 @@ export default function Onboarding() {
               <div key={section.name} className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-2 mb-2">
                   {section.status === "complete" ? (
-                    <CheckCircle2 className="w-5 h-5 text-rag-green" />
+                    <CheckCircle2 className="w-5 h-5 text-outcome-pass" />
                   ) : section.status === "pending" ? (
-                    <AlertTriangle className="w-5 h-5 text-rag-amber" />
+                    <AlertTriangle className="w-5 h-5 text-outcome-pending" />
                   ) : (
-                    <XCircle className="w-5 h-5 text-rag-red" />
+                    <XCircle className="w-5 h-5 text-outcome-fail" />
                   )}
                   <h3 className="text-sm font-semibold text-foreground">{section.name}</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">{section.detail}</p>
                 <div className="flex items-center justify-between">
                   <span className={`text-xs font-semibold ${
-                    section.status === "complete" ? "text-rag-green" : section.status === "pending" ? "text-rag-amber" : "text-rag-red"
+                    section.status === "complete" ? "text-outcome-pass" : section.status === "pending" ? "text-outcome-pending" : "text-outcome-fail"
                   }`}>
                     {section.status === "complete" ? "✓ Complete" : section.status === "pending" ? "⚠ Pending" : "✗ Failed"}
                   </span>

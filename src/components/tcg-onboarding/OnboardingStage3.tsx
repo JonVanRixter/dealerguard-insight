@@ -25,9 +25,9 @@ interface Stage3Props {
 
 function preScreenPill(result: PreScreenResult) {
   if (!result) return <Badge variant="secondary">Not Set</Badge>;
-  if (result === "pass") return <Badge className="bg-[hsl(var(--rag-green-bg))] text-[hsl(var(--rag-green-text))]">Pass</Badge>;
-  if (result === "fail") return <Badge className="bg-[hsl(var(--rag-red-bg))] text-[hsl(var(--rag-red-text))]">Fail</Badge>;
-  return <Badge className="bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))]">Refer</Badge>;
+  if (result === "pass") return <Badge className="bg-outcome-pass-bg text-outcome-pass-text">Pass</Badge>;
+  if (result === "fail") return <Badge className="bg-outcome-fail-bg text-outcome-fail-text">Fail</Badge>;
+  return <Badge className="bg-outcome-pending-bg text-outcome-pending-text">Refer</Badge>;
 }
 
 export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove, onReject }: Stage3Props) {
@@ -102,7 +102,7 @@ export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove,
           <CardHeader><CardTitle>Pre-Screen Summary</CardTitle></CardHeader>
           <CardContent>
             {referredChecks.length > 0 && (
-              <div className="mb-4 p-3 rounded-lg bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))] text-sm flex items-start gap-2">
+              <div className="mb-4 p-3 rounded-lg bg-outcome-pending-bg text-outcome-pending-text text-sm flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>⚠️ {referredChecks.length} pre-screen check(s) have been referred to the manual review queue. You may still proceed with approval — these will be tracked separately.</span>
               </div>
@@ -150,10 +150,10 @@ export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove,
                     <TableCell className="font-medium text-sm">{cat}</TableCell>
                     <TableCell className="text-center">{s.total}</TableCell>
                     <TableCell className="text-center">{s.yes}</TableCell>
-                    <TableCell className="text-center">{s.no > 0 ? <span className="text-[hsl(var(--rag-amber-text))] font-medium">{s.no}</span> : "0"}</TableCell>
+                    <TableCell className="text-center">{s.no > 0 ? <span className="text-outcome-pending-text font-medium">{s.no}</span> : "0"}</TableCell>
                     <TableCell className="text-center text-muted-foreground">{s.na}</TableCell>
                     <TableCell className="text-center">{s.uploaded}</TableCell>
-                    <TableCell className="text-center">{s.missing > 0 ? <span className="text-[hsl(var(--rag-red-text))] font-medium">{s.missing}</span> : "0"}</TableCell>
+                    <TableCell className="text-center">{s.missing > 0 ? <span className="text-outcome-fail-text font-medium">{s.missing}</span> : "0"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -163,7 +163,7 @@ export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove,
               <div className="flex flex-wrap gap-2 pt-2">
                 <span className="text-sm text-muted-foreground mr-1">Not held:</span>
                 {missingPolicies.map((p) => (
-                  <Badge key={p.id} className="bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))]">{p.name}</Badge>
+                  <Badge key={p.id} className="bg-outcome-pending-bg text-outcome-pending-text">{p.name}</Badge>
                 ))}
               </div>
             )}
@@ -205,7 +205,7 @@ export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove,
             <Button variant="destructive" onClick={() => setShowRejectModal(true)}>
               Reject Application
             </Button>
-            <Button className="bg-[hsl(var(--rag-green))] hover:bg-[hsl(var(--rag-green))]/90 text-white gap-2" onClick={() => setShowApproveModal(true)}>
+            <Button className="bg-outcome-pass hover:bg-outcome-pass/90 text-white gap-2" onClick={() => setShowApproveModal(true)}>
               <CheckCircle2 className="w-4 h-4" /> Approve Onboarding
             </Button>
           </div>
@@ -220,10 +220,10 @@ export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove,
             <div className="space-y-3 text-sm">
               <p>Approving this onboarding will:</p>
               <ul className="space-y-1.5">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[hsl(var(--rag-green))]" /> Add {app.tradingName || app.companyName} to the active dealer pool</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[hsl(var(--rag-green))]" /> Make this record available to all lenders using DealerGuard</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[hsl(var(--rag-green))]" /> Set validity until {validUntil}</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[hsl(var(--rag-green))]" /> Notify any waiting lenders that this dealer is now onboarded</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Add {app.tradingName || app.companyName} to the active dealer pool</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Make this record available to all lenders using DealerGuard</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Set validity until {validUntil}</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Notify any waiting lenders that this dealer is now onboarded</li>
               </ul>
               <div className="pt-2 text-muted-foreground">
                 <p>Approved by: Tom Griffiths (TCG Ops)</p>
@@ -232,7 +232,7 @@ export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove,
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowApproveModal(false)}>Cancel</Button>
-              <Button className="bg-[hsl(var(--rag-green))] hover:bg-[hsl(var(--rag-green))]/90 text-white" onClick={handleApproveConfirm}>
+              <Button className="bg-outcome-pass hover:bg-outcome-pass/90 text-white" onClick={handleApproveConfirm}>
                 Confirm Approval
               </Button>
             </DialogFooter>

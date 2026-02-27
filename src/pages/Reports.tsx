@@ -391,7 +391,7 @@ const Reports = () => {
             </div>
             <div className="flex items-end gap-2">
               <span className="text-3xl font-bold text-foreground">{portfolioStats.avgScore}%</span>
-              <span className="text-sm text-rag-green flex items-center mb-1">
+              <span className="text-sm text-score-up flex items-center mb-1">
                 <TrendingUp className="w-3 h-3 mr-0.5" /> +2.3%
               </span>
             </div>
@@ -405,10 +405,10 @@ const Reports = () => {
           </div>
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-              <AlertTriangle className="w-4 h-4 text-rag-red" />
+              <AlertTriangle className="w-4 h-4 text-destructive" />
               Active Alerts
             </div>
-            <span className="text-3xl font-bold text-rag-red">{totalAmber + totalRed}</span>
+            <span className="text-3xl font-bold text-destructive">{totalAmber + totalRed}</span>
           </div>
         </div>
 
@@ -566,7 +566,7 @@ const Reports = () => {
                       </td>
                       <td className="px-3 py-3 text-foreground font-semibold">{dealer.score}</td>
                       <td className="px-3 py-3">
-                        <RagBadge status={dealer.rag} size="sm" />
+                        <span className="text-sm font-semibold text-score-badge-foreground bg-score-badge px-2 py-0.5 rounded-full">{dealer.score}</span>
                       </td>
                       <td className="px-3 py-3 text-muted-foreground hidden sm:table-cell">{dealer.lastAudit}</td>
                     </tr>
@@ -588,9 +588,9 @@ const Reports = () => {
                 <tr className="border-b border-border text-muted-foreground">
                   <th className="text-left px-5 py-3 font-medium">Section</th>
                   <th className="text-center px-3 py-3 font-medium">Total Checks</th>
-                  <th className="text-center px-3 py-3 font-medium text-rag-green">Green</th>
-                  <th className="text-center px-3 py-3 font-medium text-rag-amber">Amber</th>
-                  <th className="text-center px-3 py-3 font-medium text-rag-red">Red</th>
+                  <th className="text-center px-3 py-3 font-medium text-outcome-pass">Pass</th>
+                  <th className="text-center px-3 py-3 font-medium text-outcome-pending">Attention</th>
+                  <th className="text-center px-3 py-3 font-medium text-outcome-fail">Fail</th>
                   <th className="text-center px-3 py-3 font-medium">Pass Rate</th>
                 </tr>
               </thead>
@@ -599,17 +599,17 @@ const Reports = () => {
                   <tr key={section.id} className="border-b border-border last:border-0">
                     <td className="px-5 py-3 font-medium text-foreground">{section.name}</td>
                     <td className="px-3 py-3 text-center text-foreground">{section.totalControls}</td>
-                    <td className="px-3 py-3 text-center text-rag-green font-semibold">{section.green}</td>
-                    <td className="px-3 py-3 text-center text-rag-amber font-semibold">{section.amber}</td>
-                    <td className="px-3 py-3 text-center text-rag-red font-semibold">{section.red}</td>
+                    <td className="px-3 py-3 text-center text-outcome-pass font-semibold">{section.green}</td>
+                    <td className="px-3 py-3 text-center text-outcome-pending font-semibold">{section.amber}</td>
+                    <td className="px-3 py-3 text-center text-outcome-fail font-semibold">{section.red}</td>
                     <td className="px-3 py-3 text-center">
                       <span
                         className={`font-semibold ${
                           section.passRate >= 90
-                            ? "text-rag-green"
+                            ? "text-outcome-pass"
                             : section.passRate >= 70
-                            ? "text-rag-amber"
-                            : "text-rag-red"
+                            ? "text-outcome-pending"
+                            : "text-outcome-fail"
                         }`}
                       >
                         {section.passRate}%

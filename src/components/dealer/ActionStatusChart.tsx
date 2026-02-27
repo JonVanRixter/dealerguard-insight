@@ -7,10 +7,10 @@ interface ActionStatusChartProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  Complete: "hsl(var(--rag-green))",
+  Complete: "hsl(var(--outcome-pass))",
   "In Progress": "hsl(var(--primary))",
   BAU: "hsl(142, 50%, 60%)",
-  Pending: "hsl(var(--rag-amber))",
+  Pending: "hsl(var(--outcome-pending))",
   Planned: "hsl(var(--muted-foreground))",
   Optional: "hsl(var(--border))",
 };
@@ -90,15 +90,15 @@ export function ActionStatusChart({ actions }: ActionStatusChartProps) {
           </p>
           <div className="flex gap-3">
             <span className="text-xs">
-              <span className="inline-block w-2 h-2 rounded-full bg-rag-red mr-1" />
+              <span className="inline-block w-2 h-2 rounded-full bg-outcome-fail mr-1" />
               High: <span className="font-semibold text-foreground">{priorityCounts.High}</span>
             </span>
             <span className="text-xs">
-              <span className="inline-block w-2 h-2 rounded-full bg-rag-amber mr-1" />
+              <span className="inline-block w-2 h-2 rounded-full bg-outcome-pending mr-1" />
               Med: <span className="font-semibold text-foreground">{priorityCounts.Medium}</span>
             </span>
             <span className="text-xs">
-              <span className="inline-block w-2 h-2 rounded-full bg-rag-green mr-1" />
+              <span className="inline-block w-2 h-2 rounded-full bg-outcome-pass mr-1" />
               Low: <span className="font-semibold text-foreground">{priorityCounts.Low}</span>
             </span>
           </div>

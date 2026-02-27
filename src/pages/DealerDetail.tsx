@@ -124,8 +124,8 @@ const DealerDetail = () => {
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-semibold text-foreground">{dealerName}</h2>
-              <span className="text-sm font-semibold text-foreground bg-muted px-2.5 py-0.5 rounded-full">
-                {audit.overallScore} / 100
+              <span className="text-sm font-bold text-score-badge-foreground bg-score-badge px-3 py-0.5 rounded-full">
+                {audit.overallScore}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">

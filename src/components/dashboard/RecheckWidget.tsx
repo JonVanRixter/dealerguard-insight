@@ -37,7 +37,7 @@ export const RecheckWidget = () => {
             </Badge>
           )}
           {dueSoonCount > 0 && (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-rag-amber text-rag-amber">
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-outcome-pending text-outcome-pending">
               {dueSoonCount} due soon
             </Badge>
           )}
@@ -52,9 +52,9 @@ export const RecheckWidget = () => {
           >
             <div className="shrink-0">
               {item.status === "overdue" ? (
-                <AlertTriangle className="w-4 h-4 text-rag-red" />
+                <AlertTriangle className="w-4 h-4 text-destructive" />
               ) : (
-                <Clock className="w-4 h-4 text-rag-amber" />
+                <Clock className="w-4 h-4 text-outcome-pending" />
               )}
             </div>
             <div
@@ -70,11 +70,11 @@ export const RecheckWidget = () => {
             </div>
             <div className="shrink-0 text-right">
               {item.status === "overdue" ? (
-                <span className="text-xs font-medium text-rag-red">
+                <span className="text-xs font-medium text-destructive">
                   {item.daysOverdue}d overdue
                 </span>
               ) : (
-                <span className="text-xs text-rag-amber">
+                <span className="text-xs text-outcome-pending">
                   {Math.abs(item.daysOverdue)}d left
                 </span>
               )}

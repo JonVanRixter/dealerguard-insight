@@ -59,9 +59,9 @@ export function ControlsBreakdownChart({ sections }: ControlsBreakdownChartProps
             iconSize={8}
             wrapperStyle={{ fontSize: 11 }}
           />
-          <Bar dataKey="Pass" stackId="a" fill="hsl(var(--rag-green))" radius={[0, 0, 0, 0]} />
-          <Bar dataKey="Attention" stackId="a" fill="hsl(var(--rag-amber))" />
-          <Bar dataKey="Fail" stackId="a" fill="hsl(var(--rag-red))" radius={[0, 4, 4, 0]} />
+          <Bar dataKey="Pass" stackId="a" fill="hsl(var(--outcome-pass))" radius={[0, 0, 0, 0]} />
+          <Bar dataKey="Attention" stackId="a" fill="hsl(var(--outcome-pending))" />
+          <Bar dataKey="Fail" stackId="a" fill="hsl(var(--outcome-fail))" radius={[0, 4, 4, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -14,16 +14,16 @@ interface KeyActionsTableProps {
 }
 
 const priorityColors = {
-  High: "bg-rag-red/10 text-rag-red border-rag-red/20",
-  Medium: "bg-rag-amber/10 text-rag-amber border-rag-amber/20",
+  High: "bg-outcome-fail/10 text-outcome-fail border-outcome-fail/20",
+  Medium: "bg-outcome-pending/10 text-outcome-pending border-outcome-pending/20",
   Low: "bg-muted text-muted-foreground border-border",
 };
 
 const statusColors: Record<string, string> = {
-  Pending: "bg-rag-red/10 text-rag-red",
-  "In Progress": "bg-rag-amber/10 text-rag-amber",
+  Pending: "bg-outcome-fail/10 text-outcome-fail",
+  "In Progress": "bg-outcome-pending/10 text-outcome-pending",
   Planned: "bg-muted text-muted-foreground",
-  Complete: "bg-rag-green/10 text-rag-green",
+  Complete: "bg-outcome-pass/10 text-outcome-pass",
   BAU: "bg-primary/10 text-primary",
   Optional: "bg-muted text-muted-foreground/70",
 };

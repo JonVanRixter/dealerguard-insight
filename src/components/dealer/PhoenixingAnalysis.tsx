@@ -125,9 +125,9 @@ const riskConfig = {
     icon: Flame,
   },
   medium: {
-    bg: "bg-rag-amber/10",
-    border: "border-rag-amber/30",
-    text: "text-rag-amber",
+    bg: "bg-outcome-pending/10",
+    border: "border-outcome-pending/30",
+    text: "text-outcome-pending",
     badge: "outline" as const,
     label: "Moderate Phoenixing Risk",
     icon: AlertTriangle,
@@ -141,9 +141,9 @@ const riskConfig = {
     icon: Info,
   },
   none: {
-    bg: "bg-rag-green/10",
-    border: "border-rag-green/30",
-    text: "text-rag-green",
+    bg: "bg-outcome-pass/10",
+    border: "border-outcome-pass/30",
+    text: "text-outcome-pass",
     badge: "outline" as const,
     label: "No Phoenixing Indicators",
     icon: CheckCircle,
@@ -152,7 +152,7 @@ const riskConfig = {
 
 const severityColors = {
   high: "bg-destructive/10 text-destructive border-destructive/20",
-  medium: "bg-rag-amber/10 text-rag-amber border-rag-amber/20",
+  medium: "bg-outcome-pending/10 text-outcome-pending border-outcome-pending/20",
   low: "bg-muted text-muted-foreground border-border",
 };
 

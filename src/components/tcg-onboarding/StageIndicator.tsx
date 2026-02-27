@@ -27,7 +27,7 @@ export function StageIndicator({ current, onNavigate }: StageIndicatorProps) {
                 isActive
                   ? "bg-primary text-primary-foreground font-medium"
                   : isPast
-                  ? "bg-[hsl(var(--rag-green-bg))] text-[hsl(var(--rag-green-text))] cursor-pointer"
+                  ? "bg-outcome-pass-bg text-outcome-pass-text cursor-pointer"
                   : "bg-muted text-muted-foreground"
               }`}
             >

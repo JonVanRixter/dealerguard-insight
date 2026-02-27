@@ -51,22 +51,29 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        rag: {
-          green: {
-            DEFAULT: "hsl(var(--rag-green))",
-            bg: "hsl(var(--rag-green-bg))",
-            text: "hsl(var(--rag-green-text))",
+        outcome: {
+          pass: {
+            DEFAULT: "hsl(var(--outcome-pass))",
+            bg: "hsl(var(--outcome-pass-bg))",
+            text: "hsl(var(--outcome-pass-text))",
           },
-          amber: {
-            DEFAULT: "hsl(var(--rag-amber))",
-            bg: "hsl(var(--rag-amber-bg))",
-            text: "hsl(var(--rag-amber-text))",
+          fail: {
+            DEFAULT: "hsl(var(--outcome-fail))",
+            bg: "hsl(var(--outcome-fail-bg))",
+            text: "hsl(var(--outcome-fail-text))",
           },
-          red: {
-            DEFAULT: "hsl(var(--rag-red))",
-            bg: "hsl(var(--rag-red-bg))",
-            text: "hsl(var(--rag-red-text))",
+          pending: {
+            DEFAULT: "hsl(var(--outcome-pending))",
+            bg: "hsl(var(--outcome-pending-bg))",
+            text: "hsl(var(--outcome-pending-text))",
           },
+        },
+        "score-up": "hsl(var(--score-up))",
+        "score-down": "hsl(var(--score-down))",
+        "score-neutral": "hsl(var(--score-neutral))",
+        "score-badge": {
+          DEFAULT: "hsl(var(--score-badge))",
+          foreground: "hsl(var(--score-badge-foreground))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

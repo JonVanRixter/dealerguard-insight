@@ -34,11 +34,11 @@ export function ComparisonKPIs({ data }: ComparisonKPIsProps) {
             {data.scoreDifference}%
           </span>
           {data.scoreDifference > 0 ? (
-            <TrendingUp className="w-5 h-5 text-foreground mb-1" />
+            <TrendingUp className="w-5 h-5 text-score-up mb-1" />
           ) : data.scoreDifference < 0 ? (
-            <TrendingDown className="w-5 h-5 text-muted-foreground mb-1" />
+            <TrendingDown className="w-5 h-5 text-score-down mb-1" />
           ) : (
-            <Minus className="w-5 h-5 text-muted-foreground mb-1" />
+            <Minus className="w-5 h-5 text-score-neutral mb-1" />
           )}
         </div>
         <p className="text-xs text-muted-foreground mt-1">

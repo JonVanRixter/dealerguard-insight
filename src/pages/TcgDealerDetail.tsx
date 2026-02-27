@@ -11,9 +11,9 @@ import { getLenderName } from "@/data/tcg/lenders";
 import { PolicyTab } from "@/components/tcg-dealer/PolicyTab";
 
 function TrendIcon({ trend }: { trend: string }) {
-  if (trend === "up") return <TrendingUp className="w-4 h-4 text-foreground" />;
-  if (trend === "down") return <TrendingDown className="w-4 h-4 text-foreground" />;
-  return <Minus className="w-4 h-4 text-muted-foreground" />;
+  if (trend === "up") return <TrendingUp className="w-4 h-4 text-score-up" />;
+  if (trend === "down") return <TrendingDown className="w-4 h-4 text-score-down" />;
+  return <Minus className="w-4 h-4 text-score-neutral" />;
 }
 
 function daysRemaining(validUntil: string | null) {
@@ -51,17 +51,17 @@ function DealerOverview({ dealer }: { dealer: TcgDealer }) {
         <div className="bg-card rounded-lg border border-border p-4 space-y-3">
           <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Onboarding Status</h4>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge className="bg-[hsl(var(--rag-green-bg))] text-[hsl(var(--rag-green-text))]">{dealer.onboarding.status}</Badge></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge className="bg-outcome-pass-bg text-outcome-pass-text">{dealer.onboarding.status}</Badge></div>
             <div className="flex justify-between"><span className="text-muted-foreground">App Ref</span><span className="font-mono text-foreground">{dealer.onboarding.applicationRef}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Valid Until</span><span className="text-foreground">{dealer.onboarding.validUntil || "—"}</span></div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Days Remaining</span>
               {days !== null && (
                 days <= 0
-                  ? <Badge className="bg-[hsl(var(--rag-red-bg))] text-[hsl(var(--rag-red-text))]">EXPIRED</Badge>
+                  ? <Badge className="bg-outcome-fail-bg text-outcome-fail-text">EXPIRED</Badge>
                   : days <= 30
-                    ? <Badge className="bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))]">{days}d</Badge>
-                    : <Badge className="bg-[hsl(var(--rag-green-bg))] text-[hsl(var(--rag-green-text))]">{days}d</Badge>
+                    ? <Badge className="bg-outcome-pending-bg text-outcome-pending-text">{days}d</Badge>
+                    : <Badge className="bg-outcome-pass-bg text-outcome-pass-text">{days}d</Badge>
               )}
             </div>
             <div className="flex justify-between"><span className="text-muted-foreground">Approved By</span><span className="text-foreground">{dealer.onboarding.approvedBy || "—"}</span></div>

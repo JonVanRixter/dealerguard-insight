@@ -14,8 +14,8 @@ interface PolicyTabProps {
 }
 
 function ExistsPill({ exists }: { exists: boolean | null }) {
-  if (exists === true) return <Badge className="bg-[hsl(var(--rag-green-bg))] text-[hsl(var(--rag-green-text))]">✅ Yes</Badge>;
-  if (exists === false) return <Badge className="bg-[hsl(var(--rag-red-bg))] text-[hsl(var(--rag-red-text))]">❌ No</Badge>;
+  if (exists === true) return <Badge className="bg-outcome-pass-bg text-outcome-pass-text">✅ Yes</Badge>;
+  if (exists === false) return <Badge className="bg-outcome-fail-bg text-outcome-fail-text">❌ No</Badge>;
   return <Badge variant="secondary">— N/A</Badge>;
 }
 
@@ -200,7 +200,7 @@ export function PolicyTab({ policyRecord }: PolicyTabProps) {
           Distributes insurance products (GAP/Warranties):
         </span>
         <div className="flex items-center gap-3">
-          <span className={`text-sm font-medium ${distributeInsurance ? "text-[hsl(var(--rag-green-text))]" : "text-muted-foreground"}`}>
+          <span className={`text-sm font-medium ${distributeInsurance ? "text-outcome-pass-text" : "text-muted-foreground"}`}>
             {distributeInsurance ? "Yes ●" : "No ○"}
           </span>
           <Button variant="ghost" size="sm" className="text-xs h-7">Edit</Button>
@@ -219,13 +219,13 @@ export function PolicyTab({ policyRecord }: PolicyTabProps) {
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 bg-card border border-border rounded-lg px-4 py-3 text-sm">
         <span><strong>{stats.confirmed}</strong> policies confirmed</span>
         <span className="text-border">|</span>
-        <span className="text-rag-amber"><strong>{stats.notHeld}</strong> not held</span>
+        <span className="text-outcome-pending"><strong>{stats.notHeld}</strong> not held</span>
         <span className="text-border">|</span>
         <span className="text-muted-foreground"><strong>{stats.na}</strong> N/A</span>
         <span className="text-border">|</span>
-        <span className="text-[hsl(var(--rag-green-text))]"><strong>{stats.docsUploaded}</strong> documents uploaded</span>
+        <span className="text-outcome-pass-text"><strong>{stats.docsUploaded}</strong> documents uploaded</span>
         <span className="text-border">|</span>
-        <span className="text-rag-amber"><strong>{stats.docsOutstanding}</strong> documents outstanding</span>
+        <span className="text-outcome-pending"><strong>{stats.docsOutstanding}</strong> documents outstanding</span>
       </div>
 
       {/* Policy categories */}

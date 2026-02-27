@@ -24,10 +24,10 @@ export const DuplicateFlagsBanner = ({ limit = 10, compact = false }: DuplicateF
     <div className="bg-card rounded-xl border border-border">
       <div className="px-5 py-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Copy className="w-4 h-4 text-rag-amber" />
+          <Copy className="w-4 h-4 text-outcome-pending" />
           <h3 className="text-sm font-semibold text-foreground">Potential Duplicates</h3>
         </div>
-        <Badge variant="outline" className="text-xs border-rag-amber text-rag-amber">
+        <Badge variant="outline" className="text-xs border-outcome-pending text-outcome-pending">
           {activeDuplicates.length} flagged
         </Badge>
       </div>

@@ -33,7 +33,7 @@ export function DisplaySettings({ settings, onSave, saving }: DisplaySettingsPro
           className="grid grid-cols-3 gap-4"
         >
           {[
-            { value: "light", label: "Light", icon: <Sun className="w-6 h-6 text-rag-amber" /> },
+            { value: "light", label: "Light", icon: <Sun className="w-6 h-6 text-outcome-pending" /> },
             { value: "dark", label: "Dark", icon: <Moon className="w-6 h-6 text-primary" /> },
             { value: "system", label: "System", icon: <Monitor className="w-6 h-6 text-muted-foreground" /> },
           ].map((opt) => (

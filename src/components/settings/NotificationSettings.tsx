@@ -24,8 +24,8 @@ interface NotifRow {
 }
 
 const ROWS: NotifRow[] = [
-  { key: "critical", label: "Critical Alerts (Red RAG)", description: "Immediate notification when a dealer moves to critical status", emailKey: "email_critical", inappKey: "inapp_critical", icon: <AlertTriangle className="w-4 h-4 text-rag-red" /> },
-  { key: "warning", label: "Warning Alerts (Amber RAG)", description: "Notification when a dealer drops to warning status", emailKey: "email_warning", inappKey: "inapp_warning", icon: <AlertTriangle className="w-4 h-4 text-rag-amber" /> },
+  { key: "critical", label: "Critical Score Alerts", description: "Immediate notification when a dealer score drops significantly", emailKey: "email_critical", inappKey: "inapp_critical", icon: <AlertTriangle className="w-4 h-4 text-destructive" /> },
+  { key: "warning", label: "Score Warning Alerts", description: "Notification when a dealer score declines", emailKey: "email_warning", inappKey: "inapp_warning", icon: <AlertTriangle className="w-4 h-4 text-muted-foreground" /> },
   { key: "audit", label: "Audit Due Reminders", description: "Reminder before dealer audits are due", emailKey: "email_audit_reminders", inappKey: "inapp_audit_reminders", icon: <Bell className="w-4 h-4 text-muted-foreground" /> },
   { key: "summary", label: "Weekly Portfolio Summary", description: "Weekly digest of portfolio compliance status", emailKey: "email_weekly_summary", inappKey: "inapp_weekly_summary", icon: <Mail className="w-4 h-4 text-muted-foreground" /> },
 ];

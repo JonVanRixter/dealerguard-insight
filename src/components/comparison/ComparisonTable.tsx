@@ -43,10 +43,10 @@ export function ComparisonTable({ data }: ComparisonTableProps) {
                   <span
                     className={`font-semibold ${
                       section.difference > 0
-                        ? "text-rag-green"
+                        ? "text-score-up"
                         : section.difference < 0
-                        ? "text-rag-red"
-                        : "text-muted-foreground"
+                        ? "text-score-down"
+                        : "text-score-neutral"
                     }`}
                   >
                     {section.difference > 0 ? "+" : ""}{section.difference}%
@@ -55,12 +55,12 @@ export function ComparisonTable({ data }: ComparisonTableProps) {
                 <td className="px-3 py-3">
                   <div className="flex justify-center">
                     {section.difference > 5 ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-rag-green/10 text-rag-green">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-score-up/10 text-score-up">
                         <TrendingUp className="w-3 h-3" />
                         Ahead
                       </span>
                     ) : section.difference < -5 ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-rag-red/10 text-rag-red">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-score-down/10 text-score-down">
                         <TrendingDown className="w-3 h-3" />
                         Behind
                       </span>

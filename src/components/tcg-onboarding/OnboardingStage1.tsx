@@ -44,9 +44,9 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
 
   const resultPill = (result: PreScreenResult) => {
     if (!result) return null;
-    if (result === "pass") return <Badge className="bg-[hsl(var(--rag-green-bg))] text-[hsl(var(--rag-green-text))]">Pass</Badge>;
-    if (result === "fail") return <Badge className="bg-[hsl(var(--rag-red-bg))] text-[hsl(var(--rag-red-text))]">Fail</Badge>;
-    return <Badge className="bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))]">Refer</Badge>;
+    if (result === "pass") return <Badge className="bg-outcome-pass-bg text-outcome-pass-text">Pass</Badge>;
+    if (result === "fail") return <Badge className="bg-outcome-fail-bg text-outcome-fail-text">Fail</Badge>;
+    return <Badge className="bg-outcome-pending-bg text-outcome-pending-text">Refer</Badge>;
   };
 
   return (
@@ -63,17 +63,17 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
 
         {/* DND Warning */}
         {app.dndWarning && (
-          <div className="bg-[hsl(var(--rag-red-bg))] border border-[hsl(var(--rag-red))] rounded-lg p-4 flex items-start gap-3">
-            <ShieldBan className="w-5 h-5 text-[hsl(var(--rag-red-text))] shrink-0 mt-0.5" />
-            <p className="text-sm text-[hsl(var(--rag-red-text))] font-medium">{app.dndWarning}</p>
+          <div className="bg-outcome-fail-bg border border-outcome-fail rounded-lg p-4 flex items-start gap-3">
+            <ShieldBan className="w-5 h-5 text-outcome-fail-text shrink-0 mt-0.5" />
+            <p className="text-sm text-outcome-fail-text font-medium">{app.dndWarning}</p>
           </div>
         )}
 
         {/* Duplicate Warning */}
         {duplicateMsg && (
-          <div className="bg-[hsl(var(--rag-amber-bg))] border border-[hsl(var(--rag-amber))] rounded-lg p-4 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-[hsl(var(--rag-amber-text))] shrink-0 mt-0.5" />
-            <p className="text-sm text-[hsl(var(--rag-amber-text))]">⚠️ {duplicateMsg}</p>
+          <div className="bg-outcome-pending-bg border border-outcome-pending rounded-lg p-4 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-outcome-pending-text shrink-0 mt-0.5" />
+            <p className="text-sm text-outcome-pending-text">⚠️ {duplicateMsg}</p>
           </div>
         )}
 

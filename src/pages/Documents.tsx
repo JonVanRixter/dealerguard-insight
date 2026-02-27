@@ -66,9 +66,9 @@ function formatFileSize(bytes: number): string {
 }
 
 function getFileIcon(type: string) {
-  if (type.includes("pdf")) return <FileText className="w-5 h-5 text-rag-red" />;
+  if (type.includes("pdf")) return <FileText className="w-5 h-5 text-destructive" />;
   if (type.includes("sheet") || type.includes("excel") || type.includes("csv"))
-    return <FileSpreadsheet className="w-5 h-5 text-rag-green" />;
+    return <FileSpreadsheet className="w-5 h-5 text-outcome-pass" />;
   if (type.includes("word") || type.includes("document"))
     return <FileText className="w-5 h-5 text-primary" />;
   return <File className="w-5 h-5 text-muted-foreground" />;
@@ -464,10 +464,10 @@ const Documents = () => {
           </div>
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-              <FileText className="w-4 h-4 text-rag-red" />
+              <FileText className="w-4 h-4 text-destructive" />
               Expired
             </div>
-            <span className={`text-3xl font-bold ${expiredCount > 0 ? "text-rag-red" : "text-foreground"}`}>
+            <span className={`text-3xl font-bold ${expiredCount > 0 ? "text-destructive" : "text-foreground"}`}>
               {expiredCount}
             </span>
           </div>
@@ -541,7 +541,7 @@ const Documents = () => {
                       <span>{formatFileSize(doc.file_size)}</span>
                       <span>{new Date(doc.created_at).toLocaleDateString()}</span>
                       {doc.expiry_date && (
-                        <span className={new Date(doc.expiry_date) < new Date() ? "text-rag-red font-medium" : ""}>
+                        <span className={new Date(doc.expiry_date) < new Date() ? "text-destructive font-medium" : ""}>
                           Expires: {new Date(doc.expiry_date).toLocaleDateString()}
                         </span>
                       )}
@@ -563,7 +563,7 @@ const Documents = () => {
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDownload(doc)}>
                       <Download className="w-4 h-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-rag-red hover:text-rag-red" onClick={() => handleDelete(doc)}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(doc)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>

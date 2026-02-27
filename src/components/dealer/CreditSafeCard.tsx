@@ -104,16 +104,16 @@ export interface CreditSafeReport {
 function getRatingColor(rating?: string): string {
   if (!rating) return "text-muted-foreground";
   const val = parseInt(rating);
-  if (val >= 71) return "text-rag-green";
-  if (val >= 40) return "text-rag-amber";
-  return "text-rag-red";
+  if (val >= 71) return "text-outcome-pass";
+  if (val >= 40) return "text-outcome-pending";
+  return "text-outcome-fail";
 }
 
 function getRatingBadge(rating?: string) {
   if (!rating) return null;
   const val = parseInt(rating);
-  if (val >= 71) return { variant: "outline" as const, className: "border-rag-green text-rag-green", label: "Low Risk", icon: ShieldCheck };
-  if (val >= 40) return { variant: "outline" as const, className: "border-rag-amber text-rag-amber", label: "Medium Risk", icon: AlertTriangle };
+  if (val >= 71) return { variant: "outline" as const, className: "border-outcome-pass text-outcome-pass", label: "Low Risk", icon: ShieldCheck };
+  if (val >= 40) return { variant: "outline" as const, className: "border-outcome-pending text-outcome-pending", label: "Medium Risk", icon: AlertTriangle };
   return { variant: "destructive" as const, className: "", label: "High Risk", icon: ShieldAlert };
 }
 
@@ -337,8 +337,8 @@ export const CreditSafeCard = ({ dealerName, companiesHouseNumber, onDataLoaded 
                   {creditRating?.providerValue?.value || "N/A"}
                 </span>
                 <span className="text-xs text-muted-foreground">/ {creditRating?.providerValue?.maxValue || "100"}</span>
-                {trendDir === "up" && <TrendingUp className="w-4 h-4 text-rag-green" />}
-                {trendDir === "down" && <TrendingDown className="w-4 h-4 text-rag-red" />}
+                {trendDir === "up" && <TrendingUp className="w-4 h-4 text-score-up" />}
+                {trendDir === "down" && <TrendingDown className="w-4 h-4 text-score-down" />}
                 {trendDir === "stable" && <Minus className="w-4 h-4 text-muted-foreground" />}
               </div>
             </div>
@@ -354,14 +354,14 @@ export const CreditSafeCard = ({ dealerName, companiesHouseNumber, onDataLoaded 
 
             <div className="bg-muted/30 rounded-lg p-3">
               <p className="text-xs text-muted-foreground mb-1">DBT (Days Beyond Terms)</p>
-              <span className={`text-lg font-bold ${dbt && dbt > 30 ? "text-rag-red" : dbt && dbt > 14 ? "text-rag-amber" : "text-foreground"}`}>
+              <span className={`text-lg font-bold ${dbt && dbt > 30 ? "text-outcome-fail" : dbt && dbt > 14 ? "text-outcome-pending" : "text-foreground"}`}>
                 {dbt !== undefined ? `${dbt} days` : "N/A"}
               </span>
             </div>
 
             <div className="bg-muted/30 rounded-lg p-3">
               <p className="text-xs text-muted-foreground mb-1">CCJs</p>
-              <span className={`text-lg font-bold ${ccjs?.numberOfExact && ccjs.numberOfExact > 0 ? "text-rag-red" : "text-foreground"}`}>
+              <span className={`text-lg font-bold ${ccjs?.numberOfExact && ccjs.numberOfExact > 0 ? "text-outcome-fail" : "text-foreground"}`}>
                 {ccjs?.numberOfExact ?? "N/A"}
               </span>
               {ccjs?.totalAmountOfExact ? (
