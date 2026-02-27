@@ -11,11 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { OnboardingDocUpload } from "@/components/onboarding/OnboardingDocUpload";
 import { CreditSafeSearch } from "@/components/onboarding/CreditSafeSearch";
 import { FcaRegisterCard } from "@/components/dealer/FcaRegisterCard";
 import { DealerEnrichment } from "@/components/onboarding/DealerEnrichment";
 import { useOnboardingPersistence, type SegData } from "@/hooks/useOnboardingPersistence";
+import { useTcgOnboarding, type TcgOnboardingApp, type AppStatus } from "@/hooks/useTcgOnboarding";
+import { getLenderName } from "@/data/tcg/lenders";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DemoOnboardingWizard } from "@/components/onboarding/DemoOnboardingWizard";
@@ -27,7 +30,7 @@ import {
   Users, Phone, ShieldCheck, Building2, PoundSterling,
   CheckCircle2, AlertTriangle, XCircle, ArrowRight, Search,
   ClipboardList, FileSearch, Landmark, FileUp, ShieldBan,
-  Loader2, Plus, FolderOpen,
+  Loader2, Plus, FolderOpen, Eye, RefreshCw, UserCheck,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -417,10 +420,33 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
 }
 
 /* ------------------------------------------------------------------ */
+/*  TCG Hub helpers                                                    */
+/* ------------------------------------------------------------------ */
+function tcgStatusPill(status: AppStatus) {
+  const colorClass = status === "draft" ? "bg-muted text-muted-foreground" :
+    status === "in_progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
+    status === "pending_approval" ? "bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))]" :
+    status === "approved" ? "bg-[hsl(var(--rag-green-bg))] text-[hsl(var(--rag-green-text))]" :
+    "bg-[hsl(var(--rag-red-bg))] text-[hsl(var(--rag-red-text))]";
+  const labels: Record<AppStatus, string> = { draft: "Draft", in_progress: "In Progress", pending_approval: "Pending Approval", approved: "Approved", rejected: "Rejected" };
+  return <Badge className={colorClass}>{labels[status]}</Badge>;
+}
+
+function daysRemainingBadge(validUntil: string | null) {
+  if (!validUntil) return <span className="text-muted-foreground">—</span>;
+  const days = Math.ceil((new Date(validUntil).getTime() - Date.now()) / 86400000);
+  if (days < 0) return <Badge className="bg-[hsl(var(--rag-red-bg))] text-[hsl(var(--rag-red-text))]">EXPIRED</Badge>;
+  if (days <= 7) return <Badge className="bg-[hsl(var(--rag-red-bg))] text-[hsl(var(--rag-red-text))]">🚨 {days}d — Renewal urgent</Badge>;
+  if (days <= 30) return <Badge className="bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))]">⚠️ {days}d — Renewal due</Badge>;
+  return <Badge className="bg-[hsl(var(--rag-green-bg))] text-[hsl(var(--rag-green-text))]">{days}d</Badge>;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main page                                                          */
 /* ------------------------------------------------------------------ */
 export default function PreOnboarding() {
   const { state, update, applications, loading, saving, loadApplication, createNew, save } = useOnboardingPersistence();
+  const tcg = useTcgOnboarding();
   const [failed, setFailed] = useState(false);
   const { demoMode } = useAuth();
   const { toast } = useToast();
@@ -569,12 +595,131 @@ export default function PreOnboarding() {
               </CardContent>
             </Card>
 
-            <Tabs defaultValue="segmentation" className="space-y-6">
+            <Tabs defaultValue="dealer-onboarding" className="space-y-6">
               <TabsList>
+                <TabsTrigger value="dealer-onboarding" className="gap-2"><UserCheck className="w-4 h-4" />Dealer Onboarding</TabsTrigger>
                 <TabsTrigger value="segmentation" className="gap-2"><Users className="w-4 h-4" />Segmentation</TabsTrigger>
                 <TabsTrigger value="qualification" className="gap-2"><ClipboardList className="w-4 h-4" />Qualification Call</TabsTrigger>
                 <TabsTrigger value="screening" className="gap-2"><FileSearch className="w-4 h-4" />Pre‑Screening</TabsTrigger>
               </TabsList>
+
+              <TabsContent value="dealer-onboarding">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      Onboarding records are valid for all lenders for 92 days from approval. One record per dealer — no duplication.
+                    </p>
+                    <Button onClick={() => { tcg.startNew(); navigate("/tcg/onboarding/new"); }} className="gap-2">
+                      <Plus className="w-4 h-4" /> Start New Onboarding
+                    </Button>
+                  </div>
+
+                  <Tabs defaultValue="active" className="space-y-4">
+                    <TabsList>
+                      <TabsTrigger value="active">Active Applications</TabsTrigger>
+                      <TabsTrigger value="approved">Approved Dealers</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="active">
+                      <Card>
+                        <CardContent className="p-0">
+                          {tcg.applications.length === 0 ? (
+                            <div className="p-8 text-center text-muted-foreground">
+                              No active applications. Click "Start New Onboarding" to begin.
+                            </div>
+                          ) : (
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>App Ref</TableHead>
+                                  <TableHead>Dealer Name</TableHead>
+                                  <TableHead>CH Number</TableHead>
+                                  <TableHead>Started By</TableHead>
+                                  <TableHead>Progress</TableHead>
+                                  <TableHead>Status</TableHead>
+                                  <TableHead>Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {tcg.applications.filter((a) => a.status !== "approved").map((app) => (
+                                  <TableRow key={app.id}>
+                                    <TableCell className="font-mono text-sm">{app.appRef}</TableCell>
+                                    <TableCell>{app.companyName || "—"}</TableCell>
+                                    <TableCell className="font-mono">{app.companiesHouseNumber || "—"}</TableCell>
+                                    <TableCell>{app.startedBy}</TableCell>
+                                    <TableCell><span className="text-sm text-muted-foreground">{app.currentStage}/3 stages</span></TableCell>
+                                    <TableCell>{tcgStatusPill(app.status)}</TableCell>
+                                    <TableCell>
+                                      <Button variant="outline" size="sm" onClick={() => {
+                                        tcg.loadApp(app.id);
+                                        navigate(`/tcg/onboarding/${app.id}/stage-${app.currentStage}`);
+                                      }}>
+                                        {app.status === "draft" ? "Continue" : "View"}
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+
+                    <TabsContent value="approved">
+                      <Card>
+                        <CardContent className="p-0">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Dealer</TableHead>
+                                <TableHead>Lenders Using</TableHead>
+                                <TableHead>Valid From</TableHead>
+                                <TableHead>Valid Until</TableHead>
+                                <TableHead>Days Remaining</TableHead>
+                                <TableHead>Renewal Due</TableHead>
+                                <TableHead>Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {tcg.getApprovedDealers().map((d) => (
+                                <TableRow key={d.id}>
+                                  <TableCell className="font-medium">{d.name}</TableCell>
+                                  <TableCell>
+                                    <div className="flex flex-wrap gap-1">
+                                      {d.lendersUsing.map((lid) => (
+                                        <Badge key={lid} variant="secondary" className="text-xs">{getLenderName(lid)}</Badge>
+                                      ))}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>{d.validFrom || "—"}</TableCell>
+                                  <TableCell>{d.validUntil || "—"}</TableCell>
+                                  <TableCell>{daysRemainingBadge(d.validUntil)}</TableCell>
+                                  <TableCell>
+                                    {d.renewalDue ? (
+                                      <Badge className="bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))]">⚠️ Yes</Badge>
+                                    ) : (
+                                      <span className="text-[hsl(var(--rag-green-text))]">✅ No</span>
+                                    )}
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex gap-2">
+                                      <Button variant="outline" size="sm" className="gap-1"><Eye className="w-3 h-3" /> View</Button>
+                                      {d.renewalDue && (
+                                        <Button variant="outline" size="sm" className="gap-1"><RefreshCw className="w-3 h-3" /> Renew</Button>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </TabsContent>
 
               <TabsContent value="segmentation">
                 <DealerSegmentation

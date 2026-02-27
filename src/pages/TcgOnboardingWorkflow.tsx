@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTcgOnboarding } from "@/hooks/useTcgOnboarding";
 import { OnboardingStage1 } from "@/components/tcg-onboarding/OnboardingStage1";
 import { OnboardingStage2 } from "@/components/tcg-onboarding/OnboardingStage2";
@@ -7,6 +7,8 @@ import { OnboardingStage3 } from "@/components/tcg-onboarding/OnboardingStage3";
 
 export default function TcgOnboardingWorkflow() {
   const { appId, stage } = useParams();
+  const location = useLocation();
+  const isNew = location.pathname.endsWith("/new");
   const navigate = useNavigate();
   const {
     current,
@@ -22,13 +24,13 @@ export default function TcgOnboardingWorkflow() {
 
   useEffect(() => {
     if (!current) {
-      if (appId === "new") {
+      if (isNew || appId === "new") {
         startNew();
       } else if (appId) {
         loadApp(appId);
       }
     }
-  }, [appId, current, startNew, loadApp]);
+  }, [appId, isNew, current, startNew, loadApp]);
 
   const currentStage = stage ? parseInt(stage.replace("stage-", "")) as 1 | 2 | 3 : 1;
 
