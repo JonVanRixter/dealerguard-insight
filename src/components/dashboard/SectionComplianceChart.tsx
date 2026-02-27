@@ -21,22 +21,21 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export function SectionComplianceChart() {
   const data = useMemo(() => {
-    // Sample first 50 dealers for performance
     const sampleDealers = dealers.slice(0, 50);
     const sectionStats = AUDIT_SECTIONS.map(section => ({
       name: section.name.replace("Communications & Complaints", "Comms & Complaints").replace("Financial Crime / Fraud", "Fin Crime"),
-      green: 0,
-      amber: 0,
-      red: 0,
+      pass: 0,
+      attention: 0,
+      fail: 0,
     }));
 
     sampleDealers.forEach((dealer, idx) => {
       const audit = generateDealerAudit(dealer.name, idx);
       audit.sections.forEach((section, sIdx) => {
         if (sIdx < sectionStats.length) {
-          if (section.summary.ragStatus === "green") sectionStats[sIdx].green++;
-          else if (section.summary.ragStatus === "amber") sectionStats[sIdx].amber++;
-          else sectionStats[sIdx].red++;
+          if (section.summary.ragStatus === "green") sectionStats[sIdx].pass++;
+          else if (section.summary.ragStatus === "amber") sectionStats[sIdx].attention++;
+          else sectionStats[sIdx].fail++;
         }
       });
     });
@@ -47,7 +46,7 @@ export function SectionComplianceChart() {
   return (
     <div className="bg-card rounded-xl border border-border p-5">
       <h3 className="text-sm font-semibold text-foreground mb-1">Section Compliance Breakdown</h3>
-      <p className="text-xs text-muted-foreground mb-4">RAG distribution across audit sections (sample of 50 dealers)</p>
+      <p className="text-xs text-muted-foreground mb-4">Score distribution across audit sections (sample of 50 dealers)</p>
       <div className="h-52">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
@@ -62,9 +61,9 @@ export function SectionComplianceChart() {
             />
             <Tooltip content={<CustomTooltip />} cursor={false} />
             <Legend iconSize={8} wrapperStyle={{ fontSize: 10 }} />
-            <Bar dataKey="green" name="Green" stackId="a" fill="hsl(142, 71%, 45%)" />
-            <Bar dataKey="amber" name="Amber" stackId="a" fill="hsl(38, 92%, 50%)" />
-            <Bar dataKey="red" name="Red" stackId="a" fill="hsl(0, 84%, 60%)" radius={[0, 4, 4, 0]} />
+            <Bar dataKey="pass" name="Pass" stackId="a" fill="hsl(var(--primary))" />
+            <Bar dataKey="attention" name="Attention" stackId="a" fill="hsl(var(--muted-foreground))" />
+            <Bar dataKey="fail" name="Fail" stackId="a" fill="hsl(var(--border))" radius={[0, 4, 4, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

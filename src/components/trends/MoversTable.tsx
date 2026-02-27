@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { DealerTrend } from "@/data/trendData";
 import { TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
-import { RagBadge } from "@/components/RagBadge";
 
 interface MoversTableProps {
   improvers: DealerTrend[];
@@ -16,7 +15,7 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
       <div className="bg-card rounded-xl border border-border">
         <div className="px-5 py-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-rag-green" />
+            <TrendingUp className="w-4 h-4 text-primary" />
             <h3 className="text-sm font-semibold text-foreground">Compliance Leaders</h3>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">Dealerships with biggest score improvements over 12 months</p>
@@ -28,7 +27,6 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
                 <th className="text-left px-5 py-3 font-semibold text-foreground">Dealership Name</th>
                 <th className="text-center px-3 py-3 font-semibold text-foreground">Current</th>
                 <th className="text-center px-3 py-3 font-semibold text-foreground">Change</th>
-                <th className="text-center px-3 py-3 font-semibold text-foreground">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -44,12 +42,9 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
                   </td>
                   <td className="px-3 py-2.5 text-center font-semibold">{d.currentScore}%</td>
                   <td className="px-3 py-2.5 text-center">
-                    <span className="text-rag-green font-semibold flex items-center justify-center gap-1">
+                    <span className="text-foreground font-semibold flex items-center justify-center gap-1">
                       <TrendingUp className="w-3.5 h-3.5" /> +{d.changeFromStart}%
                     </span>
-                  </td>
-                  <td className="px-3 py-2.5 flex justify-center">
-                    <RagBadge status={d.currentRag} size="sm" />
                   </td>
                 </tr>
               ))}
@@ -62,7 +57,7 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
       <div className="bg-card rounded-xl border border-border">
         <div className="px-5 py-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-rag-red" />
+            <AlertTriangle className="w-4 h-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold text-foreground">Dealerships Requiring Attention</h3>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">Dealerships with declining compliance scores over 12 months</p>
@@ -74,7 +69,6 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
                 <th className="text-left px-5 py-3 font-semibold text-foreground">Dealership Name</th>
                 <th className="text-center px-3 py-3 font-semibold text-foreground">Current</th>
                 <th className="text-center px-3 py-3 font-semibold text-foreground">Change</th>
-                <th className="text-center px-3 py-3 font-semibold text-foreground">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -90,13 +84,10 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
                   </td>
                   <td className="px-3 py-2.5 text-center font-semibold">{d.currentScore}%</td>
                   <td className="px-3 py-2.5 text-center">
-                    <span className={`font-semibold flex items-center justify-center gap-1 ${d.changeFromStart < 0 ? "text-rag-red" : "text-muted-foreground"}`}>
+                    <span className="font-semibold flex items-center justify-center gap-1 text-muted-foreground">
                       {d.changeFromStart < 0 && <TrendingDown className="w-3.5 h-3.5" />}
                       {d.changeFromStart > 0 ? "+" : ""}{d.changeFromStart}%
                     </span>
-                  </td>
-                  <td className="px-3 py-2.5 flex justify-center">
-                    <RagBadge status={d.currentRag} size="sm" />
                   </td>
                 </tr>
               ))}

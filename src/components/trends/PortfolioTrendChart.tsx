@@ -1,7 +1,7 @@
 import { PortfolioTrendPoint } from "@/data/trendData";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend,
+  ResponsiveContainer,
 } from "recharts";
 
 interface PortfolioTrendChartProps {
@@ -16,10 +16,10 @@ export function PortfolioTrendChart({ data }: PortfolioTrendChartProps) {
         <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg">
           <p className="text-sm font-medium text-foreground mb-1">{label}</p>
           <p className="text-xs text-primary">Avg Score: {point.avgScore}%</p>
-          <div className="flex gap-3 mt-1 text-xs">
-            <span className="text-rag-green">Green: {point.greenCount}</span>
-            <span className="text-rag-amber">Amber: {point.amberCount}</span>
-            <span className="text-rag-red">Red: {point.redCount}</span>
+          <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
+            <span>80–100: {point.greenCount}</span>
+            <span>55–79: {point.amberCount}</span>
+            <span>0–54: {point.redCount}</span>
           </div>
         </div>
       );

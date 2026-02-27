@@ -9,10 +9,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-xs">
         <p className="font-medium text-foreground mb-1">{label}</p>
         <p>Avg Score: <span className="font-semibold">{d.avgScore}%</span></p>
-        <div className="flex gap-2 mt-1">
-          <span className="text-rag-green">{d.greenCount}G</span>
-          <span className="text-rag-amber">{d.amberCount}A</span>
-          <span className="text-rag-red">{d.redCount}R</span>
+        <div className="flex gap-2 mt-1 text-muted-foreground">
+          <span>80–100: {d.greenCount}</span>
+          <span>55–79: {d.amberCount}</span>
+          <span>0–54: {d.redCount}</span>
         </div>
       </div>
     );

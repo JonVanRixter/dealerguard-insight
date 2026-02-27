@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, CheckCircle2, AlertTriangle, XCircle, Zap } from "lucide-react";
 import { AuditSection, ControlCheck } from "@/data/auditFramework";
-import { RagBadge } from "@/components/RagBadge";
 import {
   Table,
   TableBody,
@@ -18,40 +17,43 @@ interface AuditSectionCardProps {
 }
 
 const ResultIcon = ({ result }: { result: ControlCheck["result"] }) => {
-  if (result === "pass") return <CheckCircle2 className="w-4 h-4 text-rag-green" />;
-  if (result === "partial") return <AlertTriangle className="w-4 h-4 text-rag-amber" />;
-  return <XCircle className="w-4 h-4 text-rag-red" />;
+  if (result === "pass") return <CheckCircle2 className="w-4 h-4 text-primary" />;
+  if (result === "partial") return <AlertTriangle className="w-4 h-4 text-muted-foreground" />;
+  return <XCircle className="w-4 h-4 text-destructive" />;
+};
+
+const RiskLabel = ({ rating }: { rating: string }) => {
+  const labels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+    green: { label: "Pass", variant: "secondary" },
+    amber: { label: "Attention", variant: "outline" },
+    red: { label: "Fail", variant: "destructive" },
+  };
+  const config = labels[rating] || labels.green;
+  return <Badge variant={config.variant} className="text-[10px] px-1.5 py-0">{config.label}</Badge>;
 };
 
 export function AuditSectionCard({ section, defaultExpanded = false }: AuditSectionCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
+  const sectionStatus = section.summary.red > 0 ? "Fail" : section.summary.amber > 0 ? "Attention" : "Pass";
+
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden">
-      {/* Section Header - Clickable */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full px-5 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
       >
         <div className="flex items-center gap-3">
           <h3 className="text-sm font-semibold text-foreground">{section.name}</h3>
-          <RagBadge status={section.summary.ragStatus} />
+          <Badge variant={sectionStatus === "Fail" ? "destructive" : sectionStatus === "Attention" ? "outline" : "secondary"} className="text-[10px]">
+            {sectionStatus}
+          </Badge>
         </div>
         <div className="flex items-center gap-4">
-          {/* RAG counts */}
-          <div className="hidden sm:flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-rag-green" />
-              {section.summary.green}
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-rag-amber" />
-              {section.summary.amber}
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-rag-red" />
-              {section.summary.red}
-            </span>
+          <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
+            <span>Pass: {section.summary.green}</span>
+            <span>Attn: {section.summary.amber}</span>
+            <span>Fail: {section.summary.red}</span>
           </div>
           {isExpanded ? (
             <ChevronUp className="w-4 h-4 text-muted-foreground" />
@@ -61,15 +63,12 @@ export function AuditSectionCard({ section, defaultExpanded = false }: AuditSect
         </div>
       </button>
 
-      {/* Expanded Controls Table */}
       {isExpanded && (
         <div className="border-t border-border">
-          {/* Section Notes */}
           <div className="px-5 py-3 bg-muted/30 text-sm text-muted-foreground">
             {section.summary.notes}
           </div>
 
-          {/* Controls Table */}
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -107,7 +106,7 @@ export function AuditSectionCard({ section, defaultExpanded = false }: AuditSect
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <RagBadge status={control.riskRating} size="sm" />
+                      <RiskLabel rating={control.riskRating} />
                     </TableCell>
                     <TableCell className="hidden xl:table-cell text-xs text-muted-foreground max-w-[200px] truncate">
                       {control.comments}

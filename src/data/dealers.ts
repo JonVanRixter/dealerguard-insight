@@ -277,9 +277,9 @@ export const portfolioStats = {
 
 // Recent activities based on actual dealer data
 export const activities = [
-  { text: "Shirlaws Limited flagged as High Risk – CreditSafe Category D", time: "2 hours ago", type: "red" as const },
-  { text: "Platinum Vehicle Specialists – missing IDD on finance deal", time: "5 hours ago", type: "red" as const },
-  { text: "Thurlby Motors – representative APR update required", time: "1 day ago", type: "amber" as const },
-  { text: "Dynasty Partners Limited – website commission disclosure needs updating", time: "2 days ago", type: "amber" as const },
-  { text: `${dealers.filter(d => d.rag === "green")[0]?.name || "A dealer"} completed annual audit`, time: "3 days ago", type: "green" as const },
+  { text: "Shirlaws Limited flagged — CreditSafe Category D, score: 38", time: "2 hours ago", type: "red" as const },
+  { text: "Platinum Vehicle Specialists – missing IDD on finance deal, score: 42", time: "5 hours ago", type: "red" as const },
+  { text: "Thurlby Motors – representative APR update required, score: 72", time: "1 day ago", type: "amber" as const },
+  { text: "Dynasty Partners Limited – website commission disclosure needs updating, score: 68", time: "2 days ago", type: "amber" as const },
+  { text: `${dealers[0]?.name || "A dealer"} completed annual audit`, time: "3 days ago", type: "green" as const },
 ];
