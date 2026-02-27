@@ -4,11 +4,12 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, TrendingUp, TrendingDown, Minus, MapPin, Phone, Building2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Minus, MapPin, Phone, Building2, ShieldCheck, Search } from "lucide-react";
 import { tcgDealers, type TcgDealer } from "@/data/tcg/dealers";
 import { getPolicyRecord } from "@/data/tcg/dealerPolicies";
 import { getLenderName } from "@/data/tcg/lenders";
 import { PolicyTab } from "@/components/tcg-dealer/PolicyTab";
+import { ExternalChecksTab } from "@/components/tcg-dealer/ExternalChecksTab";
 
 function TrendIcon({ trend }: { trend: string }) {
   if (trend === "up") return <TrendingUp className="w-4 h-4 text-score-up" />;
@@ -140,6 +141,10 @@ export default function TcgDealerDetail() {
               <ShieldCheck className="w-3.5 h-3.5" />
               Policies
             </TabsTrigger>
+            <TabsTrigger value="checks" className="gap-1.5">
+              <Search className="w-3.5 h-3.5" />
+              External Checks
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -154,6 +159,10 @@ export default function TcgDealerDetail() {
                 No policy records found for this dealer.
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="checks">
+            <ExternalChecksTab dealerId={dealer.id} />
           </TabsContent>
         </Tabs>
       </div>
