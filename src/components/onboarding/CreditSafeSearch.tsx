@@ -211,9 +211,9 @@ export function CreditSafeSearch({ defaultSearch = "", companyNumber, variant = 
                 </span>
                 <span className="text-[10px] text-muted-foreground">/ {result.maxScore}</span>
                 {result.previousScore && (
-                  parseInt(result.score || "0") > parseInt(result.previousScore) ? <TrendingUp className="w-3 h-3 text-emerald-600" /> :
-                  parseInt(result.score || "0") < parseInt(result.previousScore) ? <TrendingDown className="w-3 h-3 text-destructive" /> :
-                  <Minus className="w-3 h-3 text-muted-foreground" />
+                  parseInt(result.score || "0") > parseInt(result.previousScore) ? <TrendingUp className="w-3 h-3 text-score-up" /> :
+                  parseInt(result.score || "0") < parseInt(result.previousScore) ? <TrendingDown className="w-3 h-3 text-score-down" /> :
+                  <Minus className="w-3 h-3 text-score-neutral" />
                 )}
               </div>
             </div>

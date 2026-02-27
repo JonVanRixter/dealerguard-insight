@@ -36,18 +36,27 @@
 
     --radius: 0.5rem;
 
-    /* RAG Status Colors */
-    --rag-green: 142 71% 45%;
-    --rag-green-bg: 142 76% 94%;
-    --rag-green-text: 142 64% 30%;
+    /* Audit outcome colours (Pass/Fail/Pending — binary, not threshold) */
+    --outcome-pass: 142 71% 45%;
+    --outcome-pass-bg: 142 76% 94%;
+    --outcome-pass-text: 142 64% 30%;
 
-    --rag-amber: 38 92% 50%;
-    --rag-amber-bg: 38 100% 93%;
-    --rag-amber-text: 32 95% 30%;
+    --outcome-fail: 0 84% 60%;
+    --outcome-fail-bg: 0 86% 95%;
+    --outcome-fail-text: 0 72% 35%;
 
-    --rag-red: 0 84% 60%;
-    --rag-red-bg: 0 86% 95%;
-    --rag-red-text: 0 72% 35%;
+    --outcome-pending: 38 92% 50%;
+    --outcome-pending-bg: 38 100% 93%;
+    --outcome-pending-text: 32 95% 30%;
+
+    /* Score change directional colours */
+    --score-up: 270 55% 36%;          /* TCG purple #3d1468 */
+    --score-down: 220 13% 26%;        /* neutral dark grey #374151 */
+    --score-neutral: 220 9% 62%;      /* light grey #9ca3af */
+
+    /* Neutral score badge */
+    --score-badge: 220 13% 26%;       /* dark grey pill */
+    --score-badge-foreground: 0 0% 100%; /* white text */
 
     /* Sidebar - Deep Purple */
     --sidebar-background: 270 55% 25%;

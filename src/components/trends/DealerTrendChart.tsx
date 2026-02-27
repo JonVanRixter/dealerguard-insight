@@ -60,9 +60,7 @@ export function DealerTrendChart({ trends }: DealerTrendChartProps) {
             {dealers.map((d) => (
               <SelectItem key={d.name} value={d.name} disabled={selected.length >= 5 && !selected.includes(d.name)}>
                 <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${
-                    d.rag === "green" ? "bg-rag-green" : d.rag === "amber" ? "bg-rag-amber" : "bg-rag-red"
-                  }`} />
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground" />
                   {d.name}
                   {selected.includes(d.name) && <span className="text-xs text-muted-foreground ml-1">✓</span>}
                 </div>

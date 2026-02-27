@@ -46,13 +46,7 @@ function DealerSelect({
             <SelectItem key={dealer.name} value={dealer.name}>
               <div className="flex items-center gap-2">
                 <span
-                  className={`w-2 h-2 rounded-full ${
-                    dealer.rag === "green"
-                      ? "bg-rag-green"
-                      : dealer.rag === "amber"
-                      ? "bg-rag-amber"
-                      : "bg-rag-red"
-                  }`}
+                  className="w-2 h-2 rounded-full bg-muted-foreground"
                 />
                 {dealer.name}
               </div>

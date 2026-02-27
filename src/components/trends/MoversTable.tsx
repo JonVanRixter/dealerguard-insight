@@ -15,7 +15,7 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
       <div className="bg-card rounded-xl border border-border">
         <div className="px-5 py-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" />
+            <TrendingUp className="w-4 h-4 text-score-up" />
             <h3 className="text-sm font-semibold text-foreground">Compliance Leaders</h3>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">Dealerships with biggest score improvements over 12 months</p>
@@ -42,7 +42,7 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
                   </td>
                   <td className="px-3 py-2.5 text-center font-semibold">{d.currentScore}%</td>
                   <td className="px-3 py-2.5 text-center">
-                    <span className="text-foreground font-semibold flex items-center justify-center gap-1">
+                    <span className="text-score-up font-semibold flex items-center justify-center gap-1">
                       <TrendingUp className="w-3.5 h-3.5" /> +{d.changeFromStart}%
                     </span>
                   </td>
@@ -84,7 +84,7 @@ export function MoversTable({ improvers, decliners }: MoversTableProps) {
                   </td>
                   <td className="px-3 py-2.5 text-center font-semibold">{d.currentScore}%</td>
                   <td className="px-3 py-2.5 text-center">
-                    <span className="font-semibold flex items-center justify-center gap-1 text-muted-foreground">
+                    <span className="font-semibold flex items-center justify-center gap-1 text-score-down">
                       {d.changeFromStart < 0 && <TrendingDown className="w-3.5 h-3.5" />}
                       {d.changeFromStart > 0 ? "+" : ""}{d.changeFromStart}%
                     </span>

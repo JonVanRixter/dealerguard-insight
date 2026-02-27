@@ -33,9 +33,9 @@ export function DealerScoreTrend({ dealerName }: DealerScoreTrendProps) {
           12-Month Score Trend
         </h3>
         <div className="flex items-center gap-2">
-          {isUp && <TrendingUp className="w-4 h-4 text-foreground" />}
-          {isDown && <TrendingDown className="w-4 h-4 text-muted-foreground" />}
-          {!isUp && !isDown && <Minus className="w-4 h-4 text-muted-foreground" />}
+          {isUp && <TrendingUp className="w-4 h-4 text-score-up" />}
+          {isDown && <TrendingDown className="w-4 h-4 text-score-down" />}
+          {!isUp && !isDown && <Minus className="w-4 h-4 text-score-neutral" />}
           <span className="text-sm font-semibold text-foreground">
             {isUp ? "+" : ""}
             {change}pts

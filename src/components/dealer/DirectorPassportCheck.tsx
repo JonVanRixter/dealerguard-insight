@@ -34,9 +34,9 @@ import {
 } from "lucide-react";
 
 const VERIFICATION_STATUSES = [
-  { value: "pending", label: "Pending Review", icon: Clock, color: "text-rag-amber" },
-  { value: "verified", label: "Verified", icon: CheckCircle2, color: "text-rag-green" },
-  { value: "rejected", label: "Rejected", icon: XCircle, color: "text-rag-red" },
+  { value: "pending", label: "Pending Review", icon: Clock, color: "text-outcome-pending" },
+  { value: "verified", label: "Verified", icon: CheckCircle2, color: "text-outcome-pass" },
+  { value: "rejected", label: "Rejected", icon: XCircle, color: "text-outcome-fail" },
 ] as const;
 
 type VerificationStatus = typeof VERIFICATION_STATUSES[number]["value"];
@@ -236,9 +236,9 @@ export function DirectorPassportCheck({ dealerName }: Props) {
               {documents.length} document{documents.length !== 1 ? "s" : ""}
               {documents.length > 0 && (
                 <span className="ml-2">
-                  <span className="text-rag-green">{verifiedCount} verified</span>
-                  {pendingCount > 0 && <span className="text-rag-amber ml-1.5">{pendingCount} pending</span>}
-                  {rejectedCount > 0 && <span className="text-rag-red ml-1.5">{rejectedCount} rejected</span>}
+                  <span className="text-outcome-pass">{verifiedCount} verified</span>
+                  {pendingCount > 0 && <span className="text-outcome-pending ml-1.5">{pendingCount} pending</span>}
+                  {rejectedCount > 0 && <span className="text-outcome-fail ml-1.5">{rejectedCount} rejected</span>}
                 </span>
               )}
             </p>
@@ -356,7 +356,7 @@ export function DirectorPassportCheck({ dealerName }: Props) {
                       <span>{formatFileSize(doc.file_size)}</span>
                       <span>Uploaded: {new Date(doc.created_at).toLocaleDateString()}</span>
                       {doc.expiry_date && (
-                        <span className={new Date(doc.expiry_date) < new Date() ? "text-rag-red font-medium" : ""}>
+                        <span className={new Date(doc.expiry_date) < new Date() ? "text-destructive font-medium" : ""}>
                           {new Date(doc.expiry_date) < new Date() ? "EXPIRED" : "Expires"}: {new Date(doc.expiry_date).toLocaleDateString()}
                         </span>
                       )}
@@ -374,7 +374,7 @@ export function DirectorPassportCheck({ dealerName }: Props) {
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDownload(doc)} title="Download">
                       <Download className="w-4 h-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-rag-red hover:text-rag-red" onClick={() => handleDelete(doc)} title="Delete">
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(doc)} title="Delete">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -394,7 +394,7 @@ export function DirectorPassportCheck({ dealerName }: Props) {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="gap-1 text-rag-green border-rag-green/30 hover:bg-rag-green/10 h-8"
+                        className="gap-1 text-outcome-pass border-outcome-pass/30 hover:bg-outcome-pass/10 h-8"
                         onClick={() => updateStatus(doc, "verified", reviewNotes[doc.id] || "")}
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" /> Verify
@@ -402,7 +402,7 @@ export function DirectorPassportCheck({ dealerName }: Props) {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="gap-1 text-rag-red border-rag-red/30 hover:bg-rag-red/10 h-8"
+                        className="gap-1 text-outcome-fail border-outcome-fail/30 hover:bg-outcome-fail/10 h-8"
                         onClick={() => updateStatus(doc, "rejected", reviewNotes[doc.id] || "")}
                       >
                         <XCircle className="w-3.5 h-3.5" /> Reject

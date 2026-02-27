@@ -38,7 +38,7 @@ export function ComparisonBarChart({ data }: ComparisonBarChartProps) {
           ))}
           <p
             className={`text-xs font-medium mt-1 ${
-              diff > 0 ? "text-rag-green" : diff < 0 ? "text-rag-red" : "text-muted-foreground"
+              diff > 0 ? "text-score-up" : diff < 0 ? "text-score-down" : "text-muted-foreground"
             }`}
           >
             Difference: {diff > 0 ? "+" : ""}{diff}%

@@ -214,7 +214,7 @@ export function FcaRegisterCard({ dealerName, fcaRef, onDataLoaded }: Props) {
     const lower = status.toLowerCase();
     if (lower.includes("authorised") || lower.includes("registered")) {
       return (
-        <Badge variant="outline" className="gap-1 text-rag-green border-rag-green/30">
+        <Badge variant="outline" className="gap-1 text-outcome-pass border-outcome-pass/30">
           <CheckCircle2 className="w-3 h-3" />
           {status}
         </Badge>
@@ -222,14 +222,14 @@ export function FcaRegisterCard({ dealerName, fcaRef, onDataLoaded }: Props) {
     }
     if (lower.includes("no longer") || lower.includes("cancelled") || lower.includes("revoked")) {
       return (
-        <Badge variant="outline" className="gap-1 text-rag-red border-rag-red/30">
+        <Badge variant="outline" className="gap-1 text-outcome-fail border-outcome-fail/30">
           <XCircle className="w-3 h-3" />
           {status}
         </Badge>
       );
     }
     return (
-      <Badge variant="outline" className="gap-1 text-rag-amber border-rag-amber/30">
+      <Badge variant="outline" className="gap-1 text-outcome-pending border-outcome-pending/30">
         <AlertTriangle className="w-3 h-3" />
         {status}
       </Badge>
@@ -270,9 +270,9 @@ export function FcaRegisterCard({ dealerName, fcaRef, onDataLoaded }: Props) {
 
         {/* Error state */}
         {error && searched && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-rag-red-bg border border-rag-red/20">
-            <AlertTriangle className="w-4 h-4 text-rag-red shrink-0" />
-            <p className="text-sm text-rag-red-text">{error}</p>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-outcome-fail-bg border border-outcome-fail/20">
+            <AlertTriangle className="w-4 h-4 text-outcome-fail shrink-0" />
+            <p className="text-sm text-outcome-fail-text">{error}</p>
           </div>
         )}
 

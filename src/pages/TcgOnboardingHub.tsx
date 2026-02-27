@@ -21,9 +21,9 @@ function statusPill(status: AppStatus) {
   const m = map[status];
   const colorClass = status === "draft" ? "bg-muted text-muted-foreground" :
     status === "in_progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
-    status === "pending_approval" ? "bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))]" :
-    status === "approved" ? "bg-[hsl(var(--rag-green-bg))] text-[hsl(var(--rag-green-text))]" :
-    "bg-[hsl(var(--rag-red-bg))] text-[hsl(var(--rag-red-text))]";
+    status === "pending_approval" ? "bg-outcome-pending-bg text-outcome-pending-text" :
+    status === "approved" ? "bg-outcome-pass-bg text-outcome-pass-text" :
+    "bg-outcome-fail-bg text-outcome-fail-text";
   return <Badge className={colorClass}>{m.label}</Badge>;
 }
 
@@ -35,10 +35,10 @@ function stageProgress(app: TcgOnboardingApp) {
 function daysRemainingBadge(validUntil: string | null) {
   if (!validUntil) return <span className="text-muted-foreground">—</span>;
   const days = Math.ceil((new Date(validUntil).getTime() - Date.now()) / 86400000);
-  if (days < 0) return <Badge className="bg-[hsl(var(--rag-red-bg))] text-[hsl(var(--rag-red-text))]">EXPIRED</Badge>;
-  if (days <= 7) return <Badge className="bg-[hsl(var(--rag-red-bg))] text-[hsl(var(--rag-red-text))]">🚨 {days}d — Renewal urgent</Badge>;
-  if (days <= 30) return <Badge className="bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))]">⚠️ {days}d — Renewal due</Badge>;
-  return <Badge className="bg-[hsl(var(--rag-green-bg))] text-[hsl(var(--rag-green-text))]">{days}d</Badge>;
+  if (days < 0) return <Badge className="bg-outcome-fail-bg text-outcome-fail-text">EXPIRED</Badge>;
+  if (days <= 7) return <Badge className="bg-outcome-fail-bg text-outcome-fail-text">🚨 {days}d — Renewal urgent</Badge>;
+  if (days <= 30) return <Badge className="bg-outcome-pending-bg text-outcome-pending-text">⚠️ {days}d — Renewal due</Badge>;
+  return <Badge className="bg-outcome-pass-bg text-outcome-pass-text">{days}d</Badge>;
 }
 
 export default function TcgOnboardingHub() {
@@ -158,9 +158,9 @@ export default function TcgOnboardingHub() {
                         <TableCell>{daysRemainingBadge(d.validUntil)}</TableCell>
                         <TableCell>
                           {d.renewalDue ? (
-                            <Badge className="bg-[hsl(var(--rag-amber-bg))] text-[hsl(var(--rag-amber-text))]">⚠️ Yes</Badge>
+                            <Badge className="bg-outcome-pending-bg text-outcome-pending-text">⚠️ Yes</Badge>
                           ) : (
-                            <span className="text-[hsl(var(--rag-green-text))]">✅ No</span>
+                            <span className="text-outcome-pass-text">✅ No</span>
                           )}
                         </TableCell>
                         <TableCell>

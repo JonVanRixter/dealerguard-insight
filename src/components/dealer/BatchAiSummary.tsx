@@ -290,17 +290,17 @@ export function BatchAiSummary() {
                     >
                       {result.status === "pending" && <div className="w-4 h-4 rounded-full border-2 border-border" />}
                       {result.status === "generating" && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
-                      {result.status === "done" && <Check className="w-4 h-4 text-rag-green" />}
-                      {result.status === "error" && <X className="w-4 h-4 text-rag-red" />}
+                      {result.status === "done" && <Check className="w-4 h-4 text-outcome-pass" />}
+                      {result.status === "error" && <X className="w-4 h-4 text-outcome-fail" />}
                       <span className="flex-1 text-sm font-medium text-foreground truncate">{result.dealerName}</span>
-                      <RagBadge status={result.rag as any} size="sm" />
+                      <span className="text-sm font-bold text-score-badge-foreground bg-score-badge px-2 py-0.5 rounded-full">{dealers.find(d => d.name === result.dealerName)?.score ?? "—"}</span>
                       {result.status === "done" && (
                         expandedResult === result.dealerName
                           ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
                           : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                       )}
                       {result.status === "error" && (
-                        <span className="text-xs text-rag-red truncate max-w-32">{result.error}</span>
+                        <span className="text-xs text-destructive truncate max-w-32">{result.error}</span>
                       )}
                     </button>
                     {expandedResult === result.dealerName && result.status === "done" && (

@@ -34,10 +34,10 @@ export function OnboardingValidityWidget() {
           className="flex items-center justify-between w-full px-5 py-3 hover:bg-muted/50 transition-colors"
         >
           <div className="flex items-center gap-2 text-sm">
-            <ShieldCheck className="w-4 h-4 text-rag-green" />
+            <ShieldCheck className="w-4 h-4 text-outcome-pass" />
             <span className="text-foreground">Valid onboarding</span>
           </div>
-          <span className="text-lg font-bold text-rag-green">{counts.valid}</span>
+          <span className="text-lg font-bold text-outcome-pass">{counts.valid}</span>
         </button>
 
         <button
@@ -45,10 +45,10 @@ export function OnboardingValidityWidget() {
           className="flex items-center justify-between w-full px-5 py-3 hover:bg-muted/50 transition-colors"
         >
           <div className="flex items-center gap-2 text-sm">
-            <AlertTriangle className="w-4 h-4 text-rag-amber" />
+            <AlertTriangle className="w-4 h-4 text-outcome-pending" />
             <span className="text-foreground">Renewal due (≤30 days)</span>
           </div>
-          <span className="text-lg font-bold text-rag-amber">{counts.renewalDue}</span>
+          <span className="text-lg font-bold text-outcome-pending">{counts.renewalDue}</span>
         </button>
 
         <button
@@ -56,10 +56,10 @@ export function OnboardingValidityWidget() {
           className="flex items-center justify-between w-full px-5 py-3 hover:bg-muted/50 transition-colors"
         >
           <div className="flex items-center gap-2 text-sm">
-            <ShieldAlert className="w-4 h-4 text-rag-red" />
+            <ShieldAlert className="w-4 h-4 text-outcome-fail" />
             <span className="text-foreground">Expired onboarding</span>
           </div>
-          <span className="text-lg font-bold text-rag-red">{counts.expired}</span>
+          <span className="text-lg font-bold text-outcome-fail">{counts.expired}</span>
         </button>
       </div>
     </div>
