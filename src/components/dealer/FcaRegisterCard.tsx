@@ -1,18 +1,11 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Search,
-  Loader2,
   Building2,
   Users,
   ShieldCheck,
@@ -32,15 +25,12 @@ interface FirmData {
   "Companies House Number"?: string;
   "Firm Type"?: string;
   "Address"?: Record<string, string>;
-  [key: string]: unknown;
 }
 
 interface IndividualData {
   "Name"?: string;
   "IRN"?: string;
   "Status"?: string;
-  "Effective Date"?: string;
-  [key: string]: unknown;
 }
 
 interface Props {
@@ -59,160 +49,73 @@ interface Props {
   }) => void;
 }
 
+// Generate deterministic mock FCA data based on dealer name
+function generateMockFcaData(dealerName: string, fcaRef?: string) {
+  const hash = dealerName.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const frn = fcaRef || String(600000 + (hash % 99999));
+
+  const firm: FirmData = {
+    "Organisation Name": dealerName,
+    "Current Status": "Authorised",
+    "Status Effective Date": "2019-03-15",
+    "Firm Reference Number": frn,
+    "Companies House Number": String(8000000 + (hash % 999999)),
+    "Firm Type": "Appointed Representative",
+  };
+
+  const firstNames = ["James", "Sarah", "Michael", "Emma", "David", "Claire"];
+  const lastNames = ["Thompson", "Walker", "Harrison", "Mitchell", "Cooper", "Bennett"];
+  const numIndividuals = 2 + (hash % 3);
+  const individuals: IndividualData[] = [];
+  for (let i = 0; i < numIndividuals; i++) {
+    individuals.push({
+      Name: `${firstNames[(hash + i) % firstNames.length]} ${lastNames[(hash + i * 3) % lastNames.length]}`,
+      IRN: String(100000 + ((hash * (i + 1)) % 899999)),
+      Status: "Approved",
+    });
+  }
+
+  const permissions = [
+    "Agreeing to carry on a regulated activity",
+    "Arranging (bringing about) deals in investments",
+    "Making arrangements with a view to transactions in investments",
+    "Advising on investments (except on Peer to Peer agreements)",
+  ];
+
+  return { firm, individuals, permissions };
+}
+
 export function FcaRegisterCard({ dealerName, fcaRef, onDataLoaded }: Props) {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [firmData, setFirmData] = useState<FirmData | null>(null);
-  const [individuals, setIndividuals] = useState<IndividualData[]>([]);
-  const [permissions, setPermissions] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState(fcaRef || "");
-  const [searched, setSearched] = useState(false);
   const [showIndividuals, setShowIndividuals] = useState(false);
   const [showPermissions, setShowPermissions] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const autoSearched = useRef(false);
+  const notified = useRef(false);
 
-  // Auto-search on mount if fcaRef is provided
+  const { firm, individuals, permissions } = generateMockFcaData(dealerName, fcaRef);
+
   useEffect(() => {
-    if (fcaRef && !autoSearched.current) {
-      autoSearched.current = true;
-      lookupFirm(fcaRef);
-    }
-  }, [fcaRef]);
-
-  const lookupFirm = async (frn: string) => {
-    setLoading(true);
-    setError(null);
-    setSearched(true);
-
-    try {
-      // Fetch firm details
-      const { data: firmResult, error: firmError } = await supabase.functions.invoke(
-        "fca-register",
-        {
-          body: { action: "firm", frn },
-        }
-      );
-
-      if (firmError) throw new Error(firmError.message);
-      if (firmResult?.error) throw new Error(firmResult.error);
-
-      // Handle "Not Found" from graceful 404 handling
-      if (firmResult?.Status === "Not Found") {
-        setError(`No firm found with FRN ${frn}. This may be a mock dealer with no real FCA record.`);
-        setFirmData(null);
-        setLoading(false);
-        return;
-      }
-
-      const firm = firmResult?.Data?.[0] || firmResult;
-      setFirmData(firm);
-
-      // Fetch individuals in parallel
-      const { data: indResult } = await supabase.functions.invoke("fca-register", {
-        body: { action: "firm-individuals", frn },
-      });
-      if (indResult?.Data) {
-        setIndividuals(indResult.Data);
-      }
-
-      // Fetch permissions
-      const { data: permResult } = await supabase.functions.invoke("fca-register", {
-        body: { action: "firm-permissions", frn },
-      });
-      if (permResult?.Data) {
-        setPermissions(
-          permResult.Data.map(
-            (p: Record<string, string>) =>
-              p["Permission"] || p["Regulated Activity"] || JSON.stringify(p)
-          )
-        );
-      }
-
-      // Notify parent with loaded data for PDF export
-      const loadedIndividuals = indResult?.Data || [];
-      const loadedPermissions = permResult?.Data?.map(
-        (p: Record<string, string>) =>
-          p["Permission"] || p["Regulated Activity"] || JSON.stringify(p)
-      ) || [];
-      
-      onDataLoaded?.({
-        firmName: firm["Organisation Name"] || "Unknown",
-        frn: firm["Firm Reference Number"] || frn,
+    if (!notified.current && onDataLoaded) {
+      notified.current = true;
+      onDataLoaded({
+        firmName: firm["Organisation Name"] || dealerName,
+        frn: firm["Firm Reference Number"] || "",
         status: firm["Current Status"] || "Unknown",
         statusDate: firm["Status Effective Date"],
         firmType: firm["Firm Type"],
         companiesHouseNumber: firm["Companies House Number"],
-        address: firm["Address"] ? Object.values(firm["Address"]).filter(Boolean).join(", ") : undefined,
-        individuals: loadedIndividuals.map((ind: IndividualData) => ({
+        individuals: individuals.map((ind) => ({
           name: ind["Name"] || "Unknown",
           irn: ind["IRN"],
           status: ind["Status"],
         })),
-        permissions: loadedPermissions,
+        permissions,
       });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Lookup failed";
-      setError(msg);
-      toast({
-        title: "FCA Lookup Failed",
-        description: msg,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const handleSearch = async () => {
-    const query = searchQuery.trim();
-    if (!query) return;
-
-    // If it looks like an FRN (all digits), do a direct lookup
-    if (/^\d+$/.test(query)) {
-      return lookupFirm(query);
-    }
-
-    // Otherwise search by name
-    setLoading(true);
-    setError(null);
-    setSearched(true);
-
-    try {
-      const { data, error: searchError } = await supabase.functions.invoke("fca-register", {
-        body: { action: "search", query, type: "firm" },
-      });
-
-      if (searchError) throw new Error(searchError.message);
-      if (data?.error) throw new Error(data.error);
-
-      const results = data?.Data || [];
-      if (results.length === 0) {
-        setError("No firms found matching your search.");
-        setFirmData(null);
-        setLoading(false);
-        return;
-      }
-
-      // Take first result and look up details
-      const frn = results[0]["FRN"] || results[0]["Firm Reference Number"];
-      if (frn) {
-        await lookupFirm(frn);
-      } else {
-        setFirmData(results[0]);
-        setLoading(false);
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Search failed";
-      setError(msg);
-      setLoading(false);
-    }
-  };
+  }, []);
 
   const getStatusBadge = (status: string | undefined) => {
     if (!status) return null;
     const lower = status.toLowerCase();
-    if (lower.includes("authorised") || lower.includes("registered")) {
+    if (lower.includes("authorised") || lower.includes("registered") || lower.includes("approved")) {
       return (
         <Badge variant="outline" className="gap-1 text-outcome-pass border-outcome-pass/30">
           <CheckCircle2 className="w-3 h-3" />
@@ -243,177 +146,98 @@ export function FcaRegisterCard({ dealerName, fcaRef, onDataLoaded }: Props) {
           <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
             <Building2 className="w-5 h-5 text-primary" />
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="text-sm font-semibold text-foreground">FCA Register Check</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Search the Financial Services Register by name or FRN
+              Financial Services Register lookup
             </p>
           </div>
+          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 text-muted-foreground">SIMULATED DATA</Badge>
         </div>
       </div>
 
       <div className="px-5 py-4 space-y-4">
-        {/* Search */}
-        <div className="flex gap-2">
-          <Input
-            placeholder="Enter firm name or FRN..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="bg-background"
-          />
-          <Button onClick={handleSearch} disabled={loading || !searchQuery.trim()} className="gap-1.5 shrink-0">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-            Search
-          </Button>
+        {/* Firm header */}
+        <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h4 className="text-sm font-semibold text-foreground">
+                {firm["Organisation Name"]}
+              </h4>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-muted-foreground">
+                <span>FRN: <span className="font-medium text-foreground">{firm["Firm Reference Number"]}</span></span>
+                <span>CH: <span className="font-medium text-foreground">{firm["Companies House Number"]}</span></span>
+                <span>Type: <span className="font-medium text-foreground">{firm["Firm Type"]}</span></span>
+              </div>
+            </div>
+            <div className="shrink-0">
+              {getStatusBadge(firm["Current Status"])}
+            </div>
+          </div>
+
+          {firm["Status Effective Date"] && (
+            <p className="text-xs text-muted-foreground">
+              Status effective: {firm["Status Effective Date"]}
+            </p>
+          )}
+
+          <a
+            href={`https://register.fca.org.uk/s/firm?id=${firm["Firm Reference Number"]}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            View on FCA Register <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
 
-        {/* Error state */}
-        {error && searched && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-outcome-fail-bg border border-outcome-fail/20">
-            <AlertTriangle className="w-4 h-4 text-outcome-fail shrink-0" />
-            <p className="text-sm text-outcome-fail-text">{error}</p>
-          </div>
-        )}
-
-        {/* Firm details */}
-        {firmData && (
-          <div className="space-y-4">
-            {/* Firm header */}
-            <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h4 className="text-sm font-semibold text-foreground">
-                    {firmData["Organisation Name"] || "Unknown Firm"}
-                  </h4>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-muted-foreground">
-                    {firmData["Firm Reference Number"] && (
-                      <span>FRN: <span className="font-medium text-foreground">{firmData["Firm Reference Number"]}</span></span>
-                    )}
-                    {firmData["Companies House Number"] && (
-                      <span>CH: <span className="font-medium text-foreground">{firmData["Companies House Number"]}</span></span>
-                    )}
-                    {firmData["Firm Type"] && (
-                      <span>Type: <span className="font-medium text-foreground">{firmData["Firm Type"]}</span></span>
-                    )}
-                  </div>
-                </div>
-                <div className="shrink-0">
-                  {getStatusBadge(firmData["Current Status"] as string)}
-                </div>
+        {/* Individuals */}
+        <Collapsible open={showIndividuals} onOpenChange={setShowIndividuals}>
+          <CollapsibleTrigger asChild>
+            <button className="flex items-center justify-between w-full px-4 py-2.5 rounded-lg bg-muted/30 border border-border hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Users className="w-4 h-4 text-primary" />
+                Approved Individuals ({individuals.length})
               </div>
-
-              {firmData["Status Effective Date"] && (
-                <p className="text-xs text-muted-foreground">
-                  Status effective: {firmData["Status Effective Date"]}
-                </p>
-              )}
-
-              {firmData["Firm Reference Number"] && (
-                <a
-                  href={`https://register.fca.org.uk/s/firm?id=${firmData["Firm Reference Number"]}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                >
-                  View on FCA Register <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
-            </div>
-
-            {/* Individuals */}
-            {individuals.length > 0 && (
-              <Collapsible open={showIndividuals} onOpenChange={setShowIndividuals}>
-                <CollapsibleTrigger asChild>
-                  <button className="flex items-center justify-between w-full px-4 py-2.5 rounded-lg bg-muted/30 border border-border hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                      <Users className="w-4 h-4 text-primary" />
-                      Approved Individuals ({individuals.length})
-                    </div>
-                    {showIndividuals ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2">
-                  <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
-                    {individuals.slice(0, 20).map((ind, i) => (
-                      <div key={i} className="px-4 py-2.5 flex items-center justify-between text-sm">
-                        <div>
-                          <p className="font-medium text-foreground">{ind["Name"] || "Unknown"}</p>
-                          {ind["IRN"] && (
-                            <p className="text-xs text-muted-foreground">IRN: {ind["IRN"]}</p>
-                          )}
-                        </div>
-                        {ind["Status"] && getStatusBadge(ind["Status"])}
-                      </div>
-                    ))}
-                    {individuals.length > 20 && (
-                      <div className="px-4 py-2 text-xs text-muted-foreground text-center">
-                        + {individuals.length - 20} more individuals
-                      </div>
-                    )}
+              {showIndividuals ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
+              {individuals.map((ind, i) => (
+                <div key={i} className="px-4 py-2.5 flex items-center justify-between text-sm">
+                  <div>
+                    <p className="font-medium text-foreground">{ind["Name"]}</p>
+                    <p className="text-xs text-muted-foreground">IRN: {ind["IRN"]}</p>
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-
-            {/* Permissions */}
-            {permissions.length > 0 && (
-              <Collapsible open={showPermissions} onOpenChange={setShowPermissions}>
-                <CollapsibleTrigger asChild>
-                  <button className="flex items-center justify-between w-full px-4 py-2.5 rounded-lg bg-muted/30 border border-border hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                      <ShieldCheck className="w-4 h-4 text-primary" />
-                      Permissions ({permissions.length})
-                    </div>
-                    {showPermissions ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2">
-                  <div className="flex flex-wrap gap-1.5 p-3 rounded-lg border border-border">
-                    {permissions.map((p, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs">
-                        {p}
-                      </Badge>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-          </div>
-        )}
-
-        {/* Loading skeleton during auto-search */}
-        {loading && !firmData && (
-          <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-2 flex-1">
-                  <Skeleton className="h-4 w-48" />
-                  <div className="flex gap-4">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-3 w-20" />
-                    <Skeleton className="h-3 w-28" />
-                  </div>
+                  {getStatusBadge(ind["Status"])}
                 </div>
-                <Skeleton className="h-6 w-24 rounded-full" />
-              </div>
-              <Skeleton className="h-3 w-36" />
-              <Skeleton className="h-3 w-32" />
+              ))}
             </div>
-            <Skeleton className="h-10 w-full rounded-lg" />
-            <Skeleton className="h-10 w-full rounded-lg" />
-          </div>
-        )}
+          </CollapsibleContent>
+        </Collapsible>
 
-        {/* Empty state */}
-        {!searched && !firmData && !loading && (
-          <div className="text-center py-4">
-            <Building2 className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">
-              Search the FCA Financial Services Register to check firm authorisation status, approved individuals, and permissions.
-            </p>
-          </div>
-        )}
+        {/* Permissions */}
+        <Collapsible open={showPermissions} onOpenChange={setShowPermissions}>
+          <CollapsibleTrigger asChild>
+            <button className="flex items-center justify-between w-full px-4 py-2.5 rounded-lg bg-muted/30 border border-border hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                Permissions ({permissions.length})
+              </div>
+              {showPermissions ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <div className="flex flex-wrap gap-1.5 p-3 rounded-lg border border-border">
+              {permissions.map((p, i) => (
+                <Badge key={i} variant="secondary" className="text-xs">
+                  {p}
+                </Badge>
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   );
