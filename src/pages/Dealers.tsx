@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { RagBadge } from "@/components/RagBadge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -25,8 +26,6 @@ import {
   TrendingUp,
   Minus,
   Search,
-  ShieldAlert,
-  Award,
   ArrowUpDown,
   MapPin,
   BarChart3,
@@ -39,9 +38,8 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Progress } from "@/components/ui/progress";
 import { dealers, portfolioStats } from "@/data/dealers";
-import { generateDealerAudit } from "@/data/auditFramework";
-import { useUserSettings } from "@/hooks/useUserSettings";
 import { BatchAiSummary } from "@/components/dealer/BatchAiSummary";
 import { DuplicateFlagsBanner } from "@/components/dealer/DuplicateFlagsBanner";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,27 +47,24 @@ import { Badge } from "@/components/ui/badge";
 
 const ITEMS_PER_PAGE = 15;
 
-type SortKey = "name" | "score" | "rag" | "css" | "region";
+type SortKey = "name" | "score" | "region";
 type SortDir = "asc" | "desc";
 
 const TrendIcon = ({ trend }: { trend: string }) => {
-  if (trend === "up") return <TrendingUp className="w-4 h-4 text-rag-green" />;
-  if (trend === "down") return <TrendingDown className="w-4 h-4 text-rag-red" />;
+  if (trend === "up") return <TrendingUp className="w-4 h-4 text-foreground" />;
+  if (trend === "down") return <TrendingDown className="w-4 h-4 text-foreground" />;
   return <Minus className="w-4 h-4 text-muted-foreground" />;
 };
 
-const ragOrder = { red: 0, amber: 1, green: 2 };
-
 const Dealers = () => {
   const navigate = useNavigate();
-  const { settings } = useUserSettings();
   const [searchParams] = useSearchParams();
   const initialRegion = searchParams.get("region") || "all";
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [regionFilter, setRegionFilter] = useState(initialRegion);
+  const [scoreRange, setScoreRange] = useState<[number, number]>([0, 100]);
   const [docCounts, setDocCounts] = useState<Map<string, number>>(new Map());
-  const [onboardingMap, setOnboardingMap] = useState<Map<string, { stage: string; status: string; screeningResults: Record<string, string> }>>(new Map());
+
   const fetchDocCounts = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -85,92 +80,46 @@ const Dealers = () => {
 
   useEffect(() => { fetchDocCounts(); }, [fetchDocCounts]);
 
-  // Fetch onboarding applications
-  const fetchOnboarding = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data } = await supabase
-      .from("onboarding_applications")
-      .select("dealer_name, stage, status, screening_results")
-      .eq("user_id", user.id);
-    if (data) {
-      const map = new Map<string, { stage: string; status: string; screeningResults: Record<string, string> }>();
-      data.forEach((d) => map.set(d.dealer_name, {
-        stage: d.stage,
-        status: d.status,
-        screeningResults: (d.screening_results as unknown as Record<string, string>) || {},
-      }));
-      setOnboardingMap(map);
-    }
-  }, []);
-
-  useEffect(() => { fetchOnboarding(); }, [fetchOnboarding]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>("score");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [expandedRegions, setExpandedRegions] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<"table" | "region">("table");
-  const [quickFilter, setQuickFilter] = useState<"all" | "oversight" | "reward" | "green" | "amber" | "red">("all");
 
-  const activeFilterCount = [searchQuery !== "", statusFilter !== "all", regionFilter !== "all", quickFilter !== "all"].filter(Boolean).length;
+  const isScoreFiltered = scoreRange[0] > 0 || scoreRange[1] < 100;
+  const activeFilterCount = [searchQuery !== "", regionFilter !== "all", isScoreFiltered].filter(Boolean).length;
   const isFiltering = activeFilterCount > 0;
 
   const clearAllFilters = () => {
     setSearchQuery("");
-    setStatusFilter("all");
     setRegionFilter("all");
-    setQuickFilter("all");
+    setScoreRange([0, 100]);
     setCurrentPage(1);
   };
-
-  const dealerCssScores = useMemo(() => {
-    const map = new Map<string, number>();
-    dealers.forEach((d, i) => {
-      const audit = generateDealerAudit(d.name, i);
-      map.set(d.name, audit.customerSentimentScore);
-    });
-    return map;
-  }, []);
 
   const regions = useMemo(() => [...new Set(dealers.map((d) => d.region))].sort(), []);
 
   const filteredDealers = useMemo(() => {
     return dealers.filter((d) => {
       const matchesSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
-      const matchesStatus = statusFilter === "all" || d.rag === statusFilter;
       const matchesRegion = regionFilter === "all" || d.region === regionFilter;
-      if (!matchesSearch || !matchesStatus || !matchesRegion) return false;
-      if (quickFilter === "oversight") return (dealerCssScores.get(d.name) ?? 10) < settings.css_oversight_threshold;
-      if (quickFilter === "reward") return (dealerCssScores.get(d.name) ?? 0) >= settings.css_reward_threshold;
-      if (quickFilter === "green" || quickFilter === "amber" || quickFilter === "red") return d.rag === quickFilter;
-      return true;
+      const matchesScore = d.score >= scoreRange[0] && d.score <= scoreRange[1];
+      return matchesSearch && matchesRegion && matchesScore;
     });
-  }, [searchQuery, statusFilter, regionFilter, quickFilter, dealerCssScores, settings]);
+  }, [searchQuery, regionFilter, scoreRange]);
 
   const sortedDealers = useMemo(() => {
     const sorted = [...filteredDealers].sort((a, b) => {
       let cmp = 0;
       switch (sortKey) {
-        case "name":
-          cmp = a.name.localeCompare(b.name);
-          break;
-        case "score":
-          cmp = a.score - b.score;
-          break;
-        case "rag":
-          cmp = ragOrder[a.rag] - ragOrder[b.rag];
-          break;
-        case "css":
-          cmp = (dealerCssScores.get(a.name) ?? 0) - (dealerCssScores.get(b.name) ?? 0);
-          break;
-        case "region":
-          cmp = a.region.localeCompare(b.region);
-          break;
+        case "name": cmp = a.name.localeCompare(b.name); break;
+        case "score": cmp = a.score - b.score; break;
+        case "region": cmp = a.region.localeCompare(b.region); break;
       }
       return sortDir === "asc" ? cmp : -cmp;
     });
     return sorted;
-  }, [filteredDealers, sortKey, sortDir, dealerCssScores]);
+  }, [filteredDealers, sortKey, sortDir]);
 
   const totalPages = Math.ceil(sortedDealers.length / ITEMS_PER_PAGE);
   const validPage = Math.min(currentPage, Math.max(1, totalPages));
@@ -197,7 +146,6 @@ const Dealers = () => {
     });
   };
 
-  // Regional grouping data
   const regionalData = useMemo(() => {
     const groups = new Map<string, typeof filteredDealers>();
     filteredDealers.forEach((d) => {
@@ -211,27 +159,9 @@ const Dealers = () => {
         dealers: dls,
         count: dls.length,
         avgScore: Math.round(dls.reduce((s, d) => s + d.score, 0) / dls.length),
-        green: dls.filter((d) => d.rag === "green").length,
-        amber: dls.filter((d) => d.rag === "amber").length,
-        red: dls.filter((d) => d.rag === "red").length,
       }))
       .sort((a, b) => a.region.localeCompare(b.region));
   }, [filteredDealers]);
-
-  // Summary stats
-  const oversightCount = useMemo(
-    () => dealers.filter((d) => (dealerCssScores.get(d.name) ?? 10) < settings.css_oversight_threshold).length,
-    [dealerCssScores, settings.css_oversight_threshold]
-  );
-  const rewardCount = useMemo(
-    () => dealers.filter((d) => (dealerCssScores.get(d.name) ?? 0) >= settings.css_reward_threshold).length,
-    [dealerCssScores, settings.css_reward_threshold]
-  );
-  const avgCss = useMemo(() => {
-    let total = 0;
-    dealerCssScores.forEach((v) => (total += v));
-    return (total / dealerCssScores.size).toFixed(1);
-  }, [dealerCssScores]);
 
   const getPageNumbers = () => {
     const pages: (number | "ellipsis")[] = [];
@@ -248,16 +178,8 @@ const Dealers = () => {
   };
 
   const exportCsv = () => {
-    const headers = ["Dealer Name", "Score", "RAG Status", "CSS Score", "Region", "Last Audit", "Trend"];
-    const rows = sortedDealers.map((d) => [
-      d.name,
-      d.score,
-      d.rag.toUpperCase(),
-      (dealerCssScores.get(d.name) ?? 0).toFixed(1),
-      d.region,
-      d.lastAudit,
-      d.trend,
-    ]);
+    const headers = ["Dealer Name", "Score", "Region", "Last Audit", "Trend"];
+    const rows = sortedDealers.map((d) => [d.name, d.score, d.region, d.lastAudit, d.trend]);
     const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -275,9 +197,7 @@ const Dealers = () => {
     >
       <span className="flex items-center gap-1">
         {label}
-        {sortKey === sortKeyVal && (
-          <ArrowUpDown className="w-3 h-3" />
-        )}
+        {sortKey === sortKeyVal && <ArrowUpDown className="w-3 h-3" />}
       </span>
     </th>
   );
@@ -293,58 +213,32 @@ const Dealers = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div
-            onClick={() => { setQuickFilter(quickFilter === "all" ? "all" : "all"); setCurrentPage(1); }}
-            className="bg-card rounded-xl border border-border p-5 cursor-default"
-          >
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <Users className="w-4 h-4" />
               Total Dealers
             </div>
             <span className="text-3xl font-bold text-foreground">{portfolioStats.total}</span>
-            <div className="flex gap-2 mt-2 text-xs">
-              <button onClick={(e) => { e.stopPropagation(); setQuickFilter(quickFilter === "green" ? "all" : "green"); setViewMode("table"); setCurrentPage(1); }} className={`hover:underline ${quickFilter === "green" ? "font-bold underline" : ""} text-rag-green`}>{portfolioStats.green} Green</button>
-              <button onClick={(e) => { e.stopPropagation(); setQuickFilter(quickFilter === "amber" ? "all" : "amber"); setViewMode("table"); setCurrentPage(1); }} className={`hover:underline ${quickFilter === "amber" ? "font-bold underline" : ""} text-rag-amber`}>{portfolioStats.amber} Amber</button>
-              <button onClick={(e) => { e.stopPropagation(); setQuickFilter(quickFilter === "red" ? "all" : "red"); setViewMode("table"); setCurrentPage(1); }} className={`hover:underline ${quickFilter === "red" ? "font-bold underline" : ""} text-rag-red`}>{portfolioStats.red} Red</button>
-            </div>
           </div>
 
-          <div
-            onClick={() => { setSortKey("css"); setSortDir("desc"); setViewMode("table"); setCurrentPage(1); }}
-            className={`bg-card rounded-xl border p-5 cursor-pointer transition-colors hover:bg-muted/50 ${sortKey === "css" && sortDir === "desc" ? "border-primary ring-1 ring-primary/30" : "border-border"}`}
-          >
+          <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <Activity className="w-4 h-4" />
-              Avg CSS Score
+              Avg Score
             </div>
-            <span className="text-3xl font-bold text-foreground">{avgCss}</span>
-            <span className="text-lg text-muted-foreground ml-1">/ 10</span>
-            {sortKey === "css" && sortDir === "desc" && <p className="text-xs text-muted-foreground mt-1">Sorted by CSS ↓</p>}
+            <div className="flex items-end gap-1">
+              <span className="text-3xl font-bold text-foreground">{portfolioStats.avgScore}</span>
+              <span className="text-lg text-muted-foreground">/ 100</span>
+            </div>
           </div>
 
-          <div
-            onClick={() => { setQuickFilter(quickFilter === "oversight" ? "all" : "oversight"); setViewMode("table"); setCurrentPage(1); }}
-            className={`bg-card rounded-xl border p-5 cursor-pointer transition-colors hover:bg-muted/50 ${quickFilter === "oversight" ? "border-rag-red ring-1 ring-rag-red/30" : "border-border"}`}
-          >
+          <div className="bg-card rounded-xl border border-border p-5 col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-              <ShieldAlert className="w-4 h-4 text-rag-red" />
-              Oversight Flagged
+              <MapPin className="w-4 h-4" />
+              Regions
             </div>
-            <span className="text-3xl font-bold text-rag-red">{oversightCount}</span>
-            <p className="text-xs text-muted-foreground mt-1">Below {settings.css_oversight_threshold.toFixed(1)}{quickFilter === "oversight" ? " · Filtering" : ""}</p>
-          </div>
-
-          <div
-            onClick={() => { setQuickFilter(quickFilter === "reward" ? "all" : "reward"); setViewMode("table"); setCurrentPage(1); }}
-            className={`bg-card rounded-xl border p-5 cursor-pointer transition-colors hover:bg-muted/50 ${quickFilter === "reward" ? "border-accent ring-1 ring-accent/30" : "border-border"}`}
-          >
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-              <Award className="w-4 h-4 text-accent" />
-              Reward Eligible
-            </div>
-            <span className="text-3xl font-bold text-accent">{rewardCount}</span>
-            <p className="text-xs text-muted-foreground mt-1">Above {settings.css_reward_threshold.toFixed(1)}{quickFilter === "reward" ? " · Filtering" : ""}</p>
+            <span className="text-3xl font-bold text-foreground">{regions.length}</span>
           </div>
         </div>
 
@@ -365,17 +259,6 @@ const Dealers = () => {
                     className="pl-9 h-9 bg-background"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-full sm:w-36 h-9 bg-background">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="green">Green</SelectItem>
-                    <SelectItem value="amber">Amber</SelectItem>
-                    <SelectItem value="red">Red</SelectItem>
-                  </SelectContent>
-                </Select>
                 <Select value={regionFilter} onValueChange={(v) => { setRegionFilter(v); setCurrentPage(1); }}>
                   <SelectTrigger className="w-full sm:w-40 h-9 bg-background">
                     <SelectValue placeholder="Region" />
@@ -400,7 +283,7 @@ const Dealers = () => {
                   <Download className="w-4 h-4" />
                   <span className="hidden sm:inline">Export CSV</span>
                 </Button>
-                  <Button
+                <Button
                   size="sm"
                   onClick={() => setViewMode("table")}
                   className="gap-1.5"
@@ -419,6 +302,22 @@ const Dealers = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Score Range Filter */}
+            <div className="mt-4 pt-3 border-t border-border">
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-xs text-muted-foreground">Filter by score range</Label>
+                <span className="text-xs font-semibold text-foreground">{scoreRange[0]} – {scoreRange[1]}</span>
+              </div>
+              <Slider
+                value={scoreRange}
+                onValueChange={(v) => { setScoreRange(v as [number, number]); setCurrentPage(1); }}
+                min={0}
+                max={100}
+                step={1}
+                className="w-full"
+              />
+            </div>
           </div>
 
           {viewMode === "table" ? (
@@ -426,14 +325,12 @@ const Dealers = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                     <tr className="border-b border-border text-muted-foreground">
+                    <tr className="border-b border-border text-muted-foreground">
                       <SortHeader label="Dealer Name" sortKeyVal="name" />
                       <th className="text-left px-3 py-3 font-medium hidden lg:table-cell">Trading Name</th>
                       <SortHeader label="Score" sortKeyVal="score" />
-                      <SortHeader label="Status" sortKeyVal="rag" />
-                      <SortHeader label="CSS" sortKeyVal="css" />
                       <SortHeader label="Region" sortKeyVal="region" />
-                       <th className="text-left px-3 py-3 font-medium hidden lg:table-cell">Last Audit</th>
+                      <th className="text-left px-3 py-3 font-medium hidden lg:table-cell">Last Audit</th>
                       <th className="text-center px-3 py-3 font-medium">Alerts</th>
                       <th className="text-center px-3 py-3 font-medium">Trend</th>
                       <th className="px-3 py-3 font-medium"><span className="sr-only">Actions</span></th>
@@ -441,91 +338,65 @@ const Dealers = () => {
                   </thead>
                   <tbody>
                     {paginatedDealers.length > 0 ? (
-                      paginatedDealers.map((dealer, index) => {
-                        const cssScore = dealerCssScores.get(dealer.name) ?? 0;
-                        const isOversight = cssScore < settings.css_oversight_threshold;
-                        const isReward = cssScore >= settings.css_reward_threshold;
-                        return (
-                          <tr
-                            key={dealer.name}
-                            onClick={() => navigate(`/dealer/${encodeURIComponent(dealer.name)}`)}
-                            className="border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors opacity-0 animate-fade-in"
-                            style={{ animationDelay: `${index * 30}ms`, animationFillMode: "forwards" }}
-                          >
-                            <td className="px-3 py-3 font-medium text-foreground">
-                              <span className="flex items-center gap-2">
-                                {dealer.name}
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${dealer.firmType === "DA" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                                  {dealer.firmType}
-                                </span>
+                      paginatedDealers.map((dealer, index) => (
+                        <tr
+                          key={dealer.name}
+                          onClick={() => navigate(`/dealer/${encodeURIComponent(dealer.name)}`)}
+                          className="border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors opacity-0 animate-fade-in"
+                          style={{ animationDelay: `${index * 30}ms`, animationFillMode: "forwards" }}
+                        >
+                          <td className="px-3 py-3 font-medium text-foreground">
+                            <span className="flex items-center gap-2">
+                              {dealer.name}
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${dealer.firmType === "DA" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                                {dealer.firmType}
                               </span>
-                            </td>
-                            <td className="px-3 py-3 text-muted-foreground hidden lg:table-cell">{dealer.tradingName}</td>
-                            <td className={`px-3 py-3 font-semibold ${dealer.rag === "red" ? "text-rag-red" : dealer.rag === "amber" ? "text-rag-amber" : "text-rag-green"}`}>{dealer.score}</td>
-                            <td className="px-3 py-3"><RagBadge status={dealer.rag} /></td>
-                            <td className="px-3 py-3">
-                              {isOversight ? (
-                                <Tooltip>
-                                  <TooltipTrigger>
-                                    <span className="inline-flex items-center gap-1 text-rag-red font-semibold">
-                                      <ShieldAlert className="w-3.5 h-3.5" /> {cssScore.toFixed(1)}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent><p className="text-xs">Enhanced Oversight</p></TooltipContent>
-                                </Tooltip>
-                              ) : isReward ? (
-                                <Tooltip>
-                                  <TooltipTrigger>
-                                    <span className="inline-flex items-center gap-1 text-accent font-semibold">
-                                      <Award className="w-3.5 h-3.5" /> {cssScore.toFixed(1)}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent><p className="text-xs">Positive Reward</p></TooltipContent>
-                                </Tooltip>
-                              ) : (
-                                <span className="text-muted-foreground">{cssScore.toFixed(1)}</span>
-                              )}
-                            </td>
-                            <td className="px-3 py-3 text-muted-foreground">{dealer.region}</td>
-                            <td className="px-3 py-3 text-muted-foreground hidden lg:table-cell">{dealer.lastAudit}</td>
-                            <td className="px-3 py-3 text-center">
-                              {dealer.alertCount > 0 ? (
-                                <Badge variant="destructive" className="text-[10px] px-1.5 py-0 min-w-5 h-5 justify-center">
-                                  {dealer.alertCount}
-                                </Badge>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">0</span>
-                              )}
-                            </td>
-                            <td className="px-3 py-3 text-center"><TrendIcon trend={dealer.trend} /></td>
-                            <td className="px-3 py-3 text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="gap-1.5 text-muted-foreground hover:text-foreground"
-                                      onClick={(e) => { e.stopPropagation(); navigate(`/documents?dealer=${encodeURIComponent(dealer.name)}`); }}
-                                    >
-                                      <FolderOpen className="w-4 h-4" />
-                                      {(docCounts.get(dealer.name) || 0) > 0 && (
-                                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 min-w-5 h-5 justify-center">
-                                          {docCounts.get(dealer.name)}
-                                        </Badge>
-                                      )}
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent><p className="text-xs">View dealer documents</p></TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground hidden lg:table-cell">{dealer.tradingName}</td>
+                          <td className="px-3 py-3">
+                            <div className="flex items-center gap-2 min-w-[100px]">
+                              <span className="font-semibold text-foreground w-8 text-right">{dealer.score}</span>
+                              <Progress value={dealer.score} className="h-1.5 flex-1 max-w-[60px] [&>div]:bg-muted-foreground" />
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground">{dealer.region}</td>
+                          <td className="px-3 py-3 text-muted-foreground hidden lg:table-cell">{dealer.lastAudit}</td>
+                          <td className="px-3 py-3 text-center">
+                            {dealer.alertCount > 0 ? (
+                              <Badge variant="destructive" className="text-[10px] px-1.5 py-0 min-w-5 h-5 justify-center">
+                                {dealer.alertCount}
+                              </Badge>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">0</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-center"><TrendIcon trend={dealer.trend} /></td>
+                          <td className="px-3 py-3 text-right">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="gap-1.5 text-muted-foreground hover:text-foreground"
+                                  onClick={(e) => { e.stopPropagation(); navigate(`/documents?dealer=${encodeURIComponent(dealer.name)}`); }}
+                                >
+                                  <FolderOpen className="w-4 h-4" />
+                                  {(docCounts.get(dealer.name) || 0) > 0 && (
+                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 min-w-5 h-5 justify-center">
+                                      {docCounts.get(dealer.name)}
+                                    </Badge>
+                                  )}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent><p className="text-xs">View dealer documents</p></TooltipContent>
+                            </Tooltip>
+                          </td>
+                        </tr>
+                      ))
                     ) : (
                       <tr>
-                        <td colSpan={10} className="px-5 py-8 text-center text-muted-foreground">
+                        <td colSpan={8} className="px-5 py-8 text-center text-muted-foreground">
                           No dealers found matching your criteria.
                         </td>
                       </tr>
@@ -590,47 +461,30 @@ const Dealers = () => {
                       <MapPin className="w-4 h-4 text-primary shrink-0" />
                       <span className="font-medium text-foreground">{group.region}</span>
                       <span className="text-xs text-muted-foreground ml-1">({group.count} dealers)</span>
-                      <div className="flex gap-2 ml-auto text-xs">
-                        <span className="text-muted-foreground">Avg: <span className="font-semibold text-foreground">{group.avgScore}%</span></span>
-                        <span className="text-rag-green">{group.green}G</span>
-                        <span className="text-rag-amber">{group.amber}A</span>
-                        <span className="text-rag-red">{group.red}R</span>
-                      </div>
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        Avg: <span className="font-semibold text-foreground">{group.avgScore}</span>
+                      </span>
                     </button>
                     {expandedRegions.has(group.region) && (
                       <div className="bg-muted/20">
                         <table className="w-full text-sm">
                           <tbody>
-                            {group.dealers.map((dealer) => {
-                              const cssScore = dealerCssScores.get(dealer.name) ?? 0;
-                              const isOversight = cssScore < settings.css_oversight_threshold;
-                              const isReward = cssScore >= settings.css_reward_threshold;
-                              return (
-                                <tr
-                                  key={dealer.name}
-                                  onClick={() => navigate(`/dealer/${encodeURIComponent(dealer.name)}`)}
-                                  className="border-b border-border/50 last:border-0 hover:bg-muted/50 cursor-pointer transition-colors"
-                                >
-                                  <td className="pl-12 pr-3 py-2.5 font-medium text-foreground">{dealer.name}</td>
-                                  <td className="px-3 py-2.5 font-semibold text-foreground w-16">{dealer.score}</td>
-                                  <td className="px-3 py-2.5 w-24"><RagBadge status={dealer.rag} /></td>
-                                  <td className="px-3 py-2.5 w-20">
-                                    {isOversight ? (
-                                      <span className="inline-flex items-center gap-1 text-rag-red text-xs font-semibold">
-                                        <ShieldAlert className="w-3 h-3" /> {cssScore.toFixed(1)}
-                                      </span>
-                                    ) : isReward ? (
-                                      <span className="inline-flex items-center gap-1 text-accent text-xs font-semibold">
-                                        <Award className="w-3 h-3" /> {cssScore.toFixed(1)}
-                                      </span>
-                                    ) : (
-                                      <span className="text-xs text-muted-foreground">{cssScore.toFixed(1)}</span>
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-center w-12"><TrendIcon trend={dealer.trend} /></td>
-                                </tr>
-                              );
-                            })}
+                            {group.dealers.map((dealer) => (
+                              <tr
+                                key={dealer.name}
+                                onClick={() => navigate(`/dealer/${encodeURIComponent(dealer.name)}`)}
+                                className="border-b border-border/50 last:border-0 hover:bg-muted/50 cursor-pointer transition-colors"
+                              >
+                                <td className="pl-12 pr-3 py-2.5 font-medium text-foreground">{dealer.name}</td>
+                                <td className="px-3 py-2.5 w-28">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-foreground w-8 text-right">{dealer.score}</span>
+                                    <Progress value={dealer.score} className="h-1.5 flex-1 max-w-[48px] [&>div]:bg-muted-foreground" />
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2.5 text-center w-12"><TrendIcon trend={dealer.trend} /></td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>
@@ -643,7 +497,7 @@ const Dealers = () => {
                 </div>
               )}
             </div>
-        )}
+          )}
         </div>
 
         {/* Batch AI Summary Generator */}
