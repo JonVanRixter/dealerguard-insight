@@ -296,8 +296,8 @@
       "simulatedData": {
         "companyName": "Crown Car Sales Ltd",
         "companyNumber": "07654321",
-        "creditScore": 68,
-        "creditRating": "B",
+        "creditScore": 79,
+        "creditRating": "A",
         "creditLimit": 55000,
         "riskCategory": "Low Risk",
         "paymentIndex": 84,
@@ -313,7 +313,7 @@
           { "directorName": "David Michael Crown", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2026-02-01" }
         ],
         "overallResult": "Pass",
-        "flags": []
+        "flags": ["Discharged CCJ — 2024 — noted for monitoring"]
       }
     }
   },
@@ -402,11 +402,11 @@
       "simulatedData": {
         "companyName": "Lakeside Motors Ltd",
         "companyNumber": "10293847",
-        "creditScore": 66,
-        "creditRating": "B",
-        "creditLimit": 48000,
+        "creditScore": 88,
+        "creditRating": "A",
+        "creditLimit": 95000,
         "riskCategory": "Low Risk",
-        "paymentIndex": 82,
+        "paymentIndex": 92,
         "ccjs": { "count": 0, "totalValue": 0, "mostRecent": null },
         "paymentHistory": [
           { "period": "Oct–Dec 2025", "onTimePayments": "88%", "latePayments": "12%", "missedPayments": "0%" },
@@ -501,7 +501,7 @@
         "companyName": "Westfield Vehicle Solutions Ltd",
         "companyNumber": "06543210",
         "creditScore": 52,
-        "creditRating": "C",
+        "creditRating": "B",
         "creditLimit": 28000,
         "riskCategory": "Medium Risk",
         "paymentIndex": 74,
@@ -607,10 +607,10 @@
       "simulatedData": {
         "companyName": "Castle Cars Ltd",
         "companyNumber": "05432109",
-        "creditScore": 58,
+        "creditScore": 61,
         "creditRating": "B",
         "creditLimit": 38000,
-        "riskCategory": "Low Risk",
+        "riskCategory": "Medium Risk",
         "paymentIndex": 79,
         "ccjs": { "count": 0, "totalValue": 0, "mostRecent": null },
         "paymentHistory": [
@@ -715,7 +715,7 @@
         "companyName": "Northgate Auto Centre Ltd",
         "companyNumber": "04321098",
         "creditScore": 44,
-        "creditRating": "C",
+        "creditRating": "B",
         "creditLimit": 18000,
         "riskCategory": "Medium Risk",
         "paymentIndex": 71,
@@ -811,11 +811,11 @@
       "simulatedData": {
         "companyName": "Pennine Motor Co Ltd",
         "companyNumber": "03210987",
-        "creditScore": 49,
-        "creditRating": "C",
-        "creditLimit": 22000,
-        "riskCategory": "Medium Risk",
-        "paymentIndex": 73,
+        "creditScore": 67,
+        "creditRating": "A",
+        "creditLimit": 52000,
+        "riskCategory": "Low Risk",
+        "paymentIndex": 83,
         "ccjs": { "count": 0, "totalValue": 0, "mostRecent": null },
         "paymentHistory": [
           { "period": "Oct–Dec 2025", "onTimePayments": "76%", "latePayments": "18%", "missedPayments": "6%" },
@@ -920,9 +920,9 @@
       "simulatedData": {
         "companyName": "Riverside Car Group Ltd",
         "companyNumber": "02109876",
-        "creditScore": 46,
-        "creditRating": "C",
-        "creditLimit": 20000,
+        "creditScore": 58,
+        "creditRating": "B",
+        "creditLimit": 30000,
         "riskCategory": "Medium Risk",
         "paymentIndex": 68,
         "ccjs": { "count": 0, "totalValue": 0, "mostRecent": null },
@@ -1020,7 +1020,7 @@
         "companyName": "Summit Automotive Ltd",
         "companyNumber": "SC109876",
         "creditScore": 31,
-        "creditRating": "D",
+        "creditRating": "C",
         "creditLimit": 5000,
         "riskCategory": "High Risk",
         "paymentIndex": 55,
@@ -1127,7 +1127,7 @@
         "companyName": "Horizon Motor Sales Ltd",
         "companyNumber": "SC087654",
         "creditScore": 28,
-        "creditRating": "D",
+        "creditRating": "C",
         "creditLimit": 3000,
         "riskCategory": "High Risk",
         "paymentIndex": 48,
