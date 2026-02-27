@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { RagBadge } from "@/components/RagBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,8 +11,8 @@ import { getLenderName } from "@/data/tcg/lenders";
 import { PolicyTab } from "@/components/tcg-dealer/PolicyTab";
 
 function TrendIcon({ trend }: { trend: string }) {
-  if (trend === "up") return <TrendingUp className="w-4 h-4 text-rag-green" />;
-  if (trend === "down") return <TrendingDown className="w-4 h-4 text-rag-red" />;
+  if (trend === "up") return <TrendingUp className="w-4 h-4 text-foreground" />;
+  if (trend === "down") return <TrendingDown className="w-4 h-4 text-foreground" />;
   return <Minus className="w-4 h-4 text-muted-foreground" />;
 }
 
@@ -120,7 +119,6 @@ export default function TcgDealerDetail() {
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-semibold text-foreground">{dealer.name}</h2>
-              <RagBadge status={dealer.rag} />
               <TrendIcon trend={dealer.trend} />
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
