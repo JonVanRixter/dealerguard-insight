@@ -47,16 +47,16 @@ import {
   Calendar as CalendarRange,
   Download,
 } from "lucide-react";
-import { RagBadge } from "@/components/RagBadge";
+import { getScoreBand } from "@/data/dealers";
 import { cn } from "@/lib/utils";
 import { generateReportsAnalyticsPDF } from "@/utils/reportsPdfExport";
 import { useToast } from "@/hooks/use-toast";
 
-// RAG colors
-const RAG_COLORS = {
-  green: "hsl(142, 71%, 45%)",
-  amber: "hsl(38, 92%, 50%)",
-  red: "hsl(0, 84%, 60%)",
+// Score band colors (neutral)
+const BAND_COLORS = {
+  high: "hsl(var(--primary))",
+  mid: "hsl(var(--muted-foreground))",
+  low: "hsl(var(--score-down))",
 };
 
 // Preset date ranges
@@ -124,9 +124,9 @@ const Reports = () => {
       id: section.id,
       name: section.name,
       shortName: section.name.split(" ")[0],
-      green: 0,
-      amber: 0,
-      red: 0,
+      pass: 0,
+      attention: 0,
+      fail: 0,
       totalControls: 0,
       passRate: 0,
     }));
@@ -136,11 +136,11 @@ const Reports = () => {
       audit.sections.forEach((auditSection) => {
         const sectionEntry = sectionData.find((s) => s.id === auditSection.id);
         if (sectionEntry) {
-          sectionEntry.green += auditSection.summary.green;
-          sectionEntry.amber += auditSection.summary.amber;
-          sectionEntry.red += auditSection.summary.red;
+          sectionEntry.pass += auditSection.summary.pass;
+          sectionEntry.attention += auditSection.summary.attention;
+          sectionEntry.fail += auditSection.summary.fail;
           sectionEntry.totalControls +=
-            auditSection.summary.green + auditSection.summary.amber + auditSection.summary.red;
+            auditSection.summary.pass + auditSection.summary.attention + auditSection.summary.fail;
         }
       });
     });
@@ -148,7 +148,7 @@ const Reports = () => {
     // Calculate pass rates
     sectionData.forEach((section) => {
       section.passRate = section.totalControls > 0
-        ? Math.round((section.green / section.totalControls) * 100)
+        ? Math.round((section.pass / section.totalControls) * 100)
         : 0;
     });
 
@@ -165,18 +165,18 @@ const Reports = () => {
         month: format(date, "MMM yy"),
         fullDate: date,
         score: Math.max(60, Math.min(95, Math.round(baseScore + variation))),
-        green: Math.round(portfolioStats.green * (0.9 + (i / monthsInRange.length) * 0.1)),
-        amber: Math.round(portfolioStats.amber * (1.05 - (i / monthsInRange.length) * 0.1)),
-        red: Math.round(portfolioStats.red * (1.1 - (i / monthsInRange.length) * 0.15)),
+        high: Math.round(portfolioStats.high * (0.9 + (i / monthsInRange.length) * 0.1)),
+        mid: Math.round(portfolioStats.mid * (1.05 - (i / monthsInRange.length) * 0.1)),
+        low: Math.round(portfolioStats.low * (1.1 - (i / monthsInRange.length) * 0.15)),
       };
     });
   }, [monthsInRange]);
 
   // Distribution data for pie chart
   const distributionData = [
-    { name: "Safe (Green)", value: portfolioStats.green, color: RAG_COLORS.green },
-    { name: "Warning (Amber)", value: portfolioStats.amber, color: RAG_COLORS.amber },
-    { name: "Critical (Red)", value: portfolioStats.red, color: RAG_COLORS.red },
+    { name: "80–100", value: portfolioStats.high, color: BAND_COLORS.high },
+    { name: "55–79", value: portfolioStats.mid, color: BAND_COLORS.mid },
+    { name: "0–54", value: portfolioStats.low, color: BAND_COLORS.low },
   ];
 
   // Score distribution (histogram)
@@ -207,7 +207,7 @@ const Reports = () => {
   // Top risk dealers
   const topRiskDealers = useMemo(() => {
     return [...dealers]
-      .filter((d) => d.rag === "red" || d.rag === "amber")
+      .filter((d) => d.score < 80)
       .sort((a, b) => a.score - b.score)
       .slice(0, 10);
   }, []);
@@ -223,25 +223,42 @@ const Reports = () => {
 
   // Calculate aggregate stats
   const totalControls = sectionAnalytics.reduce((sum, s) => sum + s.totalControls, 0);
-  const totalGreen = sectionAnalytics.reduce((sum, s) => sum + s.green, 0);
-  const totalAmber = sectionAnalytics.reduce((sum, s) => sum + s.amber, 0);
-  const totalRed = sectionAnalytics.reduce((sum, s) => sum + s.red, 0);
-  const overallPassRate = Math.round((totalGreen / totalControls) * 100);
+  const totalPass = sectionAnalytics.reduce((sum, s) => sum + s.pass, 0);
+  const totalAttention = sectionAnalytics.reduce((sum, s) => sum + s.attention, 0);
+  const totalFail = sectionAnalytics.reduce((sum, s) => sum + s.fail, 0);
+  const overallPassRate = Math.round((totalPass / totalControls) * 100);
 
   // Handle PDF export
   const handleExportPDF = () => {
     try {
       generateReportsAnalyticsPDF({
         dateRange,
-        portfolioStats,
+        portfolioStats: {
+          total: portfolioStats.total,
+          avgScore: portfolioStats.avgScore,
+          high: portfolioStats.high,
+          mid: portfolioStats.mid,
+          low: portfolioStats.low,
+        },
         overallPassRate,
-        totalAlerts: totalAmber + totalRed,
-        sectionAnalytics,
-        trendData,
+        totalAlerts: totalAttention + totalFail,
+        sectionAnalytics: sectionAnalytics.map(s => ({
+          ...s,
+          green: s.pass,
+          amber: s.attention,
+          red: s.fail,
+        })),
+        trendData: trendData.map(t => ({
+          month: t.month,
+          score: t.score,
+          green: t.high,
+          amber: t.mid,
+          red: t.low,
+        })),
         topRiskDealers: topRiskDealers.map((d) => ({
           name: d.name,
           score: d.score,
-          rag: d.rag,
+          rag: getScoreBand(d.score) === "low" ? "red" as const : "amber" as const,
           lastAudit: d.lastAudit,
         })),
       });
@@ -408,7 +425,7 @@ const Reports = () => {
               <AlertTriangle className="w-4 h-4 text-destructive" />
               Active Alerts
             </div>
-            <span className="text-3xl font-bold text-destructive">{totalAmber + totalRed}</span>
+            <span className="text-3xl font-bold text-destructive">{totalAttention + totalFail}</span>
           </div>
         </div>
 
@@ -599,9 +616,9 @@ const Reports = () => {
                   <tr key={section.id} className="border-b border-border last:border-0">
                     <td className="px-5 py-3 font-medium text-foreground">{section.name}</td>
                     <td className="px-3 py-3 text-center text-foreground">{section.totalControls}</td>
-                    <td className="px-3 py-3 text-center text-outcome-pass font-semibold">{section.green}</td>
-                    <td className="px-3 py-3 text-center text-outcome-pending font-semibold">{section.amber}</td>
-                    <td className="px-3 py-3 text-center text-outcome-fail font-semibold">{section.red}</td>
+                    <td className="px-3 py-3 text-center text-outcome-pass font-semibold">{section.pass}</td>
+                    <td className="px-3 py-3 text-center text-outcome-pending font-semibold">{section.attention}</td>
+                    <td className="px-3 py-3 text-center text-outcome-fail font-semibold">{section.fail}</td>
                     <td className="px-3 py-3 text-center">
                       <span
                         className={`font-semibold ${

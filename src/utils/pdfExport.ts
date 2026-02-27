@@ -103,14 +103,12 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
   doc.text(`FCA Reference: ${fcaRef}`, 20, yPosition + 18);
   doc.text(`Last Audit: ${audit.lastAuditDate}`, 20, yPosition + 25);
   
-  // Overall RAG indicator
-  const ragLabel = audit.overallRag.charAt(0).toUpperCase() + audit.overallRag.slice(1);
-  const ragColor = RAG_COLORS[audit.overallRag];
-  doc.setFillColor(ragColor.r, ragColor.g, ragColor.b);
+  // Overall score indicator
+  doc.setFillColor(55, 65, 81);
   doc.roundedRect(pageWidth - 60, yPosition + 5, 46, 20, 3, 3, "F");
   doc.setTextColor(255);
   doc.setFont("helvetica", "bold");
-  doc.text(`${ragLabel} - ${audit.overallScore}%`, pageWidth - 37, yPosition + 17, { align: "center" });
+  doc.text(`Score: ${audit.overallScore}%`, pageWidth - 37, yPosition + 17, { align: "center" });
   
   yPosition += 40;
 
@@ -197,15 +195,15 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
 
   const summaryData = audit.sections.map(section => [
     section.name,
-    section.summary.green.toString(),
-    section.summary.amber.toString(),
-    section.summary.red.toString(),
-    section.summary.ragStatus.toUpperCase(),
+    section.summary.pass.toString(),
+    section.summary.attention.toString(),
+    section.summary.fail.toString(),
+    section.summary.outcome.toUpperCase(),
   ]);
 
   autoTable(doc, {
     startY: yPosition,
-    head: [["Section", "Green", "Amber", "Red", "Status"]],
+    head: [["Section", "Pass", "Attention", "Fail", "Status"]],
     body: summaryData,
     theme: "striped",
     headStyles: { fillColor: [51, 65, 85], fontSize: 9 },
@@ -220,9 +218,9 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
     didParseCell: (data) => {
       if (data.section === "body" && data.column.index === 4) {
         const status = data.cell.raw?.toString().toLowerCase() || "";
-        if (status === "green") data.cell.styles.textColor = [34, 197, 94];
-        else if (status === "amber") data.cell.styles.textColor = [245, 158, 11];
-        else if (status === "red") data.cell.styles.textColor = [239, 68, 68];
+        if (status === "pass") data.cell.styles.textColor = [34, 197, 94];
+        else if (status === "attention") data.cell.styles.textColor = [245, 158, 11];
+        else if (status === "fail") data.cell.styles.textColor = [239, 68, 68];
         data.cell.styles.fontStyle = "bold";
       }
     },
@@ -252,12 +250,11 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
     const trendData = trend.history.map((h) => [
       h.month,
       h.score.toString(),
-      h.rag.toUpperCase(),
     ]);
 
     autoTable(doc, {
       startY: yPosition,
-      head: [["Month", "Score", "Status"]],
+      head: [["Month", "Score"]],
       body: trendData,
       theme: "striped",
       headStyles: { fillColor: [51, 65, 85], fontSize: 8 },
@@ -265,16 +262,6 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
       columnStyles: {
         0: { cellWidth: 40 },
         1: { cellWidth: 25, halign: "center" },
-        2: { cellWidth: 25, halign: "center" },
-      },
-      didParseCell: (data) => {
-        if (data.section === "body" && data.column.index === 2) {
-          const status = data.cell.raw?.toString().toLowerCase() || "";
-          if (status === "green") data.cell.styles.textColor = [34, 197, 94];
-          else if (status === "amber") data.cell.styles.textColor = [245, 158, 11];
-          else if (status === "red") data.cell.styles.textColor = [239, 68, 68];
-          data.cell.styles.fontStyle = "bold";
-        }
       },
     });
 
@@ -307,8 +294,7 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
       const barH = (maxBarH * h.score) / 100;
       const x = chartX + i * (barW + 2);
       const y = barStartY + maxBarH - barH;
-      const c = RAG_COLORS[h.rag];
-      doc.setFillColor(c.r, c.g, c.b);
+      doc.setFillColor(55, 65, 81);
       doc.rect(x, y, barW, barH, "F");
     });
 
@@ -324,13 +310,13 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
   yPosition += 6;
 
   const complianceData = audit.sections.map((s) => {
-    const total = s.summary.green + s.summary.amber + s.summary.red;
-    const passRate = total > 0 ? Math.round((s.summary.green / total) * 100) : 0;
+    const total = s.summary.pass + s.summary.attention + s.summary.fail;
+    const passRate = total > 0 ? Math.round((s.summary.pass / total) * 100) : 0;
     return [
       s.name,
-      s.summary.green.toString(),
-      s.summary.amber.toString(),
-      s.summary.red.toString(),
+      s.summary.pass.toString(),
+      s.summary.attention.toString(),
+      s.summary.fail.toString(),
       total.toString(),
       `${passRate}%`,
     ];
@@ -866,8 +852,8 @@ export function generateComplianceReportPDF(audit: DealerAudit, fcaRef: string, 
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0);
     
-    const sectionRagColor = RAG_COLORS[section.summary.ragStatus];
-    doc.setFillColor(sectionRagColor.r, sectionRagColor.g, sectionRagColor.b);
+    const outcomeColor = section.summary.outcome === "pass" ? RAG_COLORS.green : section.summary.outcome === "attention" ? RAG_COLORS.amber : RAG_COLORS.red;
+    doc.setFillColor(outcomeColor.r, outcomeColor.g, outcomeColor.b);
     doc.circle(18, yPosition - 2, 3, "F");
     doc.text(section.name, 24, yPosition);
     yPosition += 6;

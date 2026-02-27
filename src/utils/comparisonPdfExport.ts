@@ -61,8 +61,7 @@ export function generateComparisonPDF(data: DealerBenchmarkData): void {
   doc.text(data.dealerName, 20, yPosition + 8);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
-  const dealerRag = RAG_COLORS[data.dealerRag];
-  doc.setTextColor(dealerRag.r, dealerRag.g, dealerRag.b);
+  doc.setTextColor(0);
   doc.text(`${data.dealerScore}%`, 20, yPosition + 22);
 
   // Comparison score
@@ -72,12 +71,7 @@ export function generateComparisonPDF(data: DealerBenchmarkData): void {
   doc.text(data.comparisonName, 20 + colWidth, yPosition + 8);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
-  if (data.comparisonRag) {
-    const compRag = RAG_COLORS[data.comparisonRag];
-    doc.setTextColor(compRag.r, compRag.g, compRag.b);
-  } else {
-    doc.setTextColor(0);
-  }
+  doc.setTextColor(0);
   doc.text(`${data.comparisonScore}%`, 20 + colWidth, yPosition + 22);
 
   // Difference

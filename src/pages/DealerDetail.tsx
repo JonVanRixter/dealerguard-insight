@@ -179,7 +179,6 @@ const DealerDetail = () => {
           <div className="lg:col-span-2">
             <ReportSummaryCard
               sections={audit.sections}
-              overallRag={audit.overallRag}
               overallScore={audit.overallScore}
             />
           </div>
@@ -197,7 +196,7 @@ const DealerDetail = () => {
         <FcaRegisterCard dealerName={dealerName} fcaRef={fcaRef} onDataLoaded={setFcaRegisterData} />
         <DirectorPassportCheck dealerName={dealerName} />
         <KeyActionsTable actions={audit.keyActions} />
-        <DealerRecheckTimeline dealerName={dealerName} dealerRag={audit.overallRag} />
+        <DealerRecheckTimeline dealerName={dealerName} dealerRag={audit.overallScore >= 80 ? "green" : "other"} />
         <DealerNotes dealerName={dealerName} />
         <DealerDocuments dealerName={dealerName} />
 
