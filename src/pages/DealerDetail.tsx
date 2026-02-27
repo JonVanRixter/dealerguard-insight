@@ -13,7 +13,6 @@ import { ReportSummaryCard } from "@/components/dealer/ReportSummaryCard";
 import { generateComplianceReportPDF, type PassportCheckEntry, type FcaRegisterEntry, type CreditSafeEntry } from "@/utils/pdfExport";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { AiAuditSummary } from "@/components/dealer/AiAuditSummary";
 import { DealerDocuments } from "@/components/dealer/DealerDocuments";
 import { DealerRecheckTimeline } from "@/components/dealer/DealerRecheckTimeline";
 import { CreditSafeCard } from "@/components/dealer/CreditSafeCard";
@@ -33,16 +32,11 @@ const DealerDetail = () => {
   const { toast } = useToast();
   const { settings } = useUserSettings();
   const dealerName = name ? decodeURIComponent(name) : "Unknown Dealer";
-  const [aiSummary, setAiSummary] = useState("");
   const [docCount, setDocCount] = useState(0);
 
   const [passportChecks, setPassportChecks] = useState<PassportCheckEntry[]>([]);
   const [fcaRegisterData, setFcaRegisterData] = useState<FcaRegisterEntry | undefined>(undefined);
   const [creditSafeData, setCreditSafeData] = useState<CreditSafeEntry | undefined>(undefined);
-
-  const handleSummaryChange = useCallback((summary: string) => {
-    setAiSummary(summary);
-  }, []);
 
   useEffect(() => {
     const fetchDocs = async () => {
@@ -94,7 +88,7 @@ const DealerDetail = () => {
 
   const handleDownloadReport = () => {
     try {
-      generateComplianceReportPDF(audit, fcaRef, aiSummary || undefined, passportChecks.length > 0 ? passportChecks : undefined, fcaRegisterData, creditSafeData);
+      generateComplianceReportPDF(audit, fcaRef, undefined, passportChecks.length > 0 ? passportChecks : undefined, fcaRegisterData, creditSafeData);
       toast({
         title: "Report Downloaded",
         description: `Compliance report for ${dealerName} has been generated and downloaded.`,
@@ -191,7 +185,6 @@ const DealerDetail = () => {
           <ControlsBreakdownChart sections={audit.sections} />
         </div>
 
-        <AiAuditSummary audit={audit} onSummaryChange={handleSummaryChange} />
         <CreditSafeCard dealerName={dealerName} companiesHouseNumber={dealerData.dealer?.companiesHouseNumber} onDataLoaded={setCreditSafeData} />
         <FcaRegisterCard dealerName={dealerName} fcaRef={fcaRef} onDataLoaded={setFcaRegisterData} />
         <DirectorPassportCheck dealerName={dealerName} />
