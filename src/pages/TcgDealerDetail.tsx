@@ -122,8 +122,9 @@ export default function TcgDealerDetail() {
               <TrendIcon trend={dealer.trend} />
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
-              <span>Score: <span className="font-semibold text-foreground">{dealer.score}%</span></span>
+              <span>Overall Score: <span className="font-semibold text-foreground">{dealer.score} / 100</span></span>
               <span>Last Audit: <span className="font-medium text-foreground">{dealer.lastAudit}</span></span>
+              <span>Audited by: <span className="font-medium text-foreground">TCG</span></span>
               {dealer.alertCount > 0 && (
                 <Badge variant="destructive" className="text-xs">{dealer.alertCount} alerts</Badge>
               )}
