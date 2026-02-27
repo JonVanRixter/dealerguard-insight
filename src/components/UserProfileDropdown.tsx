@@ -107,7 +107,7 @@ export function UserProfileDropdown() {
             {[
               { action: "Logged in", time: "Today, 09:14 AM" },
               { action: "Ran audit for Redline Specialist Cars", time: "Today, 09:22 AM" },
-              { action: "Updated RAG thresholds", time: "Yesterday, 4:45 PM" },
+              { action: "Updated alert triggers", time: "Yesterday, 4:45 PM" },
               { action: "Exported portfolio CSV", time: "Yesterday, 3:10 PM" },
               { action: "Approved NewStart Motors onboarding", time: "10 Feb 2026, 11:30 AM" },
               { action: "Added QuickCars Ltd to DND list", time: "09 Feb 2026, 2:15 PM" },
