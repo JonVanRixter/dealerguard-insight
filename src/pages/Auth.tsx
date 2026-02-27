@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { IVendiWelcome } from "@/components/IVendiWelcome";
+
 import logo from "@/assets/logo.png";
 
 const Auth = () => {
   const { signIn, signUp, enterDemoMode } = useAuth();
-  const [showWelcome, setShowWelcome] = useState(false);
+  
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
@@ -47,17 +47,11 @@ const Auth = () => {
   const handleDemoBypass = useCallback(() => {
     if (demoPassword === "TCG1234") {
       setShowDemoPassword(false);
-      setShowWelcome(true);
+      enterDemoMode();
     } else {
       toast({ title: "Incorrect Password", description: "Please enter the correct demo password.", variant: "destructive" });
     }
-  }, [demoPassword, toast]);
-  const handleWelcomeComplete = useCallback(() => {
-    setShowWelcome(false);
-    enterDemoMode();
-  }, [enterDemoMode]);
-
-  if (showWelcome) return <IVendiWelcome onComplete={handleWelcomeComplete} />;
+  }, [demoPassword, toast, enterDemoMode]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
