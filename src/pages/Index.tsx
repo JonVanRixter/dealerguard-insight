@@ -1,15 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { RagBadge } from "@/components/RagBadge";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Pagination,
   PaginationContent,
@@ -23,23 +15,22 @@ import {
   TrendingDown,
   TrendingUp,
   Minus,
-  AlertTriangle,
   Activity,
-  ShieldCheck,
-  ShieldAlert,
-  Award,
   Clock,
   Search,
+  Users,
+  Building2,
+  ClipboardList,
 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
-import { dealers, activities, portfolioStats } from "@/data/dealers";
-import { generateDealerAudit } from "@/data/auditFramework";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { dealers, activities } from "@/data/dealers";
+import { tcgDealers, tcgPortfolioStats } from "@/data/tcg/dealers";
+import { tcgLenders, getLenderDealerStats } from "@/data/tcg/lenders";
 import { TrendHighlightsWidget } from "@/components/dashboard/TrendHighlightsWidget";
 import { useAnimatedCounter } from "@/hooks/useAnimatedCounter";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
-import { useUserSettings } from "@/hooks/useUserSettings";
-import { ScoreDistributionChart } from "@/components/dashboard/ScoreDistributionChart";
 import { SectionComplianceChart } from "@/components/dashboard/SectionComplianceChart";
 import { RegionalSummaryTable } from "@/components/dashboard/RegionalSummaryTable";
 import { PortfolioTrendMini } from "@/components/dashboard/PortfolioTrendMini";
@@ -49,24 +40,32 @@ import { OnboardingValidityWidget } from "@/components/dashboard/OnboardingValid
 
 const ITEMS_PER_PAGE = 10;
 
-const portfolioData = [
-  { name: "Safe", value: portfolioStats.green, color: "hsl(142, 71%, 45%)" },
-  { name: "Warning", value: portfolioStats.amber, color: "hsl(38, 92%, 50%)" },
-  { name: "Critical", value: portfolioStats.red, color: "hsl(0, 84%, 60%)" },
-];
-
 const TrendIcon = ({ trend }: { trend: string }) => {
-  if (trend === "up") return <TrendingUp className="w-4 h-4 text-rag-green" />;
-  if (trend === "down") return <TrendingDown className="w-4 h-4 text-rag-red" />;
+  if (trend === "up") return <TrendingUp className="w-4 h-4 text-foreground" />;
+  if (trend === "down") return <TrendingDown className="w-4 h-4 text-foreground" />;
   return <Minus className="w-4 h-4 text-muted-foreground" />;
 };
 
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
+/* Score distribution bar chart data — neutral bands */
+function buildScoreDistribution() {
+  const bands = [
+    { label: "0–24", min: 0, max: 24 },
+    { label: "25–49", min: 25, max: 49 },
+    { label: "50–74", min: 50, max: 74 },
+    { label: "75–100", min: 75, max: 100 },
+  ];
+  return bands.map((b) => ({
+    band: b.label,
+    count: tcgDealers.filter((d) => d.score >= b.min && d.score <= b.max).length,
+  }));
+}
+
+const ChartTooltip = ({ active, payload, label }: any) => {
+  if (active && payload?.length) {
     return (
       <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg">
         <p className="text-sm font-medium text-foreground">
-          {payload[0].name}: {payload[0].value} dealers
+          {label}: {payload[0].value} dealer{payload[0].value !== 1 ? "s" : ""}
         </p>
       </div>
     );
@@ -77,57 +76,43 @@ const CustomTooltip = ({ active, payload }: any) => {
 const Index = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const { settings } = useUserSettings();
 
-  // Precompute CSS scores for all dealers
-  const dealerCssScores = useMemo(() => {
-    const map = new Map<string, number>();
-    dealers.forEach((dealer, index) => {
-      const audit = generateDealerAudit(dealer.name, index);
-      map.set(dealer.name, audit.customerSentimentScore);
-    });
-    return map;
-  }, []);
+  const scoreDistribution = useMemo(buildScoreDistribution, []);
+
+  // Pending reviews count (simulated — dealers with alertCount > 0 treated as pending review)
+  const pendingReviews = useMemo(
+    () => tcgDealers.filter((d) => d.alertCount > 0).length,
+    []
+  );
+
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
     return () => clearTimeout(timer);
   }, []);
 
-  const animatedTotal = useAnimatedCounter(portfolioStats.total);
-  const animatedRed = useAnimatedCounter(portfolioStats.red);
-  const animatedAvgScore = useAnimatedCounter(portfolioStats.avgScore);
+  const animatedLenders = useAnimatedCounter(tcgLenders.length);
+  const animatedDealers = useAnimatedCounter(tcgPortfolioStats.total);
+  const animatedAvgScore = useAnimatedCounter(tcgPortfolioStats.avgScore);
+  const animatedPending = useAnimatedCounter(pendingReviews);
 
   const filteredDealers = useMemo(() => {
-    return dealers.filter((dealer) => {
-      const matchesSearch = dealer.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase().trim());
-      const matchesStatus =
-        statusFilter === "all" || dealer.rag === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [searchQuery, statusFilter]);
+    return dealers.filter((dealer) =>
+      dealer.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+    );
+  }, [searchQuery]);
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredDealers.length / ITEMS_PER_PAGE);
   const validCurrentPage = Math.min(currentPage, Math.max(1, totalPages));
-  
+
   const paginatedDealers = useMemo(() => {
     const startIndex = (validCurrentPage - 1) * ITEMS_PER_PAGE;
     return filteredDealers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredDealers, validCurrentPage]);
 
-  // Reset page when filters change
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    setCurrentPage(1);
-  };
-
-  const handleStatusChange = (value: string) => {
-    setStatusFilter(value);
     setCurrentPage(1);
   };
 
@@ -160,88 +145,117 @@ const Index = () => {
       <div className="space-y-6">
         {/* Page title */}
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Portfolio Overview</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">Monitor compliance risk across your dealer network.</p>
+          <h2 className="text-xl font-semibold text-foreground">TCG Portfolio Overview</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Compliance scores and dealer activity across all lenders.</p>
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Portfolio Health with Donut Chart */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Lenders */}
           <div className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in" style={{ animationDelay: "0ms", animationFillMode: "forwards" }}>
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
-              <ShieldCheck className="w-4 h-4" />
-              Portfolio Health
+              <Users className="w-4 h-4" />
+              Total Lenders
             </div>
-            <div className="flex items-center gap-4">
-              {/* Donut Chart */}
-              <div className="w-24 h-24 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={portfolioData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={28}
-                      outerRadius={42}
-                      paddingAngle={2}
-                      dataKey="value"
-                      strokeWidth={0}
-                    >
-                      {portfolioData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-foreground">{animatedTotal}</span>
-                </div>
-              </div>
-              {/* Legend */}
-              <div className="flex flex-col gap-1.5 text-xs">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rag-green" /> {portfolioStats.green} Safe
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rag-amber" /> {portfolioStats.amber} Warning
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rag-red" /> {portfolioStats.red} Critical
-                </span>
-              </div>
-            </div>
+            <span className="text-4xl font-bold text-foreground">{animatedLenders}</span>
           </div>
 
-          {/* Critical Alerts */}
-          <div className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in" style={{ animationDelay: "150ms", animationFillMode: "forwards" }}>
+          {/* Total Dealers */}
+          <div className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
-              <AlertTriangle className="w-4 h-4" />
-              Critical Alerts
+              <Building2 className="w-4 h-4" />
+              Total Dealers
             </div>
-            <div className="flex items-end gap-2">
-              <span className="text-4xl font-bold text-rag-red">{animatedRed}</span>
-              <span className="text-sm text-muted-foreground mb-1">dealers require attention</span>
-            </div>
+            <span className="text-4xl font-bold text-foreground">{animatedDealers}</span>
           </div>
 
-          {/* Avg Risk Score */}
-          <div className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in" style={{ animationDelay: "300ms", animationFillMode: "forwards" }}>
+          {/* Average Portfolio Score */}
+          <div className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
               <Activity className="w-4 h-4" />
-              Avg Risk Score
+              Avg Portfolio Score
             </div>
             <div className="flex items-end gap-1">
               <span className="text-4xl font-bold text-foreground">{animatedAvgScore}</span>
               <span className="text-lg text-muted-foreground mb-0.5">/100</span>
             </div>
           </div>
+
+          {/* Pending Reviews */}
+          <div className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in" style={{ animationDelay: "300ms", animationFillMode: "forwards" }}>
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
+              <ClipboardList className="w-4 h-4" />
+              Pending Reviews
+            </div>
+            <span className="text-4xl font-bold text-foreground">{animatedPending}</span>
+          </div>
         </div>
 
-        {/* Charts Row */}
+        {/* Score Distribution + Portfolio Trend */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Score Distribution Bar Chart */}
+          <div className="bg-card rounded-xl border border-border">
+            <div className="px-5 py-4 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Score Distribution</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Across all active dealers</p>
+            </div>
+            <div className="p-5 h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={scoreDistribution} barSize={48}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="band" tick={{ fontSize: 12 }} className="text-muted-foreground" />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} className="text-muted-foreground" />
+                  <RechartsTooltip content={<ChartTooltip />} />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
           <PortfolioTrendMini />
-          <ScoreDistributionChart />
+        </div>
+
+        {/* Lender Activity Summary */}
+        <div className="bg-card rounded-xl border border-border">
+          <div className="px-5 py-4 border-b border-border">
+            <h3 className="text-sm font-semibold text-foreground">Lender Activity Summary</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Lender Name</TableHead>
+                  <TableHead className="text-center">Dealer Count</TableHead>
+                  <TableHead className="text-center">Avg Score</TableHead>
+                  <TableHead className="text-center">Score Range</TableHead>
+                  <TableHead>Last Login</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tcgLenders.map((lender) => {
+                  const stats = getLenderDealerStats(lender.id);
+                  const lastLogin = new Date(lender.lastLogin);
+                  return (
+                    <TableRow key={lender.id}>
+                      <TableCell className="font-medium text-foreground">{lender.name}</TableCell>
+                      <TableCell className="text-center">{stats.dealerCount}</TableCell>
+                      <TableCell className="text-center font-semibold">{stats.avgScore}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{stats.scoreRange}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {lastLogin.toLocaleDateString("en-GB")} {lastLogin.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant={lender.status === "Active" ? "default" : "secondary"}>
+                          {lender.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         {/* Section Compliance + Regional Summary + Top Risk */}
@@ -257,28 +271,14 @@ const Index = () => {
           <div className="lg:col-span-2 bg-card rounded-xl border border-border">
             <div className="px-5 py-4 border-b border-border">
               <h3 className="text-sm font-semibold text-foreground mb-3">Dealer Watchlist</h3>
-              {/* Search & Filter Bar */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search dealers..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    className="pl-9 h-9 bg-background"
-                  />
-                </div>
-                <Select value={statusFilter} onValueChange={handleStatusChange}>
-                  <SelectTrigger className="w-full sm:w-40 h-9 bg-background">
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="green">Green (Safe)</SelectItem>
-                    <SelectItem value="amber">Amber (Warning)</SelectItem>
-                    <SelectItem value="red">Red (Critical)</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search dealers..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="pl-9 h-9 bg-background"
+                />
               </div>
             </div>
             <div className="overflow-x-auto">
@@ -287,62 +287,31 @@ const Index = () => {
                   <tr className="border-b border-border text-muted-foreground">
                     <th className="text-left px-5 py-3 font-medium">Dealer Name</th>
                     <th className="text-left px-3 py-3 font-medium">Score</th>
-                    <th className="text-left px-3 py-3 font-medium">Status</th>
-                     <th className="text-left px-3 py-3 font-medium hidden sm:table-cell">Last Audit</th>
-                     <th className="text-center px-3 py-3 font-medium">Trend</th>
-                     <th className="text-center px-3 py-3 font-medium">CSS</th>
+                    <th className="text-left px-3 py-3 font-medium hidden sm:table-cell">Last Audit</th>
+                    <th className="text-center px-3 py-3 font-medium">Trend</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedDealers.length > 0 ? (
-                     paginatedDealers.map((dealer, index) => {
-                       const cssScore = dealerCssScores.get(dealer.name) ?? 0;
-                       const isOversight = cssScore < settings.css_oversight_threshold;
-                       const isReward = cssScore >= settings.css_reward_threshold;
-                       return (
-                         <tr
-                           key={dealer.name}
-                           onClick={() => navigate(`/dealer/${encodeURIComponent(dealer.name)}`)}
-                           className="border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors opacity-0 animate-fade-in"
-                           style={{ animationDelay: `${index * 50}ms`, animationFillMode: "forwards" }}
-                         >
-                           <td className="px-5 py-3.5 font-medium text-foreground">{dealer.name}</td>
-                           <td className="px-3 py-3.5 text-foreground font-semibold">{dealer.score}</td>
-                           <td className="px-3 py-3.5"><RagBadge status={dealer.rag} /></td>
-                           <td className="px-3 py-3.5 text-muted-foreground hidden sm:table-cell">{dealer.lastAudit}</td>
-                           <td className="px-3 py-3.5 text-center"><TrendIcon trend={dealer.trend} /></td>
-                           <td className="px-3 py-3.5 text-center">
-                             {isOversight ? (
-                               <Tooltip>
-                                 <TooltipTrigger>
-                                   <ShieldAlert className="w-4 h-4 text-rag-red inline-block" />
-                                 </TooltipTrigger>
-                                 <TooltipContent>
-                                   <p className="text-xs">CSS {cssScore.toFixed(1)} — Enhanced Oversight</p>
-                                 </TooltipContent>
-                               </Tooltip>
-                             ) : isReward ? (
-                               <Tooltip>
-                                 <TooltipTrigger>
-                                   <Award className="w-4 h-4 text-accent inline-block" />
-                                 </TooltipTrigger>
-                                 <TooltipContent>
-                                   <p className="text-xs">CSS {cssScore.toFixed(1)} — Positive Reward</p>
-                                 </TooltipContent>
-                               </Tooltip>
-                             ) : (
-                               <span className="text-xs text-muted-foreground">{cssScore.toFixed(1)}</span>
-                             )}
-                           </td>
-                         </tr>
-                       );
-                     })
-                   ) : (
-                     <tr>
-                       <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">
-                         No dealers found matching your criteria.
-                       </td>
-                     </tr>
+                    paginatedDealers.map((dealer, index) => (
+                      <tr
+                        key={dealer.name}
+                        onClick={() => navigate(`/dealer/${encodeURIComponent(dealer.name)}`)}
+                        className="border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors opacity-0 animate-fade-in"
+                        style={{ animationDelay: `${index * 50}ms`, animationFillMode: "forwards" }}
+                      >
+                        <td className="px-5 py-3.5 font-medium text-foreground">{dealer.name}</td>
+                        <td className="px-3 py-3.5 text-foreground font-semibold">{dealer.score}</td>
+                        <td className="px-3 py-3.5 text-muted-foreground hidden sm:table-cell">{dealer.lastAudit}</td>
+                        <td className="px-3 py-3.5 text-center"><TrendIcon trend={dealer.trend} /></td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground">
+                        No dealers found matching your criteria.
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>
@@ -356,7 +325,7 @@ const Index = () => {
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
-                      <PaginationPrevious 
+                      <PaginationPrevious
                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                         className={validCurrentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
@@ -377,7 +346,7 @@ const Index = () => {
                       </PaginationItem>
                     ))}
                     <PaginationItem>
-                      <PaginationNext 
+                      <PaginationNext
                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                         className={validCurrentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
@@ -390,13 +359,8 @@ const Index = () => {
 
           {/* Right column */}
           <div className="space-y-6">
-            {/* Re-Check Schedule */}
             <RecheckWidget />
-
-            {/* Onboarding Validity */}
             <OnboardingValidityWidget />
-
-            {/* Trend Highlights */}
             <TrendHighlightsWidget />
 
             {/* Recent Activity */}
@@ -408,15 +372,7 @@ const Index = () => {
                 {activities.map((activity, i) => (
                   <div key={i} className="px-5 py-3.5 flex gap-3">
                     <div className="mt-0.5">
-                      <span
-                        className={`block w-2 h-2 rounded-full ${
-                          activity.type === "green"
-                            ? "bg-rag-green"
-                            : activity.type === "amber"
-                            ? "bg-rag-amber"
-                            : "bg-rag-red"
-                        }`}
-                      />
+                      <span className="block w-2 h-2 rounded-full bg-muted-foreground" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm text-foreground leading-snug">{activity.text}</p>
