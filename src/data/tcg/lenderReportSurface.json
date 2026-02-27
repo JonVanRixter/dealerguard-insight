@@ -1,0 +1,15 @@
+{
+  "policyDataSharedWithLenders": [
+    "Policy name",
+    "Exists (Yes/No/NA)",
+    "Last updated date",
+    "Document available (yes/no — not the document itself)"
+  ],
+  "policyDataTCGOnly": [
+    "Actual document files",
+    "TCG internal notes",
+    "Pre-screen raw data",
+    "Individual check scores from pre-screen"
+  ],
+  "noteForLenderReport": "Lenders can see policy existence and dates. To request a copy of a specific policy document, the lender must contact TCG directly. TCG will share with lender consent."
+}
