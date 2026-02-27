@@ -1,4 +1,4 @@
-import { Info, ShieldAlert, Award } from "lucide-react";
+import { Info, ShieldAlert, Award, TrendingUp, TrendingDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SentimentGauge } from "./SentimentGauge";
 import type { SentimentCategory } from "@/data/auditFramework";
@@ -10,6 +10,18 @@ interface CustomerSentimentCardProps {
   categories?: SentimentCategory[];
   oversightThreshold?: number;
   rewardThreshold?: number;
+}
+
+function getScoreColor(score: number) {
+  if (score >= 6.7) return "text-[hsl(var(--rag-green-text))]";
+  if (score >= 3.4) return "text-[hsl(var(--rag-amber-text))]";
+  return "text-[hsl(var(--rag-red-text))]";
+}
+
+function getScoreBg(score: number) {
+  if (score >= 6.7) return "bg-[hsl(var(--rag-green-bg))]";
+  if (score >= 3.4) return "bg-[hsl(var(--rag-amber-bg))]";
+  return "bg-[hsl(var(--rag-red-bg))]";
 }
 
 export function CustomerSentimentCard({
@@ -24,103 +36,98 @@ export function CustomerSentimentCard({
   const isReward = score >= rewardThreshold;
 
   return (
-    <div className="bg-card rounded-xl border border-border p-5">
-      {/* Title */}
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-        Customer Sentiment Score (CSS)
-        <Tooltip>
-          <TooltipTrigger>
-            <Info className="w-3.5 h-3.5" />
-          </TooltipTrigger>
-          <TooltipContent className="max-w-[250px]">
-            <p className="text-xs">
-              Data-driven insight into dealer conduct, governance, and customer
-              experience. Combines complaint trends, feedback analytics, and
-              post-sale outcomes.
-            </p>
-          </TooltipContent>
-        </Tooltip>
+    <div className="bg-card rounded-xl border border-border p-5 flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-foreground">Customer Sentiment</h3>
+          <Tooltip>
+            <TooltipTrigger>
+              <Info className="w-3.5 h-3.5 text-muted-foreground" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[250px]">
+              <p className="text-xs">
+                Data-driven insight into dealer conduct, governance, and customer
+                experience. Combines complaint trends, feedback analytics, and
+                post-sale outcomes.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        {/* Trend indicator */}
+        <div className={`flex items-center gap-1 text-xs font-medium ${trend >= 0 ? "text-[hsl(var(--rag-green-text))]" : "text-[hsl(var(--rag-red-text))]"}`}>
+          {trend >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+          {trend >= 0 ? "+" : ""}{trend.toFixed(1)} ({periodDays}d)
+        </div>
       </div>
 
-      {/* Threshold alert banners */}
+      {/* Threshold alert */}
       {isOversight && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-rag-red/10 border border-rag-red/20 mb-3">
-          <ShieldAlert className="w-4 h-4 text-rag-red shrink-0" />
-          <span className="text-xs font-medium text-rag-red">
-            Enhanced Oversight — CSS below {oversightThreshold.toFixed(1)} threshold
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[hsl(var(--rag-red-bg))] border border-[hsl(var(--rag-red))]/20 mb-4">
+          <ShieldAlert className="w-4 h-4 text-[hsl(var(--rag-red))] shrink-0" />
+          <span className="text-xs font-medium text-[hsl(var(--rag-red-text))]">
+            Enhanced Oversight — below {oversightThreshold.toFixed(1)}
           </span>
         </div>
       )}
       {isReward && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/20 mb-3">
-          <Award className="w-4 h-4 text-accent shrink-0" />
-          <span className="text-xs font-medium text-accent">
-            Positive Reward — CSS above {rewardThreshold.toFixed(1)} threshold
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[hsl(var(--rag-green-bg))] border border-[hsl(var(--rag-green))]/20 mb-4">
+          <Award className="w-4 h-4 text-[hsl(var(--rag-green))] shrink-0" />
+          <span className="text-xs font-medium text-[hsl(var(--rag-green-text))]">
+            Positive Reward — above {rewardThreshold.toFixed(1)}
           </span>
         </div>
       )}
 
-      {/* Main gauge */}
-      <div className="flex justify-center">
+      {/* Main score + gauge */}
+      <div className="flex items-center justify-center mb-2">
         <SentimentGauge score={score} size="default" />
       </div>
 
-      {/* Trend pill */}
-      <div className="flex justify-center -mt-1 mb-4">
-        <div className="bg-muted rounded-full px-4 py-1 text-xs font-medium text-muted-foreground">
-          {trend >= 0 ? "Up" : "Down"} {Math.abs(trend).toFixed(1)} in the last{" "}
-          {periodDays} days
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="flex justify-between text-[10px] text-muted-foreground mb-5">
+      {/* Legend row */}
+      <div className="flex justify-center gap-4 text-[10px] text-muted-foreground mb-4">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-sm bg-rag-red inline-block" /> Risk
-          0.0–3.3
+          <span className="w-2 h-2 rounded-full bg-[hsl(var(--rag-red))]" /> 0–3.3
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-sm bg-rag-amber inline-block" />{" "}
-          Attention 3.4–6.6
+          <span className="w-2 h-2 rounded-full bg-[hsl(var(--rag-amber))]" /> 3.4–6.6
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-sm bg-rag-green inline-block" />{" "}
-          Happy 6.7–10.0
+          <span className="w-2 h-2 rounded-full bg-[hsl(var(--rag-green))]" /> 6.7–10
         </span>
       </div>
 
       {/* Category breakdown */}
       {categories.length > 0 && (
-        <div className="border-t border-border pt-4">
-          <p className="text-xs font-semibold text-foreground mb-3">
-            Category Breakdown
-          </p>
-          <div className="grid grid-cols-3 gap-2">
+        <div className="border-t border-border pt-3 mt-auto">
+          <p className="text-xs font-semibold text-foreground mb-2">Breakdown</p>
+          <div className="space-y-2">
             {categories.map((cat) => {
+              const pct = (cat.score / 10) * 100;
               const catOversight = cat.score < oversightThreshold;
               const catReward = cat.score >= rewardThreshold;
               return (
-                <div
-                  key={cat.label}
-                  className={`flex flex-col items-center gap-1 rounded-lg p-2 ${
-                    catOversight
-                      ? "bg-rag-red/5 ring-1 ring-rag-red/20"
-                      : catReward
-                        ? "bg-accent/5 ring-1 ring-accent/20"
-                        : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-1">
-                    {catOversight && <ShieldAlert className="w-3 h-3 text-rag-red" />}
-                    {catReward && <Award className="w-3 h-3 text-accent" />}
-                    <p className="text-[11px] font-semibold text-foreground uppercase tracking-wide">
-                      {cat.label}
-                    </p>
+                <div key={cat.label} className="group">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1.5">
+                      {catOversight && <ShieldAlert className="w-3 h-3 text-[hsl(var(--rag-red))]" />}
+                      {catReward && <Award className="w-3 h-3 text-[hsl(var(--rag-green))]" />}
+                      <span className="text-xs text-muted-foreground">{cat.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-semibold ${getScoreColor(cat.score)}`}>
+                        {cat.score.toFixed(1)}
+                      </span>
+                      <span className={`text-[10px] ${cat.trend >= 0 ? "text-[hsl(var(--rag-green-text))]" : "text-[hsl(var(--rag-red-text))]"}`}>
+                        {cat.trend >= 0 ? "▲" : "▼"} {Math.abs(cat.trend).toFixed(1)}
+                      </span>
+                    </div>
                   </div>
-                  <SentimentGauge score={cat.score} size="compact" />
-                  <div className="bg-muted rounded-full px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground mt-1">
-                    {cat.trend >= 0 ? "Up" : "Down"}{" "}
-                    {Math.abs(cat.trend).toFixed(1)} in {periodDays}d
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${getScoreBg(cat.score)}`}
+                      style={{ width: `${pct}%` }}
+                    />
                   </div>
                 </div>
               );
