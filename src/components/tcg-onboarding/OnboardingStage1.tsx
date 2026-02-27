@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AlertTriangle, ChevronDown, Save, ArrowRight, ShieldBan } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertTriangle, ChevronDown, Save, ArrowRight, ShieldBan, Info } from "lucide-react";
 import { StageIndicator } from "@/components/tcg-onboarding/StageIndicator";
+import { RunExternalChecks } from "@/components/tcg-onboarding/RunExternalChecks";
 import type { TcgOnboardingApp, PreScreenCheck, PreScreenResult } from "@/hooks/useTcgOnboarding";
 
 interface Stage1Props {
@@ -151,6 +153,13 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
           </CardContent>
         </Card>
 
+        {/* External Checks */}
+        <RunExternalChecks
+          companiesHouseNumber={app.companiesHouseNumber}
+          app={app}
+          onUpdate={onUpdate}
+        />
+
         {/* Section B — Pre-Screen Checks */}
         <Card>
           <CardHeader><CardTitle>Pre-Screen Checks</CardTitle></CardHeader>
@@ -186,12 +195,17 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
                         <Label htmlFor={`${check.id}-refer`} className="text-sm">Refer for Manual Review</Label>
                       </div>
                     </RadioGroup>
+                    {check.notes === "Auto-filled from simulated check" && check.id !== "web" && (
+                      <p className="text-xs text-primary/70 mt-1 flex items-center gap-1">
+                        <Info className="w-3 h-3" /> Auto-filled from simulated check — review and confirm
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">Notes</Label>
                     <Textarea
                       rows={2}
-                      value={check.notes}
+                      value={check.notes === "Auto-filled from simulated check" ? "" : check.notes}
                       onChange={(e) => updateCheck(check.id, "notes", e.target.value)}
                       placeholder="Add notes..."
                     />
