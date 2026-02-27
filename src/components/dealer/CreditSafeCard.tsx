@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Building2,
   TrendingUp,
@@ -9,7 +10,11 @@ import {
   AlertTriangle,
   ShieldAlert,
   Flame,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 import { PhoenixingAnalysis } from "./PhoenixingAnalysis";
 import type { CreditSafeEntry } from "@/utils/pdfExport";
 
@@ -149,7 +154,22 @@ interface CreditSafeCardProps {
 
 export const CreditSafeCard = ({ dealerName, companiesHouseNumber, onDataLoaded }: CreditSafeCardProps) => {
   const notified = useRef(false);
+  const { toast } = useToast();
+  const [rechecking, setRechecking] = useState(false);
+  const [lastChecked, setLastChecked] = useState<string | null>(null);
   const report = generateMockReport(dealerName, companiesHouseNumber);
+
+  const handleRecheck = useCallback(() => {
+    setRechecking(true);
+    setTimeout(() => {
+      setRechecking(false);
+      setLastChecked(new Date().toISOString());
+      toast({
+        title: "✅ CreditSafe check refreshed",
+        description: `Simulated re-check completed — ${format(new Date(), "dd MMM yyyy HH:mm")}`,
+      });
+    }, 1500);
+  }, [toast]);
 
   const creditRating = report.report?.creditScore?.currentCreditRating;
   const prevRating = report.report?.creditScore?.previousCreditRating;
@@ -196,7 +216,16 @@ export const CreditSafeCard = ({ dealerName, companiesHouseNumber, onDataLoaded 
           <Building2 className="w-4 h-4 text-muted-foreground" />
           <h3 className="text-sm font-semibold text-foreground">CreditSafe Report</h3>
           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 text-muted-foreground">SIMULATED DATA</Badge>
+          {lastChecked && (
+            <span className="text-[10px] text-muted-foreground ml-1">
+              Last checked: {format(new Date(lastChecked), "dd MMM yyyy HH:mm")}
+            </span>
+          )}
         </div>
+        <Button variant="ghost" size="sm" onClick={handleRecheck} disabled={rechecking} className="gap-1.5 text-xs h-7">
+          {rechecking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+          Re-check
+        </Button>
       </div>
 
       <div className="px-5 py-4 space-y-5">
