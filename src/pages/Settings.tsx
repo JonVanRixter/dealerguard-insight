@@ -40,7 +40,7 @@ const Settings = () => {
             </TabsTrigger>
             <TabsTrigger value="thresholds" className="gap-2 data-[state=active]:bg-background">
               <Sliders className="w-4 h-4" />
-              <span className="hidden sm:inline">Alert Thresholds</span>
+              <span className="hidden sm:inline">Platform Config</span>
             </TabsTrigger>
             <TabsTrigger value="display" className="gap-2 data-[state=active]:bg-background">
               <Monitor className="w-4 h-4" />
