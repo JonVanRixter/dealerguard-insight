@@ -1,0 +1,1153 @@
+[
+  {
+    "dealerId": "d001",
+    "dealerName": "Blackmore Automotive Ltd",
+    "companiesHouse": {
+      "lastChecked": "2026-01-15T10:22:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "companyName": "Blackmore Automotive Ltd",
+        "companyNumber": "08421573",
+        "companyStatus": "Active",
+        "companyType": "Private limited Company",
+        "incorporationDate": "2012-04-03",
+        "registeredAddress": "14 Whiteladies Road, Bristol, BS1 4DJ",
+        "sicCodes": ["45111 - Sale of new cars and light motor vehicles"],
+        "confirmationStatementDue": "2026-06-01",
+        "confirmationStatementOverdue": false,
+        "accountsDue": "2026-09-30",
+        "accountsOverdue": false,
+        "directors": [
+          {
+            "name": "James Andrew Blackmore",
+            "role": "Director",
+            "appointedDate": "2012-04-03",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-06-20",
+            "idCheckStatus": "Verified"
+          },
+          {
+            "name": "Sarah Louise Blackmore",
+            "role": "Director",
+            "appointedDate": "2015-09-14",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-06-20",
+            "idCheckStatus": "Verified"
+          }
+        ],
+        "pscs": [
+          {
+            "name": "James Andrew Blackmore",
+            "naturesOfControl": ["Ownership of shares – 75% or more"],
+            "notifiedDate": "2016-07-01"
+          }
+        ],
+        "previousNames": [],
+        "filingHistory": [
+          { "date": "2025-10-01", "type": "CS01", "description": "Confirmation statement with no updates" },
+          { "date": "2025-07-15", "type": "AA", "description": "Accounts for year ending 31 March 2025" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "fcaRegister": {
+      "lastChecked": "2026-01-15T10:24:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "firmName": "Blackmore Automotive Ltd",
+        "firmReference": "734291",
+        "status": "Authorised",
+        "statusDate": "2014-08-01",
+        "tradingNames": ["Blackmore Cars", "Blackmore Automotive"],
+        "authorisationType": "Directly Authorised",
+        "regulatoryActivity": [
+          { "activity": "Credit broking", "status": "Current", "permission": "Full Permission" },
+          { "activity": "Insurance distribution", "status": "Current", "permission": "Full Permission" }
+        ],
+        "addressOnRegister": "14 Whiteladies Road, Bristol, BS1 4DJ",
+        "addressMatchesCompaniesHouse": true,
+        "individuals": [
+          { "name": "James Andrew Blackmore", "role": "Director", "status": "Active" },
+          { "name": "Sarah Louise Blackmore", "role": "Director", "status": "Active" }
+        ],
+        "requirements": [],
+        "variations": [],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "creditSafe": {
+      "lastChecked": "2026-01-15T10:26:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "companyName": "Blackmore Automotive Ltd",
+        "companyNumber": "08421573",
+        "creditScore": 74,
+        "creditRating": "A",
+        "creditLimit": 85000,
+        "riskCategory": "Low Risk",
+        "paymentIndex": 89,
+        "ccjs": { "count": 0, "totalValue": 0, "mostRecent": null },
+        "paymentHistory": [
+          { "period": "Oct–Dec 2025", "onTimePayments": "94%", "latePayments": "6%", "missedPayments": "0%" },
+          { "period": "Jul–Sep 2025", "onTimePayments": "91%", "latePayments": "9%", "missedPayments": "0%" },
+          { "period": "Apr–Jun 2025", "onTimePayments": "96%", "latePayments": "4%", "missedPayments": "0%" }
+        ],
+        "legalFilings": [],
+        "insolvencyHistory": [],
+        "directorSanctionsScreening": [
+          { "directorName": "James Andrew Blackmore", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2026-01-15" },
+          { "directorName": "Sarah Louise Blackmore", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2026-01-15" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    }
+  },
+  {
+    "dealerId": "d002",
+    "dealerName": "Meridian Motor Group",
+    "companiesHouse": {
+      "lastChecked": "2026-01-22T09:15:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "companyName": "Meridian Motor Group Ltd",
+        "companyNumber": "09128374",
+        "companyStatus": "Active",
+        "companyType": "Private limited Company",
+        "incorporationDate": "2014-06-12",
+        "registeredAddress": "78 Deansgate, Manchester, M1 2WD",
+        "sicCodes": ["45111 - Sale of new cars and light motor vehicles", "45200 - Maintenance and repair of motor vehicles"],
+        "confirmationStatementDue": "2026-08-12",
+        "confirmationStatementOverdue": false,
+        "accountsDue": "2026-11-30",
+        "accountsOverdue": false,
+        "directors": [
+          {
+            "name": "Richard Paul Meridian",
+            "role": "Director",
+            "appointedDate": "2014-06-12",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-07-10",
+            "idCheckStatus": "Verified"
+          },
+          {
+            "name": "Catherine Anne Meridian",
+            "role": "Director",
+            "appointedDate": "2016-02-01",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-07-10",
+            "idCheckStatus": "Verified"
+          }
+        ],
+        "pscs": [
+          {
+            "name": "Richard Paul Meridian",
+            "naturesOfControl": ["Ownership of shares – 50% to 75%"],
+            "notifiedDate": "2016-07-01"
+          },
+          {
+            "name": "Catherine Anne Meridian",
+            "naturesOfControl": ["Ownership of shares – 25% to 50%"],
+            "notifiedDate": "2016-07-01"
+          }
+        ],
+        "previousNames": [],
+        "filingHistory": [
+          { "date": "2025-11-15", "type": "CS01", "description": "Confirmation statement with updates" },
+          { "date": "2025-08-20", "type": "AA", "description": "Accounts for year ending 30 June 2025" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "fcaRegister": {
+      "lastChecked": "2026-01-22T09:18:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "firmName": "Meridian Motor Group Ltd",
+        "firmReference": "745832",
+        "status": "Authorised",
+        "statusDate": "2015-03-01",
+        "tradingNames": ["Meridian Motors"],
+        "authorisationType": "Directly Authorised",
+        "regulatoryActivity": [
+          { "activity": "Credit broking", "status": "Current", "permission": "Full Permission" },
+          { "activity": "Insurance distribution", "status": "Current", "permission": "Full Permission" }
+        ],
+        "addressOnRegister": "78 Deansgate, Manchester, M1 2WD",
+        "addressMatchesCompaniesHouse": true,
+        "individuals": [
+          { "name": "Richard Paul Meridian", "role": "Director", "status": "Active" },
+          { "name": "Catherine Anne Meridian", "role": "Director", "status": "Active" }
+        ],
+        "requirements": [],
+        "variations": [],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "creditSafe": {
+      "lastChecked": "2026-01-22T09:20:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "companyName": "Meridian Motor Group Ltd",
+        "companyNumber": "09128374",
+        "creditScore": 71,
+        "creditRating": "A",
+        "creditLimit": 72000,
+        "riskCategory": "Low Risk",
+        "paymentIndex": 86,
+        "ccjs": { "count": 0, "totalValue": 0, "mostRecent": null },
+        "paymentHistory": [
+          { "period": "Oct–Dec 2025", "onTimePayments": "92%", "latePayments": "8%", "missedPayments": "0%" },
+          { "period": "Jul–Sep 2025", "onTimePayments": "89%", "latePayments": "11%", "missedPayments": "0%" },
+          { "period": "Apr–Jun 2025", "onTimePayments": "93%", "latePayments": "7%", "missedPayments": "0%" }
+        ],
+        "legalFilings": [],
+        "insolvencyHistory": [],
+        "directorSanctionsScreening": [
+          { "directorName": "Richard Paul Meridian", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2026-01-22" },
+          { "directorName": "Catherine Anne Meridian", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2026-01-22" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    }
+  },
+  {
+    "dealerId": "d003",
+    "dealerName": "Crown Car Sales",
+    "companiesHouse": {
+      "lastChecked": "2026-02-01T11:30:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "companyName": "Crown Car Sales Ltd",
+        "companyNumber": "07654321",
+        "companyStatus": "Active",
+        "companyType": "Private limited Company",
+        "incorporationDate": "2011-01-20",
+        "registeredAddress": "22 The Headrow, Leeds, LS1 5PL",
+        "sicCodes": ["45111 - Sale of new cars and light motor vehicles"],
+        "confirmationStatementDue": "2026-05-20",
+        "confirmationStatementOverdue": false,
+        "accountsDue": "2026-08-31",
+        "accountsOverdue": false,
+        "directors": [
+          {
+            "name": "David Michael Crown",
+            "role": "Director",
+            "appointedDate": "2011-01-20",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-08-05",
+            "idCheckStatus": "Verified"
+          }
+        ],
+        "pscs": [
+          {
+            "name": "David Michael Crown",
+            "naturesOfControl": ["Ownership of shares – 75% or more"],
+            "notifiedDate": "2016-07-01"
+          }
+        ],
+        "previousNames": [],
+        "filingHistory": [
+          { "date": "2025-09-10", "type": "CS01", "description": "Confirmation statement with no updates" },
+          { "date": "2025-06-01", "type": "AA", "description": "Accounts for year ending 31 January 2025" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "fcaRegister": {
+      "lastChecked": "2026-02-01T11:33:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "firmName": "Crown Car Sales Ltd",
+        "firmReference": "712456",
+        "status": "Authorised",
+        "statusDate": "2013-11-01",
+        "tradingNames": ["Crown Cars"],
+        "authorisationType": "Directly Authorised",
+        "regulatoryActivity": [
+          { "activity": "Credit broking", "status": "Current", "permission": "Full Permission" },
+          { "activity": "Insurance distribution", "status": "Current", "permission": "Full Permission" }
+        ],
+        "addressOnRegister": "22 The Headrow, Leeds, LS1 5PL",
+        "addressMatchesCompaniesHouse": true,
+        "individuals": [
+          { "name": "David Michael Crown", "role": "Director", "status": "Active" }
+        ],
+        "requirements": [],
+        "variations": [],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "creditSafe": {
+      "lastChecked": "2026-02-01T11:36:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "companyName": "Crown Car Sales Ltd",
+        "companyNumber": "07654321",
+        "creditScore": 68,
+        "creditRating": "B",
+        "creditLimit": 55000,
+        "riskCategory": "Low Risk",
+        "paymentIndex": 84,
+        "ccjs": { "count": 0, "totalValue": 0, "mostRecent": null },
+        "paymentHistory": [
+          { "period": "Oct–Dec 2025", "onTimePayments": "90%", "latePayments": "10%", "missedPayments": "0%" },
+          { "period": "Jul–Sep 2025", "onTimePayments": "88%", "latePayments": "12%", "missedPayments": "0%" },
+          { "period": "Apr–Jun 2025", "onTimePayments": "91%", "latePayments": "9%", "missedPayments": "0%" }
+        ],
+        "legalFilings": [],
+        "insolvencyHistory": [],
+        "directorSanctionsScreening": [
+          { "directorName": "David Michael Crown", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2026-02-01" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    }
+  },
+  {
+    "dealerId": "d004",
+    "dealerName": "Lakeside Motors",
+    "companiesHouse": {
+      "lastChecked": "2026-02-05T14:10:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "companyName": "Lakeside Motors Ltd",
+        "companyNumber": "10293847",
+        "companyStatus": "Active",
+        "companyType": "Private limited Company",
+        "incorporationDate": "2016-08-22",
+        "registeredAddress": "90 Broad Street, Birmingham, B5 6HN",
+        "sicCodes": ["45112 - Sale of used cars and light motor vehicles"],
+        "confirmationStatementDue": "2026-10-22",
+        "confirmationStatementOverdue": false,
+        "accountsDue": "2027-01-31",
+        "accountsOverdue": false,
+        "directors": [
+          {
+            "name": "Michael James Lakeside",
+            "role": "Director",
+            "appointedDate": "2016-08-22",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-08-10",
+            "idCheckStatus": "Verified"
+          },
+          {
+            "name": "Priya Anand Lakeside",
+            "role": "Director",
+            "appointedDate": "2018-03-15",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-08-10",
+            "idCheckStatus": "Verified"
+          }
+        ],
+        "pscs": [
+          {
+            "name": "Michael James Lakeside",
+            "naturesOfControl": ["Ownership of shares – 50% to 75%"],
+            "notifiedDate": "2016-08-22"
+          }
+        ],
+        "previousNames": [],
+        "filingHistory": [
+          { "date": "2025-12-01", "type": "CS01", "description": "Confirmation statement with no updates" },
+          { "date": "2025-09-15", "type": "AA", "description": "Accounts for year ending 31 August 2025" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "fcaRegister": {
+      "lastChecked": "2026-02-05T14:13:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "firmName": "Lakeside Motors Ltd",
+        "firmReference": "789012",
+        "status": "Authorised",
+        "statusDate": "2017-05-01",
+        "tradingNames": ["Lakeside Motors"],
+        "authorisationType": "Directly Authorised",
+        "regulatoryActivity": [
+          { "activity": "Credit broking", "status": "Current", "permission": "Full Permission" }
+        ],
+        "addressOnRegister": "90 Broad Street, Birmingham, B5 6HN",
+        "addressMatchesCompaniesHouse": true,
+        "individuals": [
+          { "name": "Michael James Lakeside", "role": "Director", "status": "Active" },
+          { "name": "Priya Anand Lakeside", "role": "Director", "status": "Active" }
+        ],
+        "requirements": [],
+        "variations": [],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "creditSafe": {
+      "lastChecked": "2026-02-05T14:16:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "companyName": "Lakeside Motors Ltd",
+        "companyNumber": "10293847",
+        "creditScore": 66,
+        "creditRating": "B",
+        "creditLimit": 48000,
+        "riskCategory": "Low Risk",
+        "paymentIndex": 82,
+        "ccjs": { "count": 0, "totalValue": 0, "mostRecent": null },
+        "paymentHistory": [
+          { "period": "Oct–Dec 2025", "onTimePayments": "88%", "latePayments": "12%", "missedPayments": "0%" },
+          { "period": "Jul–Sep 2025", "onTimePayments": "85%", "latePayments": "15%", "missedPayments": "0%" },
+          { "period": "Apr–Jun 2025", "onTimePayments": "90%", "latePayments": "10%", "missedPayments": "0%" }
+        ],
+        "legalFilings": [],
+        "insolvencyHistory": [],
+        "directorSanctionsScreening": [
+          { "directorName": "Michael James Lakeside", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2026-02-05" },
+          { "directorName": "Priya Anand Lakeside", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2026-02-05" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    }
+  },
+  {
+    "dealerId": "d005",
+    "dealerName": "Westfield Vehicle Solutions",
+    "companiesHouse": {
+      "lastChecked": "2026-01-10T08:45:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "companyName": "Westfield Vehicle Solutions Ltd",
+        "companyNumber": "06543210",
+        "companyStatus": "Active",
+        "companyType": "Private limited Company",
+        "incorporationDate": "2008-11-05",
+        "registeredAddress": "16 Maid Marian Way, Nottingham, NG1 5FT",
+        "sicCodes": ["45112 - Sale of used cars and light motor vehicles"],
+        "confirmationStatementDue": "2026-03-05",
+        "confirmationStatementOverdue": false,
+        "accountsDue": "2026-06-30",
+        "accountsOverdue": false,
+        "directors": [
+          {
+            "name": "Gary Thomas Westfield",
+            "role": "Director",
+            "appointedDate": "2008-11-05",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-07-20",
+            "idCheckStatus": "Verified"
+          }
+        ],
+        "pscs": [
+          {
+            "name": "Gary Thomas Westfield",
+            "naturesOfControl": ["Ownership of shares – 75% or more"],
+            "notifiedDate": "2016-07-01"
+          }
+        ],
+        "previousNames": [{ "name": "Westfield Cars Ltd", "changedDate": "2015-03-01" }],
+        "filingHistory": [
+          { "date": "2025-08-15", "type": "CS01", "description": "Confirmation statement with no updates" },
+          { "date": "2025-05-01", "type": "AA", "description": "Accounts for year ending 31 October 2024" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "fcaRegister": {
+      "lastChecked": "2026-01-10T08:48:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "firmName": "Westfield Vehicle Solutions Ltd",
+        "firmReference": "698543",
+        "status": "Authorised",
+        "statusDate": "2014-04-01",
+        "tradingNames": ["Westfield Motors"],
+        "authorisationType": "Directly Authorised",
+        "regulatoryActivity": [
+          { "activity": "Credit broking", "status": "Current", "permission": "Full Permission" },
+          { "activity": "Insurance distribution", "status": "Current", "permission": "Full Permission" }
+        ],
+        "addressOnRegister": "16 Maid Marian Way, Nottingham, NG1 5FT",
+        "addressMatchesCompaniesHouse": true,
+        "individuals": [
+          { "name": "Gary Thomas Westfield", "role": "Director", "status": "Active" }
+        ],
+        "requirements": [],
+        "variations": [],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "creditSafe": {
+      "lastChecked": "2026-01-10T08:50:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "companyName": "Westfield Vehicle Solutions Ltd",
+        "companyNumber": "06543210",
+        "creditScore": 52,
+        "creditRating": "C",
+        "creditLimit": 28000,
+        "riskCategory": "Medium Risk",
+        "paymentIndex": 74,
+        "ccjs": { "count": 1, "totalValue": 3200, "mostRecent": "2024-08-01" },
+        "paymentHistory": [
+          { "period": "Oct–Dec 2025", "onTimePayments": "78%", "latePayments": "18%", "missedPayments": "4%" },
+          { "period": "Jul–Sep 2025", "onTimePayments": "75%", "latePayments": "20%", "missedPayments": "5%" },
+          { "period": "Apr–Jun 2025", "onTimePayments": "80%", "latePayments": "16%", "missedPayments": "4%" }
+        ],
+        "legalFilings": [],
+        "insolvencyHistory": [],
+        "directorSanctionsScreening": [
+          { "directorName": "Gary Thomas Westfield", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2026-01-10" }
+        ],
+        "overallResult": "Refer",
+        "flags": ["1 CCJ on record — satisfied Aug 2024"]
+      }
+    }
+  },
+  {
+    "dealerId": "d006",
+    "dealerName": "Castle Cars Ltd",
+    "companiesHouse": {
+      "lastChecked": "2025-12-18T13:00:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "companyName": "Castle Cars Ltd",
+        "companyNumber": "05432109",
+        "companyStatus": "Active",
+        "companyType": "Private limited Company",
+        "incorporationDate": "2005-06-10",
+        "registeredAddress": "5 Castle Street, Cardiff, CF10 1EP",
+        "sicCodes": ["45112 - Sale of used cars and light motor vehicles"],
+        "confirmationStatementDue": "2026-04-10",
+        "confirmationStatementOverdue": false,
+        "accountsDue": "2026-07-31",
+        "accountsOverdue": false,
+        "directors": [
+          {
+            "name": "Owen Rhys Castle",
+            "role": "Director",
+            "appointedDate": "2005-06-10",
+            "nationality": "British",
+            "countryOfResidence": "Wales",
+            "idCheckDate": "2025-08-01",
+            "idCheckStatus": "Verified"
+          },
+          {
+            "name": "Megan Louise Castle",
+            "role": "Director",
+            "appointedDate": "2010-01-15",
+            "nationality": "British",
+            "countryOfResidence": "Wales",
+            "idCheckDate": "2025-08-01",
+            "idCheckStatus": "Verified"
+          }
+        ],
+        "pscs": [
+          {
+            "name": "Owen Rhys Castle",
+            "naturesOfControl": ["Ownership of shares – 50% to 75%"],
+            "notifiedDate": "2016-07-01"
+          }
+        ],
+        "previousNames": [],
+        "filingHistory": [
+          { "date": "2025-09-20", "type": "CS01", "description": "Confirmation statement with no updates" },
+          { "date": "2025-06-15", "type": "AA", "description": "Accounts for year ending 31 May 2025" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "fcaRegister": {
+      "lastChecked": "2025-12-18T13:03:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "firmName": "Castle Cars Ltd",
+        "firmReference": "671234",
+        "status": "Authorised",
+        "statusDate": "2014-04-01",
+        "tradingNames": ["Castle Cars"],
+        "authorisationType": "Directly Authorised",
+        "regulatoryActivity": [
+          { "activity": "Credit broking", "status": "Current", "permission": "Full Permission" },
+          { "activity": "Insurance distribution", "status": "Current", "permission": "Full Permission" }
+        ],
+        "addressOnRegister": "5 Castle Street, Cardiff, CF10 1EP",
+        "addressMatchesCompaniesHouse": true,
+        "individuals": [
+          { "name": "Owen Rhys Castle", "role": "Director", "status": "Active" },
+          { "name": "Megan Louise Castle", "role": "Director", "status": "Active" }
+        ],
+        "requirements": [],
+        "variations": [],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "creditSafe": {
+      "lastChecked": "2025-12-18T13:06:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "companyName": "Castle Cars Ltd",
+        "companyNumber": "05432109",
+        "creditScore": 58,
+        "creditRating": "B",
+        "creditLimit": 38000,
+        "riskCategory": "Low Risk",
+        "paymentIndex": 79,
+        "ccjs": { "count": 0, "totalValue": 0, "mostRecent": null },
+        "paymentHistory": [
+          { "period": "Oct–Dec 2025", "onTimePayments": "84%", "latePayments": "14%", "missedPayments": "2%" },
+          { "period": "Jul–Sep 2025", "onTimePayments": "82%", "latePayments": "16%", "missedPayments": "2%" },
+          { "period": "Apr–Jun 2025", "onTimePayments": "86%", "latePayments": "12%", "missedPayments": "2%" }
+        ],
+        "legalFilings": [],
+        "insolvencyHistory": [],
+        "directorSanctionsScreening": [
+          { "directorName": "Owen Rhys Castle", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2025-12-18" },
+          { "directorName": "Megan Louise Castle", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2025-12-18" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    }
+  },
+  {
+    "dealerId": "d007",
+    "dealerName": "Northgate Auto Centre",
+    "companiesHouse": {
+      "lastChecked": "2026-01-05T10:00:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "companyName": "Northgate Auto Centre Ltd",
+        "companyNumber": "04321098",
+        "companyStatus": "Active",
+        "companyType": "Private limited Company",
+        "incorporationDate": "2002-03-18",
+        "registeredAddress": "42 Northumberland Street, Newcastle, NE1 8ST",
+        "sicCodes": ["45112 - Sale of used cars and light motor vehicles"],
+        "confirmationStatementDue": "2026-05-18",
+        "confirmationStatementOverdue": false,
+        "accountsDue": "2026-08-31",
+        "accountsOverdue": false,
+        "directors": [
+          {
+            "name": "Alan Peter Northgate",
+            "role": "Director",
+            "appointedDate": "2002-03-18",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-07-25",
+            "idCheckStatus": "Verified"
+          },
+          {
+            "name": "Thomas Alan Northgate",
+            "role": "Director",
+            "appointedDate": "2020-06-01",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-07-25",
+            "idCheckStatus": "Verified"
+          }
+        ],
+        "pscs": [
+          {
+            "name": "Alan Peter Northgate",
+            "naturesOfControl": ["Ownership of shares – 75% or more"],
+            "notifiedDate": "2016-07-01"
+          }
+        ],
+        "previousNames": [],
+        "filingHistory": [
+          { "date": "2025-07-20", "type": "CS01", "description": "Confirmation statement with no updates" },
+          { "date": "2025-04-10", "type": "AA", "description": "Accounts for year ending 31 March 2025" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "fcaRegister": {
+      "lastChecked": "2026-01-05T10:03:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "firmName": "Northgate Auto Centre Ltd",
+        "firmReference": "654321",
+        "status": "Authorised",
+        "statusDate": "2014-04-01",
+        "tradingNames": ["Northgate Autos"],
+        "authorisationType": "Directly Authorised",
+        "regulatoryActivity": [
+          { "activity": "Credit broking", "status": "Current", "permission": "Full Permission" }
+        ],
+        "addressOnRegister": "42 Northumberland Street, Newcastle, NE1 8ST",
+        "addressMatchesCompaniesHouse": true,
+        "individuals": [
+          { "name": "Alan Peter Northgate", "role": "Director", "status": "Active" },
+          { "name": "Thomas Alan Northgate", "role": "Director", "status": "Active" }
+        ],
+        "requirements": [],
+        "variations": [],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "creditSafe": {
+      "lastChecked": "2026-01-05T10:06:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "companyName": "Northgate Auto Centre Ltd",
+        "companyNumber": "04321098",
+        "creditScore": 44,
+        "creditRating": "C",
+        "creditLimit": 18000,
+        "riskCategory": "Medium Risk",
+        "paymentIndex": 71,
+        "ccjs": { "count": 0, "totalValue": 0, "mostRecent": null },
+        "paymentHistory": [
+          { "period": "Oct–Dec 2025", "onTimePayments": "72%", "latePayments": "22%", "missedPayments": "6%" },
+          { "period": "Jul–Sep 2025", "onTimePayments": "70%", "latePayments": "24%", "missedPayments": "6%" },
+          { "period": "Apr–Jun 2025", "onTimePayments": "74%", "latePayments": "20%", "missedPayments": "6%" }
+        ],
+        "legalFilings": [],
+        "insolvencyHistory": [],
+        "directorSanctionsScreening": [
+          { "directorName": "Alan Peter Northgate", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "Minor historical — 2021 personal matter", "screeningDate": "2026-01-05" },
+          { "directorName": "Thomas Alan Northgate", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2026-01-05" }
+        ],
+        "overallResult": "Refer",
+        "flags": ["Adverse media identified — manual review triggered"]
+      }
+    }
+  },
+  {
+    "dealerId": "d008",
+    "dealerName": "Pennine Motor Co",
+    "companiesHouse": {
+      "lastChecked": "2026-01-12T15:30:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "companyName": "Pennine Motor Co Ltd",
+        "companyNumber": "03210987",
+        "companyStatus": "Active",
+        "companyType": "Private limited Company",
+        "incorporationDate": "1999-09-01",
+        "registeredAddress": "33 Division Street, Sheffield, S1 2GE",
+        "sicCodes": ["45112 - Sale of used cars and light motor vehicles", "45200 - Maintenance and repair of motor vehicles"],
+        "confirmationStatementDue": "2026-03-01",
+        "confirmationStatementOverdue": false,
+        "accountsDue": "2026-06-30",
+        "accountsOverdue": false,
+        "directors": [
+          {
+            "name": "Brian Geoffrey Pennine",
+            "role": "Director",
+            "appointedDate": "1999-09-01",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-08-08",
+            "idCheckStatus": "Verified"
+          }
+        ],
+        "pscs": [
+          {
+            "name": "Brian Geoffrey Pennine",
+            "naturesOfControl": ["Ownership of shares – 75% or more"],
+            "notifiedDate": "2016-07-01"
+          }
+        ],
+        "previousNames": [],
+        "filingHistory": [
+          { "date": "2025-10-15", "type": "CS01", "description": "Confirmation statement with no updates" },
+          { "date": "2025-07-01", "type": "AA", "description": "Accounts for year ending 30 August 2025" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "fcaRegister": {
+      "lastChecked": "2026-01-12T15:33:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "firmName": "Pennine Motor Co Ltd",
+        "firmReference": "632198",
+        "status": "Authorised",
+        "statusDate": "2014-04-01",
+        "tradingNames": ["Pennine Motors"],
+        "authorisationType": "Directly Authorised",
+        "regulatoryActivity": [
+          { "activity": "Credit broking", "status": "Current", "permission": "Full Permission" }
+        ],
+        "addressOnRegister": "33 Division Street, Sheffield, S1 2GE",
+        "addressMatchesCompaniesHouse": true,
+        "individuals": [
+          { "name": "Brian Geoffrey Pennine", "role": "Director", "status": "Active" }
+        ],
+        "requirements": [],
+        "variations": [],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "creditSafe": {
+      "lastChecked": "2026-01-12T15:36:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "companyName": "Pennine Motor Co Ltd",
+        "companyNumber": "03210987",
+        "creditScore": 49,
+        "creditRating": "C",
+        "creditLimit": 22000,
+        "riskCategory": "Medium Risk",
+        "paymentIndex": 73,
+        "ccjs": { "count": 0, "totalValue": 0, "mostRecent": null },
+        "paymentHistory": [
+          { "period": "Oct–Dec 2025", "onTimePayments": "76%", "latePayments": "18%", "missedPayments": "6%" },
+          { "period": "Jul–Sep 2025", "onTimePayments": "73%", "latePayments": "21%", "missedPayments": "6%" },
+          { "period": "Apr–Jun 2025", "onTimePayments": "78%", "latePayments": "17%", "missedPayments": "5%" }
+        ],
+        "legalFilings": [],
+        "insolvencyHistory": [],
+        "directorSanctionsScreening": [
+          { "directorName": "Brian Geoffrey Pennine", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2026-01-12" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    }
+  },
+  {
+    "dealerId": "d009",
+    "dealerName": "Riverside Car Group",
+    "companiesHouse": {
+      "lastChecked": "2025-12-20T09:00:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "companyName": "Riverside Car Group Ltd",
+        "companyNumber": "02109876",
+        "companyStatus": "Active",
+        "companyType": "Private limited Company",
+        "incorporationDate": "1997-04-14",
+        "registeredAddress": "10 Bold Street, Liverpool, L1 0AF",
+        "sicCodes": ["45112 - Sale of used cars and light motor vehicles"],
+        "confirmationStatementDue": "2026-02-14",
+        "confirmationStatementOverdue": false,
+        "accountsDue": "2026-05-31",
+        "accountsOverdue": false,
+        "directors": [
+          {
+            "name": "Patrick John Riverside",
+            "role": "Director",
+            "appointedDate": "1997-04-14",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-07-30",
+            "idCheckStatus": "Verified"
+          },
+          {
+            "name": "Fiona Mary Riverside",
+            "role": "Director",
+            "appointedDate": "2005-01-10",
+            "nationality": "British",
+            "countryOfResidence": "England",
+            "idCheckDate": "2025-07-30",
+            "idCheckStatus": "Verified"
+          }
+        ],
+        "pscs": [
+          {
+            "name": "Patrick John Riverside",
+            "naturesOfControl": ["Ownership of shares – 50% to 75%"],
+            "notifiedDate": "2016-07-01"
+          }
+        ],
+        "previousNames": [],
+        "filingHistory": [
+          { "date": "2025-08-01", "type": "CS01", "description": "Confirmation statement with no updates" },
+          { "date": "2025-05-15", "type": "AA", "description": "Accounts for year ending 31 March 2025" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "fcaRegister": {
+      "lastChecked": "2025-12-20T09:03:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "firmName": "Riverside Car Group Ltd",
+        "firmReference": "601234",
+        "status": "Authorised",
+        "statusDate": "2014-04-01",
+        "tradingNames": ["Riverside Cars"],
+        "authorisationType": "Directly Authorised",
+        "regulatoryActivity": [
+          { "activity": "Credit broking", "status": "Current", "permission": "Full Permission" },
+          { "activity": "Insurance distribution", "status": "Current", "permission": "Full Permission" }
+        ],
+        "addressOnRegister": "10 Bold Street, Liverpool, L1 0AF",
+        "addressMatchesCompaniesHouse": true,
+        "individuals": [
+          { "name": "Patrick John Riverside", "role": "Director", "status": "Active" },
+          { "name": "Fiona Mary Riverside", "role": "Director", "status": "Active" }
+        ],
+        "requirements": [],
+        "variations": [
+          { "description": "Consumer credit permission under review — condition applied Oct 2025", "date": "2025-10-15" }
+        ],
+        "overallResult": "Refer",
+        "flags": ["Active condition on FCA authorisation"]
+      }
+    },
+    "creditSafe": {
+      "lastChecked": "2025-12-20T09:06:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "companyName": "Riverside Car Group Ltd",
+        "companyNumber": "02109876",
+        "creditScore": 46,
+        "creditRating": "C",
+        "creditLimit": 20000,
+        "riskCategory": "Medium Risk",
+        "paymentIndex": 68,
+        "ccjs": { "count": 0, "totalValue": 0, "mostRecent": null },
+        "paymentHistory": [
+          { "period": "Oct–Dec 2025", "onTimePayments": "70%", "latePayments": "22%", "missedPayments": "8%" },
+          { "period": "Jul–Sep 2025", "onTimePayments": "68%", "latePayments": "24%", "missedPayments": "8%" },
+          { "period": "Apr–Jun 2025", "onTimePayments": "72%", "latePayments": "20%", "missedPayments": "8%" }
+        ],
+        "legalFilings": [],
+        "insolvencyHistory": [],
+        "directorSanctionsScreening": [
+          { "directorName": "Patrick John Riverside", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2025-12-20" },
+          { "directorName": "Fiona Mary Riverside", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2025-12-20" }
+        ],
+        "overallResult": "Refer",
+        "flags": []
+      }
+    }
+  },
+  {
+    "dealerId": "d010",
+    "dealerName": "Summit Automotive",
+    "companiesHouse": {
+      "lastChecked": "2025-11-28T16:00:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "companyName": "Summit Automotive Ltd",
+        "companyNumber": "SC109876",
+        "companyStatus": "Active",
+        "companyType": "Private limited Company",
+        "incorporationDate": "2018-02-12",
+        "registeredAddress": "55 Buchanan Street, Glasgow, G2 1DY",
+        "sicCodes": ["45112 - Sale of used cars and light motor vehicles"],
+        "confirmationStatementDue": "2025-11-01",
+        "confirmationStatementOverdue": true,
+        "accountsDue": "2026-05-31",
+        "accountsOverdue": false,
+        "directors": [
+          {
+            "name": "Craig Douglas Summit",
+            "role": "Director",
+            "appointedDate": "2018-02-12",
+            "nationality": "British",
+            "countryOfResidence": "Scotland",
+            "idCheckDate": "2025-06-18",
+            "idCheckStatus": "Verified"
+          }
+        ],
+        "pscs": [
+          {
+            "name": "Craig Douglas Summit",
+            "naturesOfControl": ["Ownership of shares – 75% or more"],
+            "notifiedDate": "2018-02-12"
+          }
+        ],
+        "previousNames": [],
+        "filingHistory": [
+          { "date": "2024-11-01", "type": "CS01", "description": "Confirmation statement with no updates" },
+          { "date": "2025-04-20", "type": "AA", "description": "Accounts for year ending 31 January 2025" }
+        ],
+        "overallResult": "Fail",
+        "flags": ["Confirmation statement overdue — due 01 Nov 2025"]
+      }
+    },
+    "fcaRegister": {
+      "lastChecked": "2025-11-28T16:03:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "firmName": "Summit Automotive Ltd",
+        "firmReference": "812345",
+        "status": "Authorised",
+        "statusDate": "2019-01-15",
+        "tradingNames": ["Summit Cars"],
+        "authorisationType": "Directly Authorised",
+        "regulatoryActivity": [
+          { "activity": "Credit broking", "status": "Current", "permission": "Full Permission" }
+        ],
+        "addressOnRegister": "55 Buchanan Street, Glasgow, G2 1DY",
+        "addressMatchesCompaniesHouse": true,
+        "individuals": [
+          { "name": "Craig Douglas Summit", "role": "Director", "status": "Active" }
+        ],
+        "requirements": [
+          { "description": "Enhanced monitoring — applied by FCA Dec 2025", "date": "2025-12-01" }
+        ],
+        "variations": [],
+        "overallResult": "Refer",
+        "flags": ["FCA enhanced monitoring requirement active"]
+      }
+    },
+    "creditSafe": {
+      "lastChecked": "2025-11-28T16:06:00",
+      "checkedBy": "Sarah Chen",
+      "simulatedData": {
+        "companyName": "Summit Automotive Ltd",
+        "companyNumber": "SC109876",
+        "creditScore": 31,
+        "creditRating": "D",
+        "creditLimit": 5000,
+        "riskCategory": "High Risk",
+        "paymentIndex": 55,
+        "ccjs": { "count": 3, "totalValue": 18400, "mostRecent": "2025-09-15" },
+        "paymentHistory": [
+          { "period": "Oct–Dec 2025", "onTimePayments": "58%", "latePayments": "28%", "missedPayments": "14%" },
+          { "period": "Jul–Sep 2025", "onTimePayments": "55%", "latePayments": "30%", "missedPayments": "15%" },
+          { "period": "Apr–Jun 2025", "onTimePayments": "60%", "latePayments": "26%", "missedPayments": "14%" }
+        ],
+        "legalFilings": [],
+        "insolvencyHistory": [],
+        "directorSanctionsScreening": [
+          { "directorName": "Craig Douglas Summit", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2025-11-28" }
+        ],
+        "overallResult": "Fail",
+        "flags": ["3 CCJs on record", "High Risk rating"]
+      }
+    }
+  },
+  {
+    "dealerId": "d011",
+    "dealerName": "Horizon Motor Sales",
+    "companiesHouse": {
+      "lastChecked": "2025-11-15T11:00:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "companyName": "Horizon Motor Sales Ltd",
+        "companyNumber": "SC087654",
+        "companyStatus": "Active",
+        "companyType": "Private limited Company",
+        "incorporationDate": "2013-10-08",
+        "registeredAddress": "28 Princes Street, Edinburgh, EH1 1SR",
+        "sicCodes": ["45112 - Sale of used cars and light motor vehicles"],
+        "confirmationStatementDue": "2026-04-08",
+        "confirmationStatementOverdue": false,
+        "accountsDue": "2026-07-31",
+        "accountsOverdue": false,
+        "directors": [
+          {
+            "name": "Ewan Robert Horizon",
+            "role": "Director",
+            "appointedDate": "2013-10-08",
+            "nationality": "British",
+            "countryOfResidence": "Scotland",
+            "idCheckDate": "2025-06-15",
+            "idCheckStatus": "Verified"
+          },
+          {
+            "name": "Isla Grace Horizon",
+            "role": "Director",
+            "appointedDate": "2017-04-01",
+            "nationality": "British",
+            "countryOfResidence": "Scotland",
+            "idCheckDate": "2025-06-15",
+            "idCheckStatus": "Verified"
+          }
+        ],
+        "pscs": [
+          {
+            "name": "Ewan Robert Horizon",
+            "naturesOfControl": ["Ownership of shares – 50% to 75%"],
+            "notifiedDate": "2016-07-01"
+          }
+        ],
+        "previousNames": [],
+        "filingHistory": [
+          { "date": "2025-06-01", "type": "CS01", "description": "Confirmation statement with no updates" },
+          { "date": "2025-03-15", "type": "AA", "description": "Accounts for year ending 30 September 2024" }
+        ],
+        "overallResult": "Pass",
+        "flags": []
+      }
+    },
+    "fcaRegister": {
+      "lastChecked": "2025-11-15T11:03:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "firmName": "Horizon Motor Sales Ltd",
+        "firmReference": "756789",
+        "status": "Authorised — Lapsed (renewal pending)",
+        "statusDate": "2015-06-01",
+        "tradingNames": ["Horizon Motors"],
+        "authorisationType": "Directly Authorised",
+        "regulatoryActivity": [
+          { "activity": "Credit broking", "status": "Lapsed", "permission": "Full Permission" },
+          { "activity": "Insurance distribution", "status": "Lapsed", "permission": "Full Permission" }
+        ],
+        "addressOnRegister": "28 Princes Street, Edinburgh, EH1 1SR",
+        "addressMatchesCompaniesHouse": true,
+        "individuals": [
+          { "name": "Ewan Robert Horizon", "role": "Director", "status": "Active" },
+          { "name": "Isla Grace Horizon", "role": "Director", "status": "Active" }
+        ],
+        "requirements": [],
+        "variations": [],
+        "overallResult": "Fail",
+        "flags": ["FCA authorisation renewal pending — expired Dec 2025"]
+      }
+    },
+    "creditSafe": {
+      "lastChecked": "2025-11-15T11:06:00",
+      "checkedBy": "Tom Griffiths",
+      "simulatedData": {
+        "companyName": "Horizon Motor Sales Ltd",
+        "companyNumber": "SC087654",
+        "creditScore": 28,
+        "creditRating": "D",
+        "creditLimit": 3000,
+        "riskCategory": "High Risk",
+        "paymentIndex": 48,
+        "ccjs": { "count": 1, "totalValue": 4800, "mostRecent": "2024-11-20" },
+        "paymentHistory": [
+          { "period": "Oct–Dec 2025", "onTimePayments": "52%", "latePayments": "30%", "missedPayments": "18%" },
+          { "period": "Jul–Sep 2025", "onTimePayments": "50%", "latePayments": "32%", "missedPayments": "18%" },
+          { "period": "Apr–Jun 2025", "onTimePayments": "55%", "latePayments": "28%", "missedPayments": "17%" }
+        ],
+        "legalFilings": [],
+        "insolvencyHistory": [
+          { "type": "CVA", "date": "2023-06-01", "status": "Discharged 2024-01-15" }
+        ],
+        "directorSanctionsScreening": [
+          { "directorName": "Ewan Robert Horizon", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2025-11-15" },
+          { "directorName": "Isla Grace Horizon", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2025-11-15" }
+        ],
+        "overallResult": "Fail",
+        "flags": ["Historic CVA — discharged Jan 2024"]
+      }
+    }
+  }
+]
