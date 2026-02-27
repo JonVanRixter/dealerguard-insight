@@ -64,9 +64,9 @@ function formatFileSize(bytes: number): string {
 }
 
 function getFileIcon(type: string) {
-  if (type.includes("pdf")) return <FileText className="w-5 h-5 text-rag-red" />;
+  if (type.includes("pdf")) return <FileText className="w-5 h-5 text-destructive" />;
   if (type.includes("sheet") || type.includes("excel") || type.includes("csv"))
-    return <FileSpreadsheet className="w-5 h-5 text-rag-green" />;
+    return <FileSpreadsheet className="w-5 h-5 text-primary" />;
   if (type.includes("word") || type.includes("document"))
     return <FileText className="w-5 h-5 text-primary" />;
   return <File className="w-5 h-5 text-muted-foreground" />;
@@ -340,7 +340,7 @@ export function DealerDocuments({ dealerName }: Props) {
                   <span>{formatFileSize(doc.file_size)}</span>
                   <span>{new Date(doc.created_at).toLocaleDateString()}</span>
                   {doc.expiry_date && (
-                    <span className={new Date(doc.expiry_date) < new Date() ? "text-rag-red" : ""}>
+                    <span className={new Date(doc.expiry_date) < new Date() ? "text-destructive" : ""}>
                       Expires: {new Date(doc.expiry_date).toLocaleDateString()}
                     </span>
                   )}
@@ -362,7 +362,7 @@ export function DealerDocuments({ dealerName }: Props) {
                 <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDownload(doc)}>
                   <Download className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-rag-red hover:text-rag-red" onClick={() => handleDelete(doc)}>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(doc)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>

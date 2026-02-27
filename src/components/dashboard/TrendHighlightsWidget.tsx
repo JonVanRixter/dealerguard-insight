@@ -1,6 +1,5 @@
 import { TrendingUp, TrendingDown, AlertTriangle, Sparkles } from "lucide-react";
 import { topImprovers, topDecliners, portfolioTrend } from "@/data/trendData";
-import { RagBadge } from "@/components/RagBadge";
 import { useNavigate } from "react-router-dom";
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from "recharts";
 
@@ -16,8 +15,8 @@ export function TrendHighlightsWidget() {
   const topGainer = topImprovers[0];
   const topDecliner = topDecliners[0];
 
-  // Alerts: dealers that recently moved to red
-  const redAlerts = topDecliners.filter((d) => d.currentRag === "red").slice(0, 3);
+  // Lowest scoring dealers
+  const lowestScoring = topDecliners.filter((d) => d.currentScore < 55).slice(0, 3);
 
   return (
     <div className="bg-card rounded-xl border border-border">
@@ -38,11 +37,11 @@ export function TrendHighlightsWidget() {
         {/* Sparkline + Portfolio momentum */}
         <div className="px-5 py-3.5">
           <div className="flex items-center gap-3 mb-2">
-            <div className={`p-1.5 rounded-md ${scoreDelta >= 0 ? "bg-rag-green-bg" : "bg-rag-red-bg"}`}>
+            <div className="p-1.5 rounded-md bg-muted">
               {scoreDelta >= 0 ? (
-                <TrendingUp className="w-4 h-4 text-rag-green" />
+                <TrendingUp className="w-4 h-4 text-foreground" />
               ) : (
-                <TrendingDown className="w-4 h-4 text-rag-red" />
+                <TrendingDown className="w-4 h-4 text-foreground" />
               )}
             </div>
             <div className="min-w-0">
@@ -51,7 +50,7 @@ export function TrendHighlightsWidget() {
                 <span className="font-semibold">{Math.abs(scoreDelta)}pts</span> this month
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {latest.avgScore}% avg score · {latest.greenCount} green, {latest.redCount} red
+                {latest.avgScore}% avg score
               </p>
             </div>
           </div>
@@ -93,51 +92,48 @@ export function TrendHighlightsWidget() {
 
         {/* Top improver */}
         <div onClick={() => navigateToDealer(navigate, topGainer.dealerName)} className="px-5 py-3.5 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors">
-          <div className="p-1.5 rounded-md bg-rag-green-bg">
-            <TrendingUp className="w-4 h-4 text-rag-green" />
+          <div className="p-1.5 rounded-md bg-muted">
+            <TrendingUp className="w-4 h-4 text-foreground" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm text-foreground leading-snug">
               <span className="font-semibold">{topGainer.dealerName}</span> — compliance leader
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              +{topGainer.changeFromStart}pts over 12 months
+              +{topGainer.changeFromStart}pts over 12 months · Score: {topGainer.currentScore}
             </p>
           </div>
-          <RagBadge status={topGainer.currentRag} size="sm" />
         </div>
 
         {/* Top decliner */}
         <div onClick={() => navigateToDealer(navigate, topDecliner.dealerName)} className="px-5 py-3.5 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors">
-          <div className="p-1.5 rounded-md bg-rag-red-bg">
-            <TrendingDown className="w-4 h-4 text-rag-red" />
+          <div className="p-1.5 rounded-md bg-muted">
+            <TrendingDown className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm text-foreground leading-snug">
               <span className="font-semibold">{topDecliner.dealerName}</span> — requires attention
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {topDecliner.changeFromStart}pts over 12 months
+              {topDecliner.changeFromStart}pts over 12 months · Score: {topDecliner.currentScore}
             </p>
           </div>
-          <RagBadge status={topDecliner.currentRag} size="sm" />
         </div>
 
-        {/* Red alerts */}
-        {redAlerts.map((dealer, i) => (
+        {/* Lowest scoring alerts */}
+        {lowestScoring.map((dealer, i) => (
           <div key={i} onClick={() => navigateToDealer(navigate, dealer.dealerName)} className="px-5 py-3.5 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors">
-            <div className="p-1.5 rounded-md bg-rag-red-bg">
-              <AlertTriangle className="w-4 h-4 text-rag-red" />
+            <div className="p-1.5 rounded-md bg-muted">
+              <AlertTriangle className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm text-foreground leading-snug">
-                <span className="font-semibold">{dealer.dealerName}</span> now critical
+                <span className="font-semibold">{dealer.dealerName}</span> — lowest scoring
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Score: {dealer.currentScore} · {dealer.changeFromStart}pts change
               </p>
             </div>
-            <RagBadge status="red" size="sm" />
           </div>
         ))}
       </div>

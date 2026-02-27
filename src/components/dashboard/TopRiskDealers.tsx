@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { dealers } from "@/data/dealers";
-import { RagBadge } from "@/components/RagBadge";
 import { ShieldAlert, ChevronRight } from "lucide-react";
 
 export function TopRiskDealers() {
@@ -15,9 +14,9 @@ export function TopRiskDealers() {
   return (
     <div className="bg-card rounded-xl border border-border">
       <div className="px-5 py-4 border-b border-border flex items-center gap-2">
-        <ShieldAlert className="w-4 h-4 text-rag-red" />
+        <ShieldAlert className="w-4 h-4 text-muted-foreground" />
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Highest-Risk Dealers</h3>
+          <h3 className="text-sm font-semibold text-foreground">Lowest Scoring Dealers</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Bottom 5 by compliance score</p>
         </div>
       </div>
@@ -37,8 +36,7 @@ export function TopRiskDealers() {
               </div>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <span className="text-sm font-bold text-foreground">{dealer.score}%</span>
-              <RagBadge status={dealer.rag} size="sm" />
+              <span className="text-sm font-bold text-foreground">{dealer.score} / 100</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </div>
           </button>

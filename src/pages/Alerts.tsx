@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { RagBadge } from "@/components/RagBadge";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -199,42 +198,42 @@ const Alerts = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-              <ShieldAlert className="w-4 h-4 text-rag-red" />
+              <ShieldAlert className="w-4 h-4 text-destructive" />
               Critical Alerts
             </div>
-            <span className="text-3xl font-bold text-rag-red">{criticalCount}</span>
+            <span className="text-3xl font-bold text-destructive">{criticalCount}</span>
           </div>
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-              <AlertTriangle className="w-4 h-4 text-rag-amber" />
+              <AlertTriangle className="w-4 h-4 text-muted-foreground" />
               Warning Alerts
             </div>
-            <span className="text-3xl font-bold text-rag-amber">{warningCount}</span>
+            <span className="text-3xl font-bold text-foreground">{warningCount}</span>
           </div>
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-              <CalendarCheck className="w-4 h-4 text-rag-red" />
+              <CalendarCheck className="w-4 h-4 text-destructive" />
               Overdue Re-Checks
             </div>
-            <span className={`text-3xl font-bold ${overdueRechecks.length > 0 ? "text-rag-red" : "text-foreground"}`}>
+            <span className={`text-3xl font-bold ${overdueRechecks.length > 0 ? "text-destructive" : "text-foreground"}`}>
               {overdueRechecks.length}
             </span>
           </div>
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-              <UserX className="w-4 h-4 text-rag-red" />
+              <UserX className="w-4 h-4 text-destructive" />
               Failed Onboarding
             </div>
-            <span className={`text-3xl font-bold ${failedApps.length > 0 ? "text-rag-red" : "text-foreground"}`}>
+            <span className={`text-3xl font-bold ${failedApps.length > 0 ? "text-destructive" : "text-foreground"}`}>
               {failedApps.length}
             </span>
           </div>
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-              <Copy className="w-4 h-4 text-rag-amber" />
+              <Copy className="w-4 h-4 text-muted-foreground" />
               Duplicate Flags
             </div>
-            <span className={`text-3xl font-bold ${activeDuplicates.length > 0 ? "text-rag-amber" : "text-foreground"}`}>
+            <span className={`text-3xl font-bold ${activeDuplicates.length > 0 ? "text-foreground" : "text-foreground"}`}>
               {activeDuplicates.length}
             </span>
           </div>
@@ -253,7 +252,7 @@ const Alerts = () => {
           <div className="bg-card rounded-xl border border-border">
             <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CalendarCheck className="w-4 h-4 text-rag-red" />
+                <CalendarCheck className="w-4 h-4 text-destructive" />
                 <h3 className="text-sm font-semibold text-foreground">Overdue Re-Checks</h3>
               </div>
               <Badge variant="destructive" className="text-xs">
@@ -325,7 +324,7 @@ const Alerts = () => {
           <div className="bg-card rounded-xl border border-border">
             <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <UserX className="w-4 h-4 text-rag-red" />
+                <UserX className="w-4 h-4 text-destructive" />
                 <h3 className="text-sm font-semibold text-foreground">Failed Onboarding Applications</h3>
               </div>
               <Badge variant="destructive" className="text-xs">
@@ -388,8 +387,8 @@ const Alerts = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Severity</SelectItem>
-                  <SelectItem value="red">Critical (Red)</SelectItem>
-                  <SelectItem value="amber">Warning (Amber)</SelectItem>
+                  <SelectItem value="red">Critical</SelectItem>
+                  <SelectItem value="amber">Warning</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={sectionFilter} onValueChange={handleFilterChange(setSectionFilter)}>
@@ -438,7 +437,7 @@ const Alerts = () => {
                           </button>
                           {alert.automated && (
                             <span title="Automated check">
-                              <Zap className="w-3.5 h-3.5 text-rag-amber" />
+                              <Zap className="w-3.5 h-3.5 text-muted-foreground" />
                             </span>
                           )}
                         </div>
@@ -449,7 +448,9 @@ const Alerts = () => {
                         {alert.comments}
                       </td>
                       <td className="px-3 py-3.5 text-center">
-                        <RagBadge status={alert.riskRating} size="sm" />
+                        <Badge variant={alert.riskRating === "red" ? "destructive" : "outline"} className="text-[10px] px-1.5 py-0">
+                          {alert.riskRating === "red" ? "Critical" : "Warning"}
+                        </Badge>
                       </td>
                       <td className="px-3 py-3.5 text-center">
                         <Button

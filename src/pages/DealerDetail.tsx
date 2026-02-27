@@ -1,7 +1,6 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { RagBadge } from "@/components/RagBadge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Play, Download, ShieldAlert, ShieldCheck, AlertTriangle, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,7 +44,6 @@ const DealerDetail = () => {
     setAiSummary(summary);
   }, []);
 
-  // Fetch document count + passport docs
   useEffect(() => {
     const fetchDocs = async () => {
       const { data } = await supabase
@@ -77,17 +75,14 @@ const DealerDetail = () => {
     fetchDocs();
   }, [dealerName]);
 
-  // Find the dealer in our data to get the index for consistent audit generation
   const dealerData = useMemo(() => {
     const index = dealersList.findIndex(d => d.name === dealerName);
     return { index: index >= 0 ? index : 0, dealer: dealersList[index >= 0 ? index : 0] };
   }, [dealerName]);
   const dealerIndex = dealerData.index;
 
-  // Generate the full audit for this dealer
   const audit = useMemo(() => generateDealerAudit(dealerName, dealerIndex), [dealerName, dealerIndex]);
 
-  // Generate FCA ref from dealer index
   const fcaRef = useMemo(() => String(600000 + dealerIndex).slice(0, 6), [dealerIndex]);
 
   const handleRunAudit = () => {
@@ -113,37 +108,9 @@ const DealerDetail = () => {
     }
   };
 
-  // Alert banner config based on overall RAG
-  const alertConfig = {
-    green: {
-      icon: ShieldCheck,
-      bg: "bg-rag-green-bg border-rag-green/20",
-      text: "text-rag-green-text",
-      iconColor: "text-rag-green",
-      message: `Overall Risk Score: ${audit.overallScore}% (Green). Compliant.`,
-    },
-    amber: {
-      icon: AlertTriangle,
-      bg: "bg-rag-amber-bg border-rag-amber/20",
-      text: "text-rag-amber-text",
-      iconColor: "text-rag-amber",
-      message: `Overall Risk Score: ${audit.overallScore}% (Amber). Attention Required.`,
-    },
-    red: {
-      icon: ShieldAlert,
-      bg: "bg-rag-red-bg border-rag-red/20",
-      text: "text-rag-red-text",
-      iconColor: "text-rag-red",
-      message: `Overall Risk Score: ${audit.overallScore}% (Red). Critical Issues Detected.`,
-    },
-  }[audit.overallRag];
-
-  const AlertIcon = alertConfig.icon;
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Back nav */}
         <button
           onClick={() => navigate("/")}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -157,7 +124,9 @@ const DealerDetail = () => {
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-semibold text-foreground">{dealerName}</h2>
-              <RagBadge status={audit.overallRag} />
+              <span className="text-sm font-semibold text-foreground bg-muted px-2.5 py-0.5 rounded-full">
+                {audit.overallScore} / 100
+              </span>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
               <span>FCA Ref: <span className="font-medium text-foreground">{fcaRef}</span></span>
@@ -185,18 +154,17 @@ const DealerDetail = () => {
           </div>
         </div>
 
-        {/* Alert Banner */}
-        <div className={`flex flex-col gap-1.5 px-4 py-3 rounded-lg border ${alertConfig.bg}`}>
+        {/* Score Banner */}
+        <div className="flex flex-col gap-1.5 px-4 py-3 rounded-lg border bg-muted/50 border-border">
           <div className="flex items-center gap-3">
-            <AlertIcon className={`w-5 h-5 shrink-0 ${alertConfig.iconColor}`} />
-            <p className={`text-sm font-medium ${alertConfig.text}`}>
-              {alertConfig.message}
+            <p className="text-sm font-medium text-foreground">
+              Overall Score: {audit.overallScore} / 100
             </p>
           </div>
-          <p className="text-xs text-muted-foreground ml-8">{audit.assuranceStatement}</p>
+          <p className="text-xs text-muted-foreground">{audit.assuranceStatement}</p>
         </div>
 
-        {/* Top Cards: Customer Sentiment + Action Status | Report Summary */}
+        {/* Top Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="flex flex-col gap-4 min-h-0">
             <CustomerSentimentCard
@@ -217,40 +185,22 @@ const DealerDetail = () => {
           </div>
         </div>
 
-        {/* 12-Month Score Trend */}
         <DealerScoreTrend dealerName={dealerName} />
 
-        {/* Data Visualizations Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SectionRadarChart sections={audit.sections} />
           <ControlsBreakdownChart sections={audit.sections} />
         </div>
 
-        {/* AI Executive Summary */}
         <AiAuditSummary audit={audit} onSummaryChange={handleSummaryChange} />
-
-        {/* CreditSafe Report */}
         <CreditSafeCard dealerName={dealerName} companiesHouseNumber={dealerData.dealer?.companiesHouseNumber} onDataLoaded={setCreditSafeData} />
-
-        {/* FCA Register Check */}
         <FcaRegisterCard dealerName={dealerName} fcaRef={fcaRef} onDataLoaded={setFcaRegisterData} />
-
-        {/* Director Passport / ID Check */}
         <DirectorPassportCheck dealerName={dealerName} />
-
-        {/* Key Actions */}
         <KeyActionsTable actions={audit.keyActions} />
-
-        {/* Re-Check Schedule (Green dealers only) */}
         <DealerRecheckTimeline dealerName={dealerName} dealerRag={audit.overallRag} />
-
-        {/* Notes */}
         <DealerNotes dealerName={dealerName} />
-
-        {/* Documents */}
         <DealerDocuments dealerName={dealerName} />
 
-        {/* Audit Sections */}
         <div className="space-y-4">
           <h3 className="text-sm font-semibold text-foreground">Audit Sections</h3>
           {audit.sections.map((section, index) => (

@@ -1,12 +1,12 @@
 import { portfolioTrend } from "@/data/trendData";
-import { TrendingUp, TrendingDown, Minus, Activity } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Activity, ArrowUp, ArrowDown } from "lucide-react";
 
 export function TrendKPIs() {
   const first = portfolioTrend[0];
   const last = portfolioTrend[portfolioTrend.length - 1];
   const scoreChange = last.avgScore - first.avgScore;
-  const greenChange = last.greenCount - first.greenCount;
-  const redChange = last.redCount - first.redCount;
+  const highScoreChange = last.greenCount - first.greenCount;
+  const lowScoreChange = last.redCount - first.redCount;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -24,7 +24,7 @@ export function TrendKPIs() {
           12-Month Change
         </div>
         <div className="flex items-end gap-2">
-          <span className={`text-3xl font-bold ${scoreChange > 0 ? "text-rag-green" : scoreChange < 0 ? "text-rag-red" : "text-foreground"}`}>
+          <span className="text-3xl font-bold text-foreground">
             {scoreChange > 0 ? "+" : ""}{scoreChange}%
           </span>
         </div>
@@ -32,22 +32,22 @@ export function TrendKPIs() {
 
       <div className="bg-card rounded-xl border border-border p-5">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-          <TrendingUp className="w-4 h-4 text-rag-green" />
-          Green Δ
+          <ArrowUp className="w-4 h-4" />
+          High Scorers Δ
         </div>
-        <span className={`text-3xl font-bold ${greenChange > 0 ? "text-rag-green" : greenChange < 0 ? "text-rag-red" : "text-foreground"}`}>
-          {greenChange > 0 ? "+" : ""}{greenChange}
+        <span className="text-3xl font-bold text-foreground">
+          {highScoreChange > 0 ? "+" : ""}{highScoreChange}
         </span>
         <span className="text-lg text-muted-foreground ml-1">dealers</span>
       </div>
 
       <div className="bg-card rounded-xl border border-border p-5">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-          <TrendingDown className="w-4 h-4 text-rag-red" />
-          Red Δ
+          <ArrowDown className="w-4 h-4" />
+          Low Scorers Δ
         </div>
-        <span className={`text-3xl font-bold ${redChange > 0 ? "text-rag-red" : redChange < 0 ? "text-rag-green" : "text-foreground"}`}>
-          {redChange > 0 ? "+" : ""}{redChange}
+        <span className="text-3xl font-bold text-foreground">
+          {lowScoreChange > 0 ? "+" : ""}{lowScoreChange}
         </span>
         <span className="text-lg text-muted-foreground ml-1">dealers</span>
       </div>

@@ -43,16 +43,16 @@ export const DealerRecheckTimeline = ({ dealerName, dealerRag }: DealerRecheckTi
                   <div key={item.recheckMonth} className="flex items-start gap-4 relative">
                     <div className="relative z-10 shrink-0">
                       {completed ? (
-                        <div className="w-6 h-6 rounded-full bg-rag-green/10 border-2 border-rag-green flex items-center justify-center">
-                          <Check className="w-3 h-3 text-rag-green" />
+                        <div className="w-6 h-6 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center">
+                          <Check className="w-3 h-3 text-primary" />
                         </div>
                       ) : item.status === "overdue" ? (
-                        <div className="w-6 h-6 rounded-full bg-rag-red/10 border-2 border-rag-red flex items-center justify-center">
-                          <AlertTriangle className="w-3 h-3 text-rag-red" />
+                        <div className="w-6 h-6 rounded-full bg-destructive/10 border-2 border-destructive flex items-center justify-center">
+                          <AlertTriangle className="w-3 h-3 text-destructive" />
                         </div>
                       ) : item.status === "due-soon" ? (
-                        <div className="w-6 h-6 rounded-full bg-rag-amber/10 border-2 border-rag-amber flex items-center justify-center">
-                          <Clock className="w-3 h-3 text-rag-amber" />
+                        <div className="w-6 h-6 rounded-full bg-muted border-2 border-muted-foreground flex items-center justify-center">
+                          <Clock className="w-3 h-3 text-muted-foreground" />
                         </div>
                       ) : (
                         <div className="w-6 h-6 rounded-full bg-muted border-2 border-border flex items-center justify-center">
@@ -66,7 +66,7 @@ export const DealerRecheckTimeline = ({ dealerName, dealerRag }: DealerRecheckTi
                           {item.recheckMonth}-Month Re-Check
                         </span>
                         {completed && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-rag-green text-rag-green">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary text-primary">
                             Completed
                           </Badge>
                         )}
@@ -76,7 +76,7 @@ export const DealerRecheckTimeline = ({ dealerName, dealerRag }: DealerRecheckTi
                           </Badge>
                         )}
                         {!completed && item.status === "due-soon" && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-rag-amber text-rag-amber">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-muted-foreground text-muted-foreground">
                             {Math.abs(item.daysOverdue)}d remaining
                           </Badge>
                         )}
