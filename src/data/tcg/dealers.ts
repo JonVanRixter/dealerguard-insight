@@ -1,4 +1,4 @@
-export type TcgRagStatus = "green" | "amber" | "red";
+
 export type TcgFirmType = "AR" | "DA";
 export type OnboardingStatus = "Approved" | "Pending" | "Rejected" | "Expired";
 
@@ -23,7 +23,6 @@ export interface TcgDealer {
   name: string;
   tradingName: string;
   score: number;
-  rag: TcgRagStatus;
   lastAudit: string;
   trend: "up" | "down" | "stable";
   region: string;
@@ -44,7 +43,6 @@ export const tcgDealers: TcgDealer[] = [
     name: "Blackmore Automotive Ltd",
     tradingName: "Blackmore",
     score: 92,
-    rag: "green",
     lastAudit: "15 Jan 2026",
     trend: "up",
     region: "Bristol",
@@ -77,7 +75,6 @@ export const tcgDealers: TcgDealer[] = [
     name: "Meridian Motor Group",
     tradingName: "Meridian",
     score: 88,
-    rag: "green",
     lastAudit: "22 Jan 2026",
     trend: "stable",
     region: "Manchester",
@@ -110,7 +107,6 @@ export const tcgDealers: TcgDealer[] = [
     name: "Crown Car Sales",
     tradingName: "Crown",
     score: 85,
-    rag: "green",
     lastAudit: "01 Feb 2026",
     trend: "up",
     region: "Leeds",
@@ -143,7 +139,6 @@ export const tcgDealers: TcgDealer[] = [
     name: "Lakeside Motors",
     tradingName: "Lakeside",
     score: 83,
-    rag: "green",
     lastAudit: "05 Feb 2026",
     trend: "stable",
     region: "Birmingham",
@@ -176,7 +171,6 @@ export const tcgDealers: TcgDealer[] = [
     name: "Westfield Vehicle Solutions",
     tradingName: "Westfield",
     score: 71,
-    rag: "amber",
     lastAudit: "10 Jan 2026",
     trend: "down",
     region: "Nottingham",
@@ -209,7 +203,6 @@ export const tcgDealers: TcgDealer[] = [
     name: "Castle Cars Ltd",
     tradingName: "Castle Cars",
     score: 65,
-    rag: "amber",
     lastAudit: "18 Dec 2025",
     trend: "stable",
     region: "Cardiff",
@@ -242,7 +235,6 @@ export const tcgDealers: TcgDealer[] = [
     name: "Northgate Auto Centre",
     tradingName: "Northgate",
     score: 60,
-    rag: "amber",
     lastAudit: "05 Jan 2026",
     trend: "down",
     region: "Newcastle",
@@ -275,7 +267,6 @@ export const tcgDealers: TcgDealer[] = [
     name: "Pennine Motor Co",
     tradingName: "Pennine",
     score: 58,
-    rag: "amber",
     lastAudit: "12 Jan 2026",
     trend: "stable",
     region: "Sheffield",
@@ -308,7 +299,6 @@ export const tcgDealers: TcgDealer[] = [
     name: "Riverside Car Group",
     tradingName: "Riverside",
     score: 52,
-    rag: "red",
     lastAudit: "20 Dec 2025",
     trend: "down",
     region: "Liverpool",
@@ -341,7 +331,6 @@ export const tcgDealers: TcgDealer[] = [
     name: "Summit Automotive",
     tradingName: "Summit",
     score: 44,
-    rag: "red",
     lastAudit: "28 Nov 2025",
     trend: "down",
     region: "Glasgow",
@@ -374,7 +363,6 @@ export const tcgDealers: TcgDealer[] = [
     name: "Horizon Motor Sales",
     tradingName: "Horizon",
     score: 38,
-    rag: "red",
     lastAudit: "15 Nov 2025",
     trend: "down",
     region: "Edinburgh",
@@ -406,9 +394,6 @@ export const tcgDealers: TcgDealer[] = [
 
 // Portfolio stats
 export const tcgPortfolioStats = {
-  green: tcgDealers.filter((d) => d.rag === "green").length,
-  amber: tcgDealers.filter((d) => d.rag === "amber").length,
-  red: tcgDealers.filter((d) => d.rag === "red").length,
   total: tcgDealers.length,
   avgScore: Math.round(
     tcgDealers.reduce((sum, d) => sum + d.score, 0) / tcgDealers.length
