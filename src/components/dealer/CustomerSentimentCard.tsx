@@ -1,6 +1,5 @@
 import { Info, ShieldAlert, Award, TrendingUp, TrendingDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { SentimentGauge } from "./SentimentGauge";
 import type { SentimentCategory } from "@/data/auditFramework";
 
 interface CustomerSentimentCardProps {
@@ -13,15 +12,99 @@ interface CustomerSentimentCardProps {
 }
 
 function getScoreColor(score: number) {
+  if (score >= 6.7) return "text-[hsl(var(--rag-green))]";
+  if (score >= 3.4) return "text-[hsl(var(--rag-amber))]";
+  return "text-[hsl(var(--rag-red))]";
+}
+
+function getScoreTextColor(score: number) {
   if (score >= 6.7) return "text-[hsl(var(--rag-green-text))]";
   if (score >= 3.4) return "text-[hsl(var(--rag-amber-text))]";
   return "text-[hsl(var(--rag-red-text))]";
 }
 
-function getBarColor(score: number) {
-  if (score >= 6.7) return "bg-[hsl(var(--rag-green))]";
-  if (score >= 3.4) return "bg-[hsl(var(--rag-amber))]";
-  return "bg-[hsl(var(--rag-red))]";
+function getScoreBg(score: number) {
+  if (score >= 6.7) return "bg-[hsl(var(--rag-green-bg))]";
+  if (score >= 3.4) return "bg-[hsl(var(--rag-amber-bg))]";
+  return "bg-[hsl(var(--rag-red-bg))]";
+}
+
+function getBarHsl(score: number) {
+  if (score >= 6.7) return "hsl(var(--rag-green))";
+  if (score >= 3.4) return "hsl(var(--rag-amber))";
+  return "hsl(var(--rag-red))";
+}
+
+function getLabel(score: number) {
+  if (score >= 8.5) return "Excellent";
+  if (score >= 6.7) return "Good";
+  if (score >= 5.0) return "Adequate";
+  if (score >= 3.4) return "Concerning";
+  return "Poor";
+}
+
+/** Circular progress ring used for the main score */
+function ScoreRing({ score, size = 120 }: { score: number; size?: number }) {
+  const strokeWidth = 8;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const pct = Math.min(Math.max(score, 0), 10) / 10;
+  const offset = circumference * (1 - pct);
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        {/* Background track */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="hsl(var(--muted))"
+          strokeWidth={strokeWidth}
+        />
+        {/* Filled arc */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={getBarHsl(score)}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="transition-all duration-700 ease-out"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className={`text-2xl font-bold leading-none ${getScoreColor(score)}`}>
+          {score.toFixed(1)}
+        </span>
+        <span className="text-[10px] text-muted-foreground mt-0.5">/ 10</span>
+      </div>
+    </div>
+  );
+}
+
+/** Mini inline ring for category rows */
+function MiniRing({ score, size = 28 }: { score: number; size?: number }) {
+  const sw = 3;
+  const r = (size - sw) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = Math.min(Math.max(score, 0), 10) / 10;
+
+  return (
+    <svg width={size} height={size} className="-rotate-90 shrink-0">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth={sw} />
+      <circle
+        cx={size / 2} cy={size / 2} r={r} fill="none"
+        stroke={getBarHsl(score)} strokeWidth={sw} strokeLinecap="round"
+        strokeDasharray={c} strokeDashoffset={c * (1 - pct)}
+        className="transition-all duration-500"
+      />
+    </svg>
+  );
 }
 
 export function CustomerSentimentCard({
@@ -36,9 +119,9 @@ export function CustomerSentimentCard({
   const isReward = score >= rewardThreshold;
 
   return (
-    <div className="bg-card rounded-xl border border-border p-5 flex flex-col gap-4">
-      {/* Header row */}
-      <div className="flex items-center justify-between">
+    <div className="bg-card rounded-xl border border-border p-5 flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-foreground">Customer Sentiment</h3>
           <Tooltip>
@@ -54,15 +137,11 @@ export function CustomerSentimentCard({
             </TooltipContent>
           </Tooltip>
         </div>
-        <div className={`flex items-center gap-1 text-xs font-medium ${trend >= 0 ? "text-[hsl(var(--rag-green-text))]" : "text-[hsl(var(--rag-red-text))]"}`}>
-          {trend >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-          {trend >= 0 ? "+" : ""}{trend.toFixed(1)} ({periodDays}d)
-        </div>
       </div>
 
       {/* Threshold alert */}
       {isOversight && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[hsl(var(--rag-red-bg))] border border-[hsl(var(--rag-red))]/20">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[hsl(var(--rag-red-bg))] border border-[hsl(var(--rag-red))]/20 mb-4">
           <ShieldAlert className="w-4 h-4 text-[hsl(var(--rag-red))] shrink-0" />
           <span className="text-xs font-medium text-[hsl(var(--rag-red-text))]">
             Enhanced Oversight — below {oversightThreshold.toFixed(1)}
@@ -70,7 +149,7 @@ export function CustomerSentimentCard({
         </div>
       )}
       {isReward && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[hsl(var(--rag-green-bg))] border border-[hsl(var(--rag-green))]/20">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[hsl(var(--rag-green-bg))] border border-[hsl(var(--rag-green))]/20 mb-4">
           <Award className="w-4 h-4 text-[hsl(var(--rag-green))] shrink-0" />
           <span className="text-xs font-medium text-[hsl(var(--rag-green-text))]">
             Positive Reward — above {rewardThreshold.toFixed(1)}
@@ -78,57 +157,58 @@ export function CustomerSentimentCard({
         </div>
       )}
 
-      {/* Gauge + legend row */}
-      <div className="flex items-center justify-center">
-        <SentimentGauge score={score} size="default" />
-      </div>
-
-      {/* Legend */}
-      <div className="flex justify-center gap-4 text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-[hsl(var(--rag-red))]" /> 0–3.3
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-[hsl(var(--rag-amber))]" /> 3.4–6.6
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-[hsl(var(--rag-green))]" /> 6.7–10
-        </span>
+      {/* Main score area */}
+      <div className="flex items-center gap-5 mb-4">
+        <ScoreRing score={score} />
+        <div className="flex flex-col gap-1.5">
+          <span className={`text-sm font-semibold ${getScoreTextColor(score)}`}>
+            {getLabel(score)}
+          </span>
+          <div className={`inline-flex items-center gap-1 text-xs font-medium ${trend >= 0 ? "text-[hsl(var(--rag-green-text))]" : "text-[hsl(var(--rag-red-text))]"}`}>
+            {trend >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+            {trend >= 0 ? "+" : ""}{trend.toFixed(1)} over {periodDays}d
+          </div>
+          <div className="flex gap-3 mt-1">
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--rag-red))]" /> 0–3.3
+            </span>
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--rag-amber))]" /> 3.4–6.6
+            </span>
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--rag-green))]" /> 6.7–10
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Category breakdown */}
       {categories.length > 0 && (
         <div className="border-t border-border pt-3 mt-auto">
           <p className="text-xs font-semibold text-foreground mb-3">Breakdown</p>
-          <div className="space-y-2.5">
-            {categories.map((cat) => {
-              const pct = (cat.score / 10) * 100;
-              return (
-                <div key={cat.label}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-1.5">
+          <div className="space-y-2">
+            {categories.map((cat) => (
+              <div key={cat.label} className="flex items-center gap-2.5">
+                <MiniRing score={cat.score} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
                       {cat.score < oversightThreshold && <ShieldAlert className="w-3 h-3 text-[hsl(var(--rag-red))]" />}
                       {cat.score >= rewardThreshold && <Award className="w-3 h-3 text-[hsl(var(--rag-green))]" />}
-                      <span className="text-xs text-muted-foreground">{cat.label}</span>
+                      <span className="text-xs text-muted-foreground truncate">{cat.label}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs font-semibold ${getScoreColor(cat.score)}`}>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-xs font-semibold tabular-nums ${getScoreTextColor(cat.score)}`}>
                         {cat.score.toFixed(1)}
                       </span>
-                      <span className={`text-[10px] ${cat.trend >= 0 ? "text-[hsl(var(--rag-green-text))]" : "text-[hsl(var(--rag-red-text))]"}`}>
-                        {cat.trend >= 0 ? "▲" : "▼"} {Math.abs(cat.trend).toFixed(1)}
+                      <span className={`text-[10px] tabular-nums ${cat.trend >= 0 ? "text-[hsl(var(--rag-green-text))]" : "text-[hsl(var(--rag-red-text))]"}`}>
+                        {cat.trend >= 0 ? "▲" : "▼"}{Math.abs(cat.trend).toFixed(1)}
                       </span>
                     </div>
                   </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${getBarColor(cat.score)}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
       )}
