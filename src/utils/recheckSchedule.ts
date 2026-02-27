@@ -51,8 +51,8 @@ export function generateRecheckSchedule(now: Date = new Date()): RecheckItem[] {
   const recheckMonths: (3 | 6 | 9 | 12)[] = [3, 6, 9, 12];
 
   dealers.forEach((dealer, index) => {
-    // Only Green-status dealers get re-check schedules
-    if (dealer.rag !== "green") return;
+    // Only high-scoring dealers (80+) get re-check schedules
+    if (dealer.score < 80) return;
 
     const lastAudit = parseAuditDate(dealer.lastAudit);
 

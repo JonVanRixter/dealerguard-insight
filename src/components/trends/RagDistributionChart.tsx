@@ -11,9 +11,9 @@ interface RagDistributionChartProps {
 export function RagDistributionChart({ data }: RagDistributionChartProps) {
   const chartData = data.map((d) => ({
     month: d.month,
-    "80–100": d.greenCount,
-    "55–79": d.amberCount,
-    "0–54": d.redCount,
+    "80–100": d.highCount,
+    "55–79": d.midCount,
+    "0–54": d.lowCount,
   }));
 
   const CustomTooltip = ({ active, payload, label }: any) => {

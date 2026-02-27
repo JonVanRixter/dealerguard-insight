@@ -1,18 +1,16 @@
 import { AuditSection } from "@/data/auditFramework";
-import { RagStatus } from "@/data/dealers";
 
 interface ReportSummaryCardProps {
   sections: AuditSection[];
-  overallRag: RagStatus;
   overallScore: number;
 }
 
-export function ReportSummaryCard({ sections, overallRag, overallScore }: ReportSummaryCardProps) {
+export function ReportSummaryCard({ sections, overallScore }: ReportSummaryCardProps) {
   const totals = sections.reduce(
     (acc, section) => ({
-      pass: acc.pass + section.summary.green,
-      attention: acc.attention + section.summary.amber,
-      fail: acc.fail + section.summary.red,
+      pass: acc.pass + section.summary.pass,
+      attention: acc.attention + section.summary.attention,
+      fail: acc.fail + section.summary.fail,
     }),
     { pass: 0, attention: 0, fail: 0 }
   );
@@ -50,13 +48,13 @@ export function ReportSummaryCard({ sections, overallRag, overallScore }: Report
               >
                 <td className="px-5 py-3.5 font-medium text-foreground">{section.name}</td>
                 <td className="px-3 py-3.5 text-center text-foreground font-semibold">
-                  {section.summary.green}
+                  {section.summary.pass}
                 </td>
                 <td className="px-3 py-3.5 text-center text-muted-foreground font-semibold">
-                  {section.summary.amber}
+                  {section.summary.attention}
                 </td>
                 <td className="px-3 py-3.5 text-center text-muted-foreground font-semibold">
-                  {section.summary.red}
+                  {section.summary.fail}
                 </td>
               </tr>
             ))}

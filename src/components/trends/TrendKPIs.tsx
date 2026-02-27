@@ -5,8 +5,8 @@ export function TrendKPIs() {
   const first = portfolioTrend[0];
   const last = portfolioTrend[portfolioTrend.length - 1];
   const scoreChange = last.avgScore - first.avgScore;
-  const highScoreChange = last.greenCount - first.greenCount;
-  const lowScoreChange = last.redCount - first.redCount;
+  const highScoreChange = last.highCount - first.highCount;
+  const lowScoreChange = last.lowCount - first.lowCount;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -17,9 +17,9 @@ export function PortfolioTrendChart({ data }: PortfolioTrendChartProps) {
           <p className="text-sm font-medium text-foreground mb-1">{label}</p>
           <p className="text-xs text-primary">Avg Score: {point.avgScore}%</p>
           <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
-            <span>80–100: {point.greenCount}</span>
-            <span>55–79: {point.amberCount}</span>
-            <span>0–54: {point.redCount}</span>
+            <span>80–100: {point.highCount}</span>
+            <span>55–79: {point.midCount}</span>
+            <span>0–54: {point.lowCount}</span>
           </div>
         </div>
       );

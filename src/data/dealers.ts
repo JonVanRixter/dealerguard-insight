@@ -1,11 +1,9 @@
-export type RagStatus = "green" | "amber" | "red";
 export type FirmType = "AR" | "DA"; // Appointed Representative or Directly Authorised
 
 export interface Dealer {
   name: string;
   tradingName: string;
   score: number;
-  rag: RagStatus;
   lastAudit: string;
   trend: "up" | "down" | "stable";
   region: string;
@@ -118,18 +116,14 @@ function generateAuditDate(index: number): string {
 }
 
 function generateDealer(index: number): Dealer {
-  const ragDistribution = Math.random();
-  let rag: RagStatus;
+  const scoreDistribution = Math.random();
   let scoreRange: [number, number];
   
-  if (ragDistribution < 0.69) {
-    rag = "green";
+  if (scoreDistribution < 0.69) {
     scoreRange = [80, 100];
-  } else if (ragDistribution < 0.935) {
-    rag = "amber";
+  } else if (scoreDistribution < 0.935) {
     scoreRange = [55, 79];
   } else {
-    rag = "red";
     scoreRange = [30, 54];
   }
   
@@ -137,9 +131,9 @@ function generateDealer(index: number): Dealer {
   
   const trendRandom = Math.random();
   let trend: "up" | "down" | "stable";
-  if (rag === "red") {
+  if (score < 55) {
     trend = trendRandom < 0.6 ? "down" : trendRandom < 0.8 ? "stable" : "up";
-  } else if (rag === "amber") {
+  } else if (score < 80) {
     trend = trendRandom < 0.4 ? "down" : trendRandom < 0.7 ? "stable" : "up";
   } else {
     trend = trendRandom < 0.15 ? "down" : trendRandom < 0.5 ? "stable" : "up";
@@ -154,9 +148,6 @@ function generateDealer(index: number): Dealer {
   const postcode = postcodeAreas[index % postcodeAreas.length];
 
   // Introduce deliberate duplicates for testing:
-  // Dealers 10 & 11 share same phone
-  // Dealers 20 & 21 share same postcode + address
-  // Dealers 30 & 31 share same companies house number
   let phone = generatePhone(index);
   let companiesHouseNumber = generateCompaniesHouse(index);
   let address = `${streetNum} ${street}, ${region}`;
@@ -164,22 +155,18 @@ function generateDealer(index: number): Dealer {
   if (index === 11) phone = generatePhone(10);
   if (index === 21) {
     address = `${((10 * 7 + 3) % 200 + 1) + 10} ${streetNames[20 % streetNames.length]}, ${locations[20 % locations.length]}`;
-    // share postcode with dealer 20
   }
   if (index === 31) companiesHouseNumber = generateCompaniesHouse(30);
-
-  // Additional duplicates: dealers 50 & 51 share phone, 60 & 61 share companies house
   if (index === 51) phone = generatePhone(50);
   if (index === 61) companiesHouseNumber = generateCompaniesHouse(60);
 
   const dealerName = generateDealerName(index);
-  const alertCount = rag === "red" ? Math.floor(seededRandom(index + 500) * 5) + 2 : rag === "amber" ? Math.floor(seededRandom(index + 600) * 3) : 0;
+  const alertCount = score < 55 ? Math.floor(seededRandom(index + 500) * 5) + 2 : score < 80 ? Math.floor(seededRandom(index + 600) * 3) : 0;
 
   return {
     name: dealerName,
     tradingName: generateTradingName(dealerName),
     score,
-    rag,
     lastAudit: generateAuditDate(index),
     trend,
     region,
@@ -202,7 +189,6 @@ const realDealers: Dealer[] = [
     name: "Thurlby Motors",
     tradingName: "Thurlby",
     score: 72,
-    rag: "amber",
     lastAudit: "05 Feb 2026",
     trend: "stable",
     region: "Lincoln",
@@ -218,7 +204,6 @@ const realDealers: Dealer[] = [
     name: "Dynasty Partners Limited",
     tradingName: "Dynasty",
     score: 68,
-    rag: "amber",
     lastAudit: "05 Feb 2026",
     trend: "up",
     region: "London",
@@ -234,7 +219,6 @@ const realDealers: Dealer[] = [
     name: "Shirlaws Limited",
     tradingName: "Shirlaws",
     score: 38,
-    rag: "red",
     lastAudit: "05 Feb 2026",
     trend: "down",
     region: "Glasgow",
@@ -250,7 +234,6 @@ const realDealers: Dealer[] = [
     name: "Platinum Vehicle Specialists",
     tradingName: "Platinum",
     score: 42,
-    rag: "red",
     lastAudit: "05 Feb 2026",
     trend: "down",
     region: "Birmingham",
@@ -266,20 +249,27 @@ const realDealers: Dealer[] = [
 
 export const dealers: Dealer[] = [...realDealers, ...mockDealers];
 
+// Helper to derive score band from score
+export function getScoreBand(score: number): "high" | "mid" | "low" {
+  if (score >= 80) return "high";
+  if (score >= 55) return "mid";
+  return "low";
+}
+
 // Calculate portfolio stats
 export const portfolioStats = {
-  green: dealers.filter(d => d.rag === "green").length,
-  amber: dealers.filter(d => d.rag === "amber").length,
-  red: dealers.filter(d => d.rag === "red").length,
+  high: dealers.filter(d => d.score >= 80).length,
+  mid: dealers.filter(d => d.score >= 55 && d.score < 80).length,
+  low: dealers.filter(d => d.score < 55).length,
   total: dealers.length,
   avgScore: Math.round(dealers.reduce((sum, d) => sum + d.score, 0) / dealers.length),
 };
 
 // Recent activities based on actual dealer data
 export const activities = [
-  { text: "Shirlaws Limited flagged — CreditSafe Category D, score: 38", time: "2 hours ago", type: "red" as const },
-  { text: "Platinum Vehicle Specialists – missing IDD on finance deal, score: 42", time: "5 hours ago", type: "red" as const },
-  { text: "Thurlby Motors – representative APR update required, score: 72", time: "1 day ago", type: "amber" as const },
-  { text: "Dynasty Partners Limited – website commission disclosure needs updating, score: 68", time: "2 days ago", type: "amber" as const },
-  { text: `${dealers[0]?.name || "A dealer"} completed annual audit`, time: "3 days ago", type: "green" as const },
+  { text: "Shirlaws Limited flagged — CreditSafe Category D, score: 38", time: "2 hours ago", type: "alert" as const },
+  { text: "Platinum Vehicle Specialists – missing IDD on finance deal, score: 42", time: "5 hours ago", type: "alert" as const },
+  { text: "Thurlby Motors – representative APR update required, score: 72", time: "1 day ago", type: "warning" as const },
+  { text: "Dynasty Partners Limited – website commission disclosure needs updating, score: 68", time: "2 days ago", type: "warning" as const },
+  { text: `${dealers[0]?.name || "A dealer"} completed annual audit`, time: "3 days ago", type: "info" as const },
 ];

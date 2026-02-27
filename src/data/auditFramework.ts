@@ -1,6 +1,8 @@
-import { RagStatus } from "./dealers";
-
 // Control check types matching the real audit document framework
+
+// Internal result type for control risk ratings
+type ControlRiskRating = "pass" | "attention" | "fail";
+
 export interface ControlCheck {
   id: string;
   controlArea: string;
@@ -9,7 +11,7 @@ export interface ControlCheck {
   evidence: string;
   result: "pass" | "fail" | "partial";
   frequency: string;
-  riskRating: RagStatus;
+  riskRating: ControlRiskRating;
   comments: string;
   automated: boolean;
 }
@@ -20,10 +22,10 @@ export interface AuditSection {
   icon: string;
   controls: ControlCheck[];
   summary: {
-    green: number;
-    amber: number;
-    red: number;
-    ragStatus: RagStatus;
+    pass: number;
+    attention: number;
+    fail: number;
+    outcome: "pass" | "attention" | "fail";
     notes: string;
   };
 }
@@ -47,7 +49,6 @@ export interface SentimentCategory {
 
 export interface DealerAudit {
   dealerName: string;
-  overallRag: RagStatus;
   overallScore: number;
   customerSentimentScore: number;
   customerSentimentTrend: number;
@@ -85,7 +86,7 @@ function generateGovernanceControls(dealerIndex: number): ControlCheck[] {
       evidence: "Extract from registry",
       result: "pass",
       frequency: "Quarterly",
-      riskRating: "green",
+      riskRating: "pass",
       comments: "All correct and verified via Co House look up",
       automated: true,
     },
@@ -97,7 +98,7 @@ function generateGovernanceControls(dealerIndex: number): ControlCheck[] {
       evidence: "Screenshots & Registry Records",
       result: seed % 5 === 0 ? "partial" : "pass",
       frequency: "Quarterly",
-      riskRating: seed % 5 === 0 ? "amber" : "green",
+      riskRating: seed % 5 === 0 ? "attention" : "pass",
       comments: seed % 5 === 0 ? "Minor discrepancy in trading name on ICO register" : "FCA & ICO confirmed; names aligned",
       automated: false,
     },
@@ -109,7 +110,7 @@ function generateGovernanceControls(dealerIndex: number): ControlCheck[] {
       evidence: "PSC Change Log",
       result: "pass",
       frequency: "Biannual",
-      riskRating: "green",
+      riskRating: "pass",
       comments: "Enables trigger-based enhanced checks via CreditSafe",
       automated: true,
     },
@@ -121,7 +122,7 @@ function generateGovernanceControls(dealerIndex: number): ControlCheck[] {
       evidence: "Report & Case Notes",
       result: seed % 8 === 0 ? "fail" : "pass",
       frequency: "Continuous / Quarterly Review",
-      riskRating: seed % 8 === 0 ? "red" : "green",
+      riskRating: seed % 8 === 0 ? "fail" : "pass",
       comments: seed % 8 === 0 ? "High lender concern – adverse media flag requires review" : "No adverse findings; CreditSafe checks completed",
       automated: true,
     },
@@ -133,7 +134,7 @@ function generateGovernanceControls(dealerIndex: number): ControlCheck[] {
       evidence: "Onboarding + Annual",
       result: "pass",
       frequency: "Annual",
-      riskRating: "green",
+      riskRating: "pass",
       comments: "Self-declaration received; DBS status confirmed",
       automated: false,
     },
@@ -151,7 +152,7 @@ function generateDigitalReportingControls(dealerIndex: number): ControlCheck[] {
       evidence: "MI Pack + Dashboard Screenshots",
       result: seed % 7 === 0 ? "partial" : "pass",
       frequency: "Monthly",
-      riskRating: seed % 7 === 0 ? "amber" : "green",
+      riskRating: seed % 7 === 0 ? "attention" : "pass",
       comments: seed % 7 === 0 ? "MI pack delayed by 5 days; needs process tightening" : "Mostly effective reporting; continue to monitor",
       automated: true,
     },
@@ -163,7 +164,7 @@ function generateDigitalReportingControls(dealerIndex: number): ControlCheck[] {
       evidence: "Reconciliation report",
       result: "pass",
       frequency: "Quarterly",
-      riskRating: "green",
+      riskRating: "pass",
       comments: "Data reconciliation within tolerance; no escalation required",
       automated: true,
     },
@@ -181,7 +182,7 @@ function generatePermissionsControls(dealerIndex: number): ControlCheck[] {
       evidence: "FCA register snapshot",
       result: seed % 12 === 0 ? "fail" : "pass",
       frequency: "Quarterly + Alert",
-      riskRating: seed % 12 === 0 ? "red" : "green",
+      riskRating: seed % 12 === 0 ? "fail" : "pass",
       comments: seed % 12 === 0 ? "AR status verification required – register discrepancy" : "Register checked, correct status; self-declaration on permissions",
       automated: true,
     },
@@ -193,7 +194,7 @@ function generatePermissionsControls(dealerIndex: number): ControlCheck[] {
       evidence: "Certificates verified; Upload & Sampling",
       result: seed % 4 === 0 ? "partial" : "pass",
       frequency: "Annual",
-      riskRating: seed % 4 === 0 ? "amber" : "green",
+      riskRating: seed % 4 === 0 ? "attention" : "pass",
       comments: seed % 4 === 0 ? "2 staff overdue for refresher training on Klassify" : "All training current; certificates verified",
       automated: false,
     },
@@ -205,7 +206,7 @@ function generatePermissionsControls(dealerIndex: number): ControlCheck[] {
       evidence: "SMF Attestation + Org chart",
       result: "pass",
       frequency: "Annual + Alert",
-      riskRating: "green",
+      riskRating: "pass",
       comments: "No SMF required for ARs; clear oversight structure documented",
       automated: false,
     },
@@ -217,7 +218,7 @@ function generatePermissionsControls(dealerIndex: number): ControlCheck[] {
       evidence: "Comparison report",
       result: seed % 6 === 0 ? "partial" : "pass",
       frequency: "Annual",
-      riskRating: seed % 6 === 0 ? "amber" : "green",
+      riskRating: seed % 6 === 0 ? "attention" : "pass",
       comments: seed % 6 === 0 ? "Website trading name needs updating to match FCA register" : "All names aligned; partial automation reduces manual effort",
       automated: true,
     },
@@ -235,7 +236,7 @@ function generateSalesControls(dealerIndex: number): ControlCheck[] {
       evidence: "Event log + documents checked",
       result: seed % 9 === 0 ? "fail" : "pass",
       frequency: "Per Application",
-      riskRating: seed % 9 === 0 ? "red" : "green",
+      riskRating: seed % 9 === 0 ? "fail" : "pass",
       comments: seed % 9 === 0 ? "Missing IDD identified for finance deal – remediation required" : "All disclosures timestamped and logged via Klassify",
       automated: true,
     },
@@ -247,7 +248,7 @@ function generateSalesControls(dealerIndex: number): ControlCheck[] {
       evidence: "D&N document trail",
       result: seed % 7 === 0 ? "fail" : "pass",
       frequency: "Per Application",
-      riskRating: seed % 7 === 0 ? "red" : "green",
+      riskRating: seed % 7 === 0 ? "fail" : "pass",
       comments: seed % 7 === 0 ? "Missing Demands & Needs Statement – should be completed prior to pay out" : "D&N sent to customer for review prior to payout",
       automated: true,
     },
@@ -259,7 +260,7 @@ function generateSalesControls(dealerIndex: number): ControlCheck[] {
       evidence: "Decisioning trace + policy map",
       result: seed % 11 === 0 ? "partial" : "pass",
       frequency: "Per Application",
-      riskRating: seed % 11 === 0 ? "amber" : "green",
+      riskRating: seed % 11 === 0 ? "attention" : "pass",
       comments: seed % 11 === 0 ? "Some manual overrides noted; TCG Access system review required" : "Automated checks passing; manual checks for ARs evidenced",
       automated: true,
     },
@@ -277,7 +278,7 @@ function generateConsumerDutyControls(dealerIndex: number): ControlCheck[] {
       evidence: "Benchmark report + outlier list",
       result: seed % 5 === 0 ? "fail" : "pass",
       frequency: "Quarterly",
-      riskRating: seed % 5 === 0 ? "red" : "green",
+      riskRating: seed % 5 === 0 ? "fail" : "pass",
       comments: seed % 5 === 0 ? "APR outliers detected; visible through the finance proposal" : "Within benchmark range; no outliers identified",
       automated: true,
     },
@@ -289,7 +290,7 @@ function generateConsumerDutyControls(dealerIndex: number): ControlCheck[] {
       evidence: "Survey results, Measures",
       result: seed % 6 === 0 ? "partial" : "pass",
       frequency: "Quarterly",
-      riskRating: seed % 6 === 0 ? "amber" : "green",
+      riskRating: seed % 6 === 0 ? "attention" : "pass",
       comments: seed % 6 === 0 ? "Partial product selection reviewed; automation reduces manual effort" : "All products compliant; Klassify system used",
       automated: false,
     },
@@ -301,7 +302,7 @@ function generateConsumerDutyControls(dealerIndex: number): ControlCheck[] {
       evidence: "Call monitoring reports, Trustpilot, Google reviews",
       result: "pass",
       frequency: "Quarterly",
-      riskRating: "green",
+      riskRating: "pass",
       comments: "Customer comprehension verified through call monitoring and review analysis",
       automated: false,
     },
@@ -313,7 +314,7 @@ function generateConsumerDutyControls(dealerIndex: number): ControlCheck[] {
       evidence: "Complaint records, resolution logs",
       result: seed % 4 === 0 ? "partial" : "pass",
       frequency: "Monthly",
-      riskRating: seed % 4 === 0 ? "amber" : "green",
+      riskRating: seed % 4 === 0 ? "attention" : "pass",
       comments: seed % 4 === 0 ? "Response times need improvement; recent 1-star reviews noted" : "No complaints outstanding; sentiment positive",
       automated: false,
     },
@@ -325,7 +326,7 @@ function generateConsumerDutyControls(dealerIndex: number): ControlCheck[] {
       evidence: "Flags + file notes; all VC logged on Klassify",
       result: "pass",
       frequency: "Per Application",
-      riskRating: "green",
+      riskRating: "pass",
       comments: "Vulnerability flags active; all cases logged on Klassify",
       automated: true,
     },
@@ -343,7 +344,7 @@ function generateFinancialCrimeControls(dealerIndex: number): ControlCheck[] {
       evidence: "Pass/fail + reason codes",
       result: "pass",
       frequency: "Per Application",
-      riskRating: "green",
+      riskRating: "pass",
       comments: "Ensures identity verification is performed; critical for regulatory compliance and reducing fraud risk",
       automated: true,
     },
@@ -355,7 +356,7 @@ function generateFinancialCrimeControls(dealerIndex: number): ControlCheck[] {
       evidence: "Screening review",
       result: "pass",
       frequency: "Per Application",
-      riskRating: "green",
+      riskRating: "pass",
       comments: "Eliminates manual review duplication; all clear",
       automated: true,
     },
@@ -367,7 +368,7 @@ function generateFinancialCrimeControls(dealerIndex: number): ControlCheck[] {
       evidence: "Anomaly flag + score",
       result: seed % 10 === 0 ? "partial" : "pass",
       frequency: "Per Application",
-      riskRating: seed % 10 === 0 ? "amber" : "green",
+      riskRating: seed % 10 === 0 ? "attention" : "pass",
       comments: seed % 10 === 0 ? "Some anomalies flagged for review" : "Addresses emerging fraud patterns; NA on AR",
       automated: true,
     },
@@ -379,7 +380,7 @@ function generateFinancialCrimeControls(dealerIndex: number): ControlCheck[] {
       evidence: "Velocity score",
       result: "pass",
       frequency: "Per Application + Daily Cohort",
-      riskRating: "green",
+      riskRating: "pass",
       comments: "Lender assurance beyond SUP; velocity within normal range",
       automated: true,
     },
@@ -391,7 +392,7 @@ function generateFinancialCrimeControls(dealerIndex: number): ControlCheck[] {
       evidence: "Mismatch log",
       result: seed % 15 === 0 ? "fail" : "pass",
       frequency: "Triggered",
-      riskRating: seed % 15 === 0 ? "red" : "green",
+      riskRating: seed % 15 === 0 ? "fail" : "pass",
       comments: seed % 15 === 0 ? "Mismatch detected – investigation required" : "Key payout risk control; not applicable for AR",
       automated: true,
     },
@@ -409,7 +410,7 @@ function generateFinancialPromotionsControls(dealerIndex: number): ControlCheck[
       evidence: "Scan report + screenshots",
       result: seed % 3 === 0 ? "partial" : "pass",
       frequency: "Risk Based",
-      riskRating: seed % 3 === 0 ? "amber" : "green",
+      riskRating: seed % 3 === 0 ? "attention" : "pass",
       comments: seed % 3 === 0 ? "Missing representative APR on website where finance is incentivised" : "Compliant promotions; Sedric automated checks confirm",
       automated: true,
     },
@@ -421,7 +422,7 @@ function generateFinancialPromotionsControls(dealerIndex: number): ControlCheck[
       evidence: "Policy documents",
       result: "pass",
       frequency: "Annual",
-      riskRating: "green",
+      riskRating: "pass",
       comments: "Policies up to date; cookie management compliant",
       automated: false,
     },
@@ -433,7 +434,7 @@ function generateFinancialPromotionsControls(dealerIndex: number): ControlCheck[
       evidence: "Posts archive",
       result: seed % 4 === 0 ? "partial" : "pass",
       frequency: "Risk Based",
-      riskRating: seed % 4 === 0 ? "amber" : "green",
+      riskRating: seed % 4 === 0 ? "attention" : "pass",
       comments: seed % 4 === 0 ? "Missing representative APR on social media channels where finance is incentivised" : "Social content compliant; Sedric automated monitoring",
       automated: true,
     },
@@ -451,7 +452,7 @@ function generateCommunicationsControls(dealerIndex: number): ControlCheck[] {
       evidence: "Majority comms logs via Klassify; pre-delivery checklist",
       result: seed % 4 === 0 ? "partial" : "pass",
       frequency: "Monthly",
-      riskRating: seed % 4 === 0 ? "amber" : "green",
+      riskRating: seed % 4 === 0 ? "attention" : "pass",
       comments: seed % 4 === 0 ? "Sampling gaps in invoice & warranty document retention" : "Channels monitored; readability for lenders confirmed",
       automated: false,
     },
@@ -463,7 +464,7 @@ function generateCommunicationsControls(dealerIndex: number): ControlCheck[] {
       evidence: "MI pack + Customer Sentiment score",
       result: seed % 3 === 0 ? "fail" : "pass",
       frequency: "Monthly",
-      riskRating: seed % 3 === 0 ? "red" : "green",
+      riskRating: seed % 3 === 0 ? "fail" : "pass",
       comments: seed % 3 === 0 ? "Complaint ratio above threshold; Google reviews showing negative trend" : "Within acceptable range; no complaints outstanding",
       automated: true,
     },
@@ -475,7 +476,7 @@ function generateCommunicationsControls(dealerIndex: number): ControlCheck[] {
       evidence: "RCA managed register",
       result: seed % 5 === 0 ? "fail" : "pass",
       frequency: "Monthly",
-      riskRating: seed % 5 === 0 ? "red" : "green",
+      riskRating: seed % 5 === 0 ? "fail" : "pass",
       comments: seed % 5 === 0 ? "RCA register incomplete; addresses harm prevention" : "RCA process effective; consumer outcomes tested",
       automated: false,
     },
@@ -493,7 +494,7 @@ function generateConductControls(dealerIndex: number): ControlCheck[] {
       evidence: "Trend chart",
       result: seed % 10 === 0 ? "partial" : "pass",
       frequency: "Triggered from Lender",
-      riskRating: seed % 10 === 0 ? "amber" : "green",
+      riskRating: seed % 10 === 0 ? "attention" : "pass",
       comments: seed % 10 === 0 ? "Elevated arrears pattern noted; retain as early-warning control" : "Patterns within normal range; NA trends for ARs",
       automated: true,
     },
@@ -503,22 +504,22 @@ function generateConductControls(dealerIndex: number): ControlCheck[] {
 // ─── Section summary calculator ────────────────────────────
 
 function calculateSectionSummary(controls: ControlCheck[]): AuditSection["summary"] {
-  const green = controls.filter(c => c.riskRating === "green").length;
-  const amber = controls.filter(c => c.riskRating === "amber").length;
-  const red = controls.filter(c => c.riskRating === "red").length;
+  const pass = controls.filter(c => c.riskRating === "pass").length;
+  const attention = controls.filter(c => c.riskRating === "attention").length;
+  const fail = controls.filter(c => c.riskRating === "fail").length;
   
-  let ragStatus: RagStatus = "green";
+  let outcome: "pass" | "attention" | "fail" = "pass";
   let notes = "All controls operating effectively.";
   
-  if (red > 0) {
-    ragStatus = "red";
+  if (fail > 0) {
+    outcome = "fail";
     notes = "Critical controls require immediate attention.";
-  } else if (amber > 0) {
-    ragStatus = "amber";
+  } else if (attention > 0) {
+    outcome = "attention";
     notes = "Minor gaps identified; monitoring recommended.";
   }
   
-  return { green, amber, red, ragStatus, notes };
+  return { pass, attention, fail, outcome, notes };
 }
 
 // ─── Key actions generator (now includes BAU & Optional) ───
@@ -528,7 +529,6 @@ function generateKeyActions(sections: AuditSection[], dealerIndex: number): KeyA
   const owners = ["Compliance", "Digital / Compliance", "Marketing / Compliance", "Sales / Compliance", "Customer Ops", "Risk", "Compliance / IT"];
   const dueDates = ["Immediate", "Q1 2026", "Q2 2026", "Ongoing", "Annual (Nov)"];
   
-  // Always include BAU monitoring actions based on real audit patterns
   const bauActions: KeyAction[] = [
     {
       id: "bau-governance",
@@ -582,7 +582,6 @@ function generateKeyActions(sections: AuditSection[], dealerIndex: number): KeyA
     },
   ];
   
-  // Add remediation actions for failed/partial controls
   sections.forEach(section => {
     section.controls.forEach(control => {
       if (control.result === "fail" || control.result === "partial") {
@@ -590,17 +589,16 @@ function generateKeyActions(sections: AuditSection[], dealerIndex: number): KeyA
           id: `action-${control.id}`,
           section: section.name,
           action: `Remediate: ${control.controlArea}`,
-          priority: control.riskRating === "red" ? "High" : control.riskRating === "amber" ? "Medium" : "Low",
+          priority: control.riskRating === "fail" ? "High" : control.riskRating === "attention" ? "Medium" : "Low",
           owner: owners[(dealerIndex + actions.length) % owners.length],
-          dueDate: control.riskRating === "red" ? "Immediate" : dueDates[(dealerIndex + actions.length) % dueDates.length],
-          status: control.riskRating === "red" ? "Pending" : "In Progress",
+          dueDate: control.riskRating === "fail" ? "Immediate" : dueDates[(dealerIndex + actions.length) % dueDates.length],
+          status: control.riskRating === "fail" ? "Pending" : "In Progress",
           notes: control.comments,
         });
       }
     });
   });
 
-  // Add optional enhancement actions
   const optionalActions: KeyAction[] = [
     {
       id: "opt-governance",
@@ -624,7 +622,6 @@ function generateKeyActions(sections: AuditSection[], dealerIndex: number): KeyA
     },
   ];
 
-  // Combine: remediation first, then BAU, then optional – limit total
   const combined = [...actions, ...bauActions.slice(0, 3), ...optionalActions.slice(0, 1)];
   return combined.slice(0, 12);
 }
@@ -635,19 +632,18 @@ function generateRealDealerAudit(dealerName: string): DealerAudit | null {
   const realAudits: Record<string, () => DealerAudit> = {
     "Thurlby Motors": () => {
       const sections = buildSectionsFromSummary([
-        { green: 5, amber: 0, red: 0, notes: "Strong governance controls observed; no material gaps identified." },
-        { green: 2, amber: 0, red: 0, notes: "Mostly effective reporting, continue to monitor." },
-        { green: 3, amber: 0, red: 0, notes: "Authorisations generally sound; AR status verification confirmed." },
-        { green: 3, amber: 0, red: 0, notes: "Sales processes demonstrate compliance and effective monitoring." },
-        { green: 4, amber: 0, red: 0, notes: "Fair value benchmarking active via Klassify system." },
-        { green: 4, amber: 0, red: 0, notes: "AML, KYC, sanctions, and fraud controls operating effectively." },
-        { green: 0, amber: 2, red: 0, notes: "Missing representative APR on website and social media channels where finance is incentivised." },
-        { green: 2, amber: 0, red: 0, notes: "Complaints managed through Klassify; no concerns raised." },
-        { green: 1, amber: 0, red: 0, notes: "Oversight controls effective; clear responsibilities in place." },
+        { pass: 5, attention: 0, fail: 0, notes: "Strong governance controls observed; no material gaps identified." },
+        { pass: 2, attention: 0, fail: 0, notes: "Mostly effective reporting, continue to monitor." },
+        { pass: 3, attention: 0, fail: 0, notes: "Authorisations generally sound; AR status verification confirmed." },
+        { pass: 3, attention: 0, fail: 0, notes: "Sales processes demonstrate compliance and effective monitoring." },
+        { pass: 4, attention: 0, fail: 0, notes: "Fair value benchmarking active via Klassify system." },
+        { pass: 4, attention: 0, fail: 0, notes: "AML, KYC, sanctions, and fraud controls operating effectively." },
+        { pass: 0, attention: 2, fail: 0, notes: "Missing representative APR on website and social media channels where finance is incentivised." },
+        { pass: 2, attention: 0, fail: 0, notes: "Complaints managed through Klassify; no concerns raised." },
+        { pass: 1, attention: 0, fail: 0, notes: "Oversight controls effective; clear responsibilities in place." },
       ]);
       return {
         dealerName: "Thurlby Motors",
-        overallRag: "amber",
         overallScore: 72,
         customerSentimentScore: 8.2,
         customerSentimentTrend: 0.4,
@@ -673,19 +669,18 @@ function generateRealDealerAudit(dealerName: string): DealerAudit | null {
     },
     "Dynasty Partners Limited": () => {
       const sections = buildSectionsFromSummary([
-        { green: 5, amber: 0, red: 0, notes: "Strong governance controls observed; no material gaps identified." },
-        { green: 2, amber: 0, red: 0, notes: "Mostly effective reporting, continue to monitor." },
-        { green: 3, amber: 0, red: 0, notes: "Authorisations generally sound." },
-        { green: 3, amber: 0, red: 0, notes: "Sales processes demonstrate compliance." },
-        { green: 4, amber: 0, red: 0, notes: "Fair value benchmarking, Klassify system used." },
-        { green: 4, amber: 0, red: 0, notes: "AML, KYC, sanctions, and fraud controls operating effectively." },
-        { green: 1, amber: 1, red: 0, notes: "Website footnote disclosure requires updating: 'We will receive commission…'" },
-        { green: 2, amber: 0, red: 0, notes: "Complaints managed through Klassify; no concerns raised." },
-        { green: 1, amber: 0, red: 0, notes: "Oversight controls effective." },
+        { pass: 5, attention: 0, fail: 0, notes: "Strong governance controls observed; no material gaps identified." },
+        { pass: 2, attention: 0, fail: 0, notes: "Mostly effective reporting, continue to monitor." },
+        { pass: 3, attention: 0, fail: 0, notes: "Authorisations generally sound." },
+        { pass: 3, attention: 0, fail: 0, notes: "Sales processes demonstrate compliance." },
+        { pass: 4, attention: 0, fail: 0, notes: "Fair value benchmarking, Klassify system used." },
+        { pass: 4, attention: 0, fail: 0, notes: "AML, KYC, sanctions, and fraud controls operating effectively." },
+        { pass: 1, attention: 1, fail: 0, notes: "Website footnote disclosure requires updating: 'We will receive commission…'" },
+        { pass: 2, attention: 0, fail: 0, notes: "Complaints managed through Klassify; no concerns raised." },
+        { pass: 1, attention: 0, fail: 0, notes: "Oversight controls effective." },
       ]);
       return {
         dealerName: "Dynasty Partners Limited",
-        overallRag: "amber",
         overallScore: 68,
         customerSentimentScore: 8.2,
         customerSentimentTrend: 0.4,
@@ -709,19 +704,18 @@ function generateRealDealerAudit(dealerName: string): DealerAudit | null {
     },
     "Shirlaws Limited": () => {
       const sections = buildSectionsFromSummary([
-        { green: 4, amber: 0, red: 1, notes: "CreditSafe Category D with negative financials – high risk." },
-        { green: 2, amber: 0, red: 0, notes: "Mostly effective reporting." },
-        { green: 3, amber: 0, red: 0, notes: "Authorisations generally sound." },
-        { green: 1, amber: 0, red: 1, notes: "2 instances of missing Demands & Needs Statement for finance customers." },
-        { green: 4, amber: 0, red: 0, notes: "Fair value benchmarking, Klassify system used." },
-        { green: 4, amber: 0, red: 0, notes: "AML, KYC, sanctions, and fraud controls operating effectively." },
-        { green: 0, amber: 2, red: 0, notes: "Representative APR required on website and social media." },
-        { green: 2, amber: 0, red: 0, notes: "Complaints managed through Klassify; 7 recent 1-star reviews noted." },
-        { green: 1, amber: 0, red: 0, notes: "Oversight controls effective." },
+        { pass: 4, attention: 0, fail: 1, notes: "CreditSafe Category D with negative financials – high risk." },
+        { pass: 2, attention: 0, fail: 0, notes: "Mostly effective reporting." },
+        { pass: 3, attention: 0, fail: 0, notes: "Authorisations generally sound." },
+        { pass: 1, attention: 0, fail: 1, notes: "2 instances of missing Demands & Needs Statement for finance customers." },
+        { pass: 4, attention: 0, fail: 0, notes: "Fair value benchmarking, Klassify system used." },
+        { pass: 4, attention: 0, fail: 0, notes: "AML, KYC, sanctions, and fraud controls operating effectively." },
+        { pass: 0, attention: 2, fail: 0, notes: "Representative APR required on website and social media." },
+        { pass: 2, attention: 0, fail: 0, notes: "Complaints managed through Klassify; 7 recent 1-star reviews noted." },
+        { pass: 1, attention: 0, fail: 0, notes: "Oversight controls effective." },
       ]);
       return {
         dealerName: "Shirlaws Limited",
-        overallRag: "red",
         overallScore: 38,
         customerSentimentScore: 5.1,
         customerSentimentTrend: -0.8,
@@ -746,19 +740,18 @@ function generateRealDealerAudit(dealerName: string): DealerAudit | null {
     },
     "Platinum Vehicle Specialists": () => {
       const sections = buildSectionsFromSummary([
-        { green: 5, amber: 0, red: 0, notes: "Strong governance controls observed." },
-        { green: 2, amber: 0, red: 0, notes: "Mostly effective reporting." },
-        { green: 3, amber: 0, red: 0, notes: "Authorisations generally sound." },
-        { green: 0, amber: 0, red: 2, notes: "Missing IDD and Demands & Needs Statement for finance agreement." },
-        { green: 4, amber: 0, red: 0, notes: "Fair value benchmarking, Klassify system used." },
-        { green: 4, amber: 0, red: 0, notes: "AML, KYC, sanctions, and fraud controls operating effectively." },
-        { green: 0, amber: 2, red: 0, notes: "Missing representative APR on website and social media." },
-        { green: 2, amber: 0, red: 0, notes: "Complaints managed through Klassify; no concerns." },
-        { green: 1, amber: 0, red: 0, notes: "Oversight controls effective." },
+        { pass: 5, attention: 0, fail: 0, notes: "Strong governance controls observed." },
+        { pass: 2, attention: 0, fail: 0, notes: "Mostly effective reporting." },
+        { pass: 3, attention: 0, fail: 0, notes: "Authorisations generally sound." },
+        { pass: 0, attention: 0, fail: 2, notes: "Missing IDD and Demands & Needs Statement for finance agreement." },
+        { pass: 4, attention: 0, fail: 0, notes: "Fair value benchmarking, Klassify system used." },
+        { pass: 4, attention: 0, fail: 0, notes: "AML, KYC, sanctions, and fraud controls operating effectively." },
+        { pass: 0, attention: 2, fail: 0, notes: "Missing representative APR on website and social media." },
+        { pass: 2, attention: 0, fail: 0, notes: "Complaints managed through Klassify; no concerns." },
+        { pass: 1, attention: 0, fail: 0, notes: "Oversight controls effective." },
       ]);
       return {
         dealerName: "Platinum Vehicle Specialists",
-        overallRag: "red",
         overallScore: 42,
         customerSentimentScore: 8.2,
         customerSentimentTrend: 0.4,
@@ -788,16 +781,14 @@ function generateRealDealerAudit(dealerName: string): DealerAudit | null {
 }
 
 // Helper to build sections from summary data for real dealers
-function buildSectionsFromSummary(summaries: Array<{ green: number; amber: number; red: number; notes: string }>): AuditSection[] {
+function buildSectionsFromSummary(summaries: Array<{ pass: number; attention: number; fail: number; notes: string }>): AuditSection[] {
   return AUDIT_SECTIONS.map((def, i) => {
     const s = summaries[i];
-    const ragStatus: RagStatus = s.red > 0 ? "red" : s.amber > 0 ? "amber" : "green";
+    const outcome: "pass" | "attention" | "fail" = s.fail > 0 ? "fail" : s.attention > 0 ? "attention" : "pass";
     
-    // Generate appropriate controls for the section count
-    const totalControls = s.green + s.amber + s.red;
     const controls: ControlCheck[] = [];
     
-    for (let c = 0; c < s.green; c++) {
+    for (let c = 0; c < s.pass; c++) {
       controls.push({
         id: `${def.id}-g${c}`,
         controlArea: `${def.name} Control ${c + 1}`,
@@ -806,35 +797,35 @@ function buildSectionsFromSummary(summaries: Array<{ green: number; amber: numbe
         evidence: "Documented evidence",
         result: "pass",
         frequency: "Quarterly",
-        riskRating: "green",
+        riskRating: "pass",
         comments: "Operating effectively",
         automated: c % 2 === 0,
       });
     }
-    for (let c = 0; c < s.amber; c++) {
+    for (let c = 0; c < s.attention; c++) {
       controls.push({
         id: `${def.id}-a${c}`,
-        controlArea: `${def.name} Control ${s.green + c + 1}`,
+        controlArea: `${def.name} Control ${s.pass + c + 1}`,
         objective: "Monitor and remediate",
         sourceMethod: "Manual Review",
         evidence: "Review notes",
         result: "partial",
         frequency: "Risk Based",
-        riskRating: "amber",
+        riskRating: "attention",
         comments: s.notes,
         automated: false,
       });
     }
-    for (let c = 0; c < s.red; c++) {
+    for (let c = 0; c < s.fail; c++) {
       controls.push({
         id: `${def.id}-r${c}`,
-        controlArea: `${def.name} Control ${s.green + s.amber + c + 1}`,
+        controlArea: `${def.name} Control ${s.pass + s.attention + c + 1}`,
         objective: "Immediate remediation required",
         sourceMethod: "Review Required",
         evidence: "Under investigation",
         result: "fail",
         frequency: "Immediate",
-        riskRating: "red",
+        riskRating: "fail",
         comments: s.notes,
         automated: false,
       });
@@ -845,7 +836,7 @@ function buildSectionsFromSummary(summaries: Array<{ green: number; amber: numbe
       name: def.name,
       icon: def.icon,
       controls,
-      summary: { green: s.green, amber: s.amber, red: s.red, ragStatus, notes: s.notes },
+      summary: { pass: s.pass, attention: s.attention, fail: s.fail, outcome, notes: s.notes },
     };
   });
 }
@@ -865,63 +856,63 @@ export function generateDealerAudit(dealerName: string, dealerIndex: number): De
       name: "Corporate Governance",
       icon: "Building2",
       controls: generateGovernanceControls(dealerIndex),
-      summary: { green: 0, amber: 0, red: 0, ragStatus: "green", notes: "" },
+      summary: { pass: 0, attention: 0, fail: 0, outcome: "pass", notes: "" },
     },
     {
       id: "digital-reporting",
       name: "Digital & Reporting",
       icon: "Monitor",
       controls: generateDigitalReportingControls(dealerIndex),
-      summary: { green: 0, amber: 0, red: 0, ragStatus: "green", notes: "" },
+      summary: { pass: 0, attention: 0, fail: 0, outcome: "pass", notes: "" },
     },
     {
       id: "permissions",
       name: "Permissions",
       icon: "ShieldCheck",
       controls: generatePermissionsControls(dealerIndex),
-      summary: { green: 0, amber: 0, red: 0, ragStatus: "green", notes: "" },
+      summary: { pass: 0, attention: 0, fail: 0, outcome: "pass", notes: "" },
     },
     {
       id: "sales",
       name: "Sales Process",
       icon: "Receipt",
       controls: generateSalesControls(dealerIndex),
-      summary: { green: 0, amber: 0, red: 0, ragStatus: "green", notes: "" },
+      summary: { pass: 0, attention: 0, fail: 0, outcome: "pass", notes: "" },
     },
     {
       id: "consumer-duty",
       name: "Consumer Duty",
       icon: "Users",
       controls: generateConsumerDutyControls(dealerIndex),
-      summary: { green: 0, amber: 0, red: 0, ragStatus: "green", notes: "" },
+      summary: { pass: 0, attention: 0, fail: 0, outcome: "pass", notes: "" },
     },
     {
       id: "financial-crime",
       name: "Financial Crime / Fraud",
       icon: "AlertTriangle",
       controls: generateFinancialCrimeControls(dealerIndex),
-      summary: { green: 0, amber: 0, red: 0, ragStatus: "green", notes: "" },
+      summary: { pass: 0, attention: 0, fail: 0, outcome: "pass", notes: "" },
     },
     {
       id: "financial-promotions",
       name: "Financial Promotions",
       icon: "Megaphone",
       controls: generateFinancialPromotionsControls(dealerIndex),
-      summary: { green: 0, amber: 0, red: 0, ragStatus: "green", notes: "" },
+      summary: { pass: 0, attention: 0, fail: 0, outcome: "pass", notes: "" },
     },
     {
       id: "communications",
       name: "Communications & Complaints",
       icon: "MessageSquare",
       controls: generateCommunicationsControls(dealerIndex),
-      summary: { green: 0, amber: 0, red: 0, ragStatus: "green", notes: "" },
+      summary: { pass: 0, attention: 0, fail: 0, outcome: "pass", notes: "" },
     },
     {
       id: "conduct",
       name: "Conduct Oversight",
       icon: "Eye",
       controls: generateConductControls(dealerIndex),
-      summary: { green: 0, amber: 0, red: 0, ragStatus: "green", notes: "" },
+      summary: { pass: 0, attention: 0, fail: 0, outcome: "pass", notes: "" },
     },
   ];
   
@@ -930,12 +921,6 @@ export function generateDealerAudit(dealerName: string, dealerIndex: number): De
   });
   
   const allControls = sections.flatMap(s => s.controls);
-  const redCount = allControls.filter(c => c.riskRating === "red").length;
-  const amberCount = allControls.filter(c => c.riskRating === "amber").length;
-  
-  let overallRag: RagStatus = "green";
-  if (redCount > 0) overallRag = "red";
-  else if (amberCount > 1) overallRag = "amber";
   
   const passCount = allControls.filter(c => c.result === "pass").length;
   const overallScore = Math.round((passCount / allControls.length) * 100);
@@ -953,12 +938,10 @@ export function generateDealerAudit(dealerName: string, dealerIndex: number): De
     { label: "Performance", score: Math.min(10, Math.max(0, perfScore)), trend: Math.round(((seed % 6) - 3) / 10 * 10) / 10 },
   ];
 
-  // Determine firm type from dealer index
   const firmType = dealerIndex % 5 === 0 ? "DA" : "AR";
 
   return {
     dealerName,
-    overallRag,
     overallScore,
     customerSentimentScore: Math.round(baseCSS * 10) / 10,
     customerSentimentTrend: Math.round(cssTrend * 10) / 10,
@@ -967,9 +950,9 @@ export function generateDealerAudit(dealerName: string, dealerIndex: number): De
     sections,
     keyActions: generateKeyActions(sections, dealerIndex),
     firmType,
-    assuranceStatement: overallRag === "green"
+    assuranceStatement: overallScore >= 80
       ? `${dealerName} remains compliant, well-controlled, and aligned with FCA expectations, with ongoing monitoring in place.`
-      : overallRag === "amber"
+      : overallScore >= 55
       ? `${dealerName} remains mainly compliant with minor risks raised. Continuous monitoring as BAU.`
       : `TCG recommends a review into the firm's compliance controls before proceeding.`,
   };

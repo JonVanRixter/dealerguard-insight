@@ -22,9 +22,9 @@ export function ControlsBreakdownChart({ sections }: ControlsBreakdownChartProps
       return {
         name: shortName,
         fullName: s.name,
-        Pass: s.summary.green,
-        Attention: s.summary.amber,
-        Fail: s.summary.red,
+        Pass: s.summary.pass,
+        Attention: s.summary.attention,
+        Fail: s.summary.fail,
       };
     });
   }, [sections]);
