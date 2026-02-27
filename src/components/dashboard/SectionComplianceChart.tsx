@@ -33,8 +33,8 @@ export function SectionComplianceChart() {
       const audit = generateDealerAudit(dealer.name, idx);
       audit.sections.forEach((section, sIdx) => {
         if (sIdx < sectionStats.length) {
-          if (section.summary.ragStatus === "green") sectionStats[sIdx].pass++;
-          else if (section.summary.ragStatus === "amber") sectionStats[sIdx].attention++;
+          if (section.summary.outcome === "pass") sectionStats[sIdx].pass++;
+          else if (section.summary.outcome === "attention") sectionStats[sIdx].attention++;
           else sectionStats[sIdx].fail++;
         }
       });

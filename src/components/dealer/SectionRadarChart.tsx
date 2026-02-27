@@ -17,8 +17,8 @@ interface SectionRadarChartProps {
 export function SectionRadarChart({ sections }: SectionRadarChartProps) {
   const data = useMemo(() => {
     return sections.map((s) => {
-      const total = s.summary.green + s.summary.amber + s.summary.red;
-      const score = total > 0 ? Math.round((s.summary.green / total) * 100) : 0;
+      const total = s.summary.pass + s.summary.attention + s.summary.fail;
+      const score = total > 0 ? Math.round((s.summary.pass / total) * 100) : 0;
       // Short label for radar axis
       const shortName =
         s.name.length > 16 ? s.name.slice(0, 14) + "…" : s.name;

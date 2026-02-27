@@ -35,7 +35,7 @@ const RiskLabel = ({ rating }: { rating: string }) => {
 export function AuditSectionCard({ section, defaultExpanded = false }: AuditSectionCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
-  const sectionStatus = section.summary.red > 0 ? "Fail" : section.summary.amber > 0 ? "Attention" : "Pass";
+  const sectionStatus = section.summary.fail > 0 ? "Fail" : section.summary.attention > 0 ? "Attention" : "Pass";
 
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden">
@@ -51,9 +51,9 @@ export function AuditSectionCard({ section, defaultExpanded = false }: AuditSect
         </div>
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
-            <span>Pass: {section.summary.green}</span>
-            <span>Attn: {section.summary.amber}</span>
-            <span>Fail: {section.summary.red}</span>
+            <span>Pass: {section.summary.pass}</span>
+            <span>Attn: {section.summary.attention}</span>
+            <span>Fail: {section.summary.fail}</span>
           </div>
           {isExpanded ? (
             <ChevronUp className="w-4 h-4 text-muted-foreground" />

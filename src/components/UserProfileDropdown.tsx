@@ -133,7 +133,7 @@ export function UserProfileDropdown() {
             {[
               { label: "Email notifications", defaultOn: true },
               { label: "Push notifications", defaultOn: false },
-              { label: "RAG status change alerts", defaultOn: true },
+              { label: "Score change alerts", defaultOn: true },
               { label: "Weekly digest summary", defaultOn: true },
             ].map((item) => (
               <div key={item.label} className="flex items-center justify-between">
