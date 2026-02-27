@@ -313,7 +313,8 @@
           { "directorName": "David Michael Crown", "sanctionsResult": "Clear", "pepResult": "No PEP", "adverseMediaResult": "None found", "screeningDate": "2026-02-01" }
         ],
         "overallResult": "Pass",
-        "flags": ["Discharged CCJ — 2024 — noted for monitoring"]
+        "flags": [],
+        "notes": "Discharged CCJ — 2024 — noted for monitoring"
       }
     }
   },
