@@ -10,6 +10,7 @@ export interface Dealer {
   trend: "up" | "down" | "stable";
   region: string;
   firmType: FirmType;
+  principalFirm: string | null;
   phone: string;
   postcode: string;
   address: string;
@@ -59,6 +60,12 @@ const postcodeAreas = [
   "LE1 1QQ", "CV1 1RR", "BD1 1SS", "HU1 1TT", "ST1 1UU", "WV1 1VV", "DE1 1WW",
   "SA1 1XX", "PL1 1YY", "RG1 1ZZ", "AB1 1AB", "BH1 1BC", "TS1 1CD", "BL1 1DE",
   "LU1 1EF", "SR1 1FG", "NR1 1GH", "PR1 1HJ", "MK1 1JK", "BN1 1KL", "OX1 1LM",
+];
+
+const principalFirms = [
+  "Apex Motor Finance Ltd", "Stellantis Financial Services UK", "Black Horse Ltd",
+  "MotoNovo Finance", "Close Brothers Motor Finance", "Startline Motor Finance",
+  "First Response Finance", "Marsh Finance", "Evolution Funding", "Alphera Financial Services",
 ];
 
 function seededRandom(seed: number): number {
@@ -177,6 +184,7 @@ function generateDealer(index: number): Dealer {
     trend,
     region,
     firmType,
+    principalFirm: firmType === "AR" ? principalFirms[index % principalFirms.length] : null,
     phone,
     postcode: index === 21 ? postcodeAreas[20 % postcodeAreas.length] : postcode,
     address,
@@ -199,6 +207,7 @@ const realDealers: Dealer[] = [
     trend: "stable",
     region: "Lincoln",
     firmType: "AR",
+    principalFirm: "Apex Motor Finance Ltd",
     phone: "01522 456789",
     postcode: "LN1 3AA",
     address: "12 High Street, Lincoln",
@@ -214,6 +223,7 @@ const realDealers: Dealer[] = [
     trend: "up",
     region: "London",
     firmType: "DA",
+    principalFirm: null,
     phone: "020 7946 0958",
     postcode: "EC2A 4NE",
     address: "45 Finsbury Square, London",
@@ -229,6 +239,7 @@ const realDealers: Dealer[] = [
     trend: "down",
     region: "Glasgow",
     firmType: "AR",
+    principalFirm: "MotoNovo Finance",
     phone: "0141 352 4567",
     postcode: "G1 1EE",
     address: "78 Argyle Street, Glasgow",
@@ -244,6 +255,7 @@ const realDealers: Dealer[] = [
     trend: "down",
     region: "Birmingham",
     firmType: "AR",
+    principalFirm: "Close Brothers Motor Finance",
     phone: "0121 678 9012",
     postcode: "B1 1BB",
     address: "15 Station Road, Birmingham",

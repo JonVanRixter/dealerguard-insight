@@ -162,6 +162,9 @@ const DealerDetail = () => {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
               <span>FCA Ref: <span className="font-medium text-foreground">{fcaRef}</span></span>
               <span>Firm Type: <span className="font-medium text-foreground">{audit.firmType === "AR" ? "Appointed Representative" : "Directly Authorised"}</span></span>
+              {audit.firmType === "AR" && dealerData.dealer?.principalFirm && (
+                <span>Principal Firm: <span className="font-medium text-foreground">{dealerData.dealer.principalFirm}</span></span>
+              )}
               <span>Last Audit: <span className="font-medium text-foreground">{audit.lastAuditDate}</span></span>
               <span className="inline-flex items-center gap-1">
                 <FolderOpen className="w-3.5 h-3.5" />
