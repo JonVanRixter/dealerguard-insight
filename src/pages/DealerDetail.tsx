@@ -197,8 +197,8 @@ const DealerDetail = () => {
         </div>
 
         {/* Top Cards: Customer Sentiment + Action Status | Report Summary */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-stretch">
-          <div className="flex flex-col gap-4 min-h-0 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="flex flex-col gap-4 lg:h-0 lg:min-h-full overflow-hidden">
             <CustomerSentimentCard
               score={audit.customerSentimentScore}
               trend={audit.customerSentimentTrend}
