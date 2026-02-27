@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -15,7 +16,11 @@ import {
   CheckCircle2,
   XCircle,
   ExternalLink,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 interface FirmData {
   "Organisation Name"?: string;
@@ -89,6 +94,21 @@ export function FcaRegisterCard({ dealerName, fcaRef, onDataLoaded }: Props) {
   const [showIndividuals, setShowIndividuals] = useState(false);
   const [showPermissions, setShowPermissions] = useState(false);
   const notified = useRef(false);
+  const { toast } = useToast();
+  const [rechecking, setRechecking] = useState(false);
+  const [lastChecked, setLastChecked] = useState<string | null>(null);
+
+  const handleRecheck = useCallback(() => {
+    setRechecking(true);
+    setTimeout(() => {
+      setRechecking(false);
+      setLastChecked(new Date().toISOString());
+      toast({
+        title: "✅ FCA Register check refreshed",
+        description: `Simulated re-check completed — ${format(new Date(), "dd MMM yyyy HH:mm")}`,
+      });
+    }, 1500);
+  }, [toast]);
 
   const { firm, individuals, permissions } = generateMockFcaData(dealerName, fcaRef);
 
@@ -153,7 +173,16 @@ export function FcaRegisterCard({ dealerName, fcaRef, onDataLoaded }: Props) {
             </p>
           </div>
           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 text-muted-foreground">SIMULATED DATA</Badge>
+          {lastChecked && (
+            <span className="text-[10px] text-muted-foreground ml-1">
+              Last checked: {format(new Date(lastChecked), "dd MMM yyyy HH:mm")}
+            </span>
+          )}
         </div>
+        <Button variant="ghost" size="sm" onClick={handleRecheck} disabled={rechecking} className="gap-1.5 text-xs h-7">
+          {rechecking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+          Re-check
+        </Button>
       </div>
 
       <div className="px-5 py-4 space-y-4">
