@@ -154,15 +154,22 @@ const Index = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Lenders */}
           <div
-            className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in cursor-pointer hover:border-primary/40 transition-colors"
+            className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in cursor-pointer hover:bg-[hsl(262_60%_97%)] hover:border-primary/40 transition-colors group"
             style={{ animationDelay: "0ms", animationFillMode: "forwards" }}
             onClick={() => navigate("/tcg/lenders")}
           >
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
-              <Users className="w-4 h-4" />
+              <Building2 className="w-4 h-4" />
               Total Lenders
             </div>
             <span className="text-4xl font-bold text-foreground">{animatedLenders}</span>
+            <div className="flex items-center justify-between mt-2">
+              <div className="flex gap-3 text-xs text-muted-foreground">
+                <span>Active: <span className="font-semibold text-foreground">{tcgLenders.filter(l => l.status === "Active").length}</span></span>
+                <span>Pending: <span className="font-semibold text-foreground">{tcgLenders.filter(l => l.status === "Pending Activation").length}</span></span>
+              </div>
+              <span className="text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">View →</span>
+            </div>
           </div>
 
           {/* Total Dealers */}
