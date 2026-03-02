@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { tcgLenders } from "@/data/tcg/lenders";
+import { allTcgLenders } from "@/data/tcg/lenders";
 import { tcgDealers } from "@/data/tcg/dealers";
 import {
   ArrowLeft,
@@ -46,7 +46,7 @@ import { toast } from "sonner";
 const LenderProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const lender = tcgLenders.find((l) => l.id === id);
+  const lender = allTcgLenders.find((l) => l.id === id);
 
   const [impersonating, setImpersonating] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);

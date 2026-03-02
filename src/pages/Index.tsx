@@ -27,7 +27,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { dealers, activities } from "@/data/dealers";
 import { tcgDealers, tcgPortfolioStats } from "@/data/tcg/dealers";
-import { tcgLenders } from "@/data/tcg/lenders";
+import { allTcgLenders } from "@/data/tcg/lenders";
 import { TrendHighlightsWidget } from "@/components/dashboard/TrendHighlightsWidget";
 import { useAnimatedCounter } from "@/hooks/useAnimatedCounter";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -93,7 +93,7 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const animatedLenders = useAnimatedCounter(tcgLenders.length);
+  const animatedLenders = useAnimatedCounter(allTcgLenders.length);
   const animatedDealers = useAnimatedCounter(tcgPortfolioStats.total);
   const animatedAvgScore = useAnimatedCounter(Math.round(tcgPortfolioStats.avgScore));
   const animatedPending = useAnimatedCounter(pendingReviews);
@@ -165,8 +165,8 @@ const Index = () => {
             <span className="text-4xl font-bold text-foreground">{animatedLenders}</span>
             <div className="flex items-center justify-between mt-2">
               <div className="flex gap-3 text-xs text-muted-foreground">
-                <span>Active: <span className="font-semibold text-foreground">{tcgLenders.filter(l => l.status === "Active").length}</span></span>
-                <span>Pending: <span className="font-semibold text-foreground">{tcgLenders.filter(l => l.status === "Pending Activation").length}</span></span>
+                <span>Active: <span className="font-semibold text-foreground">{allTcgLenders.filter(l => l.status === "Active").length}</span></span>
+                <span>Pending: <span className="font-semibold text-foreground">{allTcgLenders.filter(l => l.status === "Pending Activation").length}</span></span>
               </div>
               <span className="text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">View →</span>
             </div>
@@ -232,8 +232,14 @@ const Index = () => {
 
         {/* Lender Activity Summary */}
         <div className="bg-card rounded-xl border border-border">
-          <div className="px-5 py-4 border-b border-border">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <h3 className="text-sm font-semibold text-foreground">Lender Activity Summary</h3>
+            <button
+              onClick={() => navigate("/tcg/lenders")}
+              className="text-xs text-primary hover:underline font-medium"
+            >
+              View all {allTcgLenders.length} lenders →
+            </button>
           </div>
           <div className="overflow-x-auto">
             <Table>
@@ -249,8 +255,13 @@ const Index = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tcgLenders.map((lender) => {
+                {allTcgLenders
+                  .slice()
+                  .sort((a, b) => b.pendingAlerts - a.pendingAlerts)
+                  .slice(0, 10)
+                  .map((lender) => {
                   const isPending = lender.status === "Pending Activation";
+                  const isInactive = lender.status === "Inactive";
                   return (
                     <TableRow
                       key={lender.id}
@@ -277,13 +288,15 @@ const Index = () => {
                         <span
                           className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
                           style={{
-                            color: isPending ? "hsl(var(--outcome-pending))" : "hsl(var(--outcome-pass))",
+                            color: isPending ? "hsl(var(--outcome-pending))" : isInactive ? "hsl(var(--muted-foreground))" : "hsl(var(--outcome-pass))",
                             backgroundColor: isPending
                               ? "color-mix(in srgb, hsl(var(--outcome-pending)) 12%, transparent)"
-                              : "color-mix(in srgb, hsl(var(--outcome-pass)) 12%, transparent)",
+                              : isInactive
+                                ? "color-mix(in srgb, hsl(var(--muted-foreground)) 12%, transparent)"
+                                : "color-mix(in srgb, hsl(var(--outcome-pass)) 12%, transparent)",
                           }}
                         >
-                          {isPending ? "⏳ Pending" : "● Active"}
+                          {isPending ? "⏳ Pending" : isInactive ? "● Inactive" : "● Active"}
                         </span>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm whitespace-nowrap">

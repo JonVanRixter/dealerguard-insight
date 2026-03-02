@@ -41,7 +41,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Progress } from "@/components/ui/progress";
 import { dealers, portfolioStats } from "@/data/dealers";
 import { tcgDealers } from "@/data/tcg/dealers";
-import { tcgLenders } from "@/data/tcg/lenders";
+import { allTcgLenders } from "@/data/tcg/lenders";
 import { BatchAiSummary } from "@/components/dealer/BatchAiSummary";
 import { DuplicateFlagsBanner } from "@/components/dealer/DuplicateFlagsBanner";
 import { supabase } from "@/integrations/supabase/client";
@@ -286,7 +286,7 @@ const Dealers = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Lenders</SelectItem>
-                    {tcgLenders.map((l) => (
+                    {allTcgLenders.map((l) => (
                       <SelectItem key={l.id} value={l.id}>{l.tradingName}</SelectItem>
                     ))}
                   </SelectContent>
