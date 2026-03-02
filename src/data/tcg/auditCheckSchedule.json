@@ -1,0 +1,86 @@
+[
+  {
+    "sectionId": "s1",
+    "sectionName": "Corporate Governance",
+    "controls": [
+      { "id": "s1c1", "name": "Legal entity status — active/dissolved", "frequency": "Quarterly", "frequencyDays": 92, "riskRating": "Medium" },
+      { "id": "s1c2", "name": "Entity/trading names alignment — FCA, ICO, website", "frequency": "Quarterly", "frequencyDays": 92, "riskRating": "Medium" },
+      { "id": "s1c3", "name": "Directors & PSCs — 24-month change history", "frequency": "Quarterly", "frequencyDays": 92, "riskRating": "Medium" },
+      { "id": "s1c4", "name": "Adverse media, sanctions & PEP screening — directors/controllers", "frequency": "Continuous / Quarterly Review", "frequencyDays": 92, "riskRating": "High" },
+      { "id": "s1c5", "name": "Declaration of criminal/regulatory sanctions", "frequency": "Onboarding then Annual", "frequencyDays": 365, "riskRating": "Medium" }
+    ]
+  },
+  {
+    "sectionId": "s2",
+    "sectionName": "Permissions",
+    "controls": [
+      { "id": "s2c1", "name": "FCA authorisation & permissions including AR status", "frequency": "Quarterly", "frequencyDays": 92, "riskRating": "High" },
+      { "id": "s2c2", "name": "Competence — role-based training & competence matrix", "frequency": "Annual", "frequencyDays": 365, "riskRating": "High" },
+      { "id": "s2c3", "name": "SMF allocation for oversight touchpoints", "frequency": "Annual", "frequencyDays": 365, "riskRating": "Medium" },
+      { "id": "s2c4", "name": "Cross-reference Companies House, website, director names", "frequency": "Annual", "frequencyDays": 365, "riskRating": "Medium" }
+    ]
+  },
+  {
+    "sectionId": "s3",
+    "sectionName": "Sales Process",
+    "controls": [
+      { "id": "s3c1", "name": "Pre-contract disclosure provided before agreement", "frequency": "Per Application", "frequencyDays": 30, "riskRating": "High" },
+      { "id": "s3c2", "name": "Affordability & eligibility checks per lender policy", "frequency": "Per Application", "frequencyDays": 30, "riskRating": "High" }
+    ]
+  },
+  {
+    "sectionId": "s4",
+    "sectionName": "Consumer Duty",
+    "controls": [
+      { "id": "s4c1", "name": "Fair value benchmarking — APR vs aggregated benchmark", "frequency": "Quarterly", "frequencyDays": 92, "riskRating": "High" },
+      { "id": "s4c2", "name": "Products and services review", "frequency": "Quarterly", "frequencyDays": 92, "riskRating": "High" },
+      { "id": "s4c3", "name": "Consumer understanding", "frequency": "Quarterly", "frequencyDays": 92, "riskRating": "High" },
+      { "id": "s4c4", "name": "Consumer support", "frequency": "Monthly", "frequencyDays": 30, "riskRating": "High" },
+      { "id": "s4c5", "name": "Vulnerability identification & treatment", "frequency": "Per Application / Quarterly", "frequencyDays": 92, "riskRating": "High" }
+    ]
+  },
+  {
+    "sectionId": "s5",
+    "sectionName": "Financial Crime & Fraud",
+    "controls": [
+      { "id": "s5c1", "name": "KYC/IDV completed", "frequency": "Per Application", "frequencyDays": 30, "riskRating": "Medium" },
+      { "id": "s5c2", "name": "Sanctions & PEP screening at application", "frequency": "Per Application", "frequencyDays": 30, "riskRating": "Medium" },
+      { "id": "s5c3", "name": "Device/IP geolocation anomaly", "frequency": "Per Application", "frequencyDays": 30, "riskRating": "Medium" },
+      { "id": "s5c4", "name": "Velocity patterning — multiple apps per customer/device/email", "frequency": "Per Application", "frequencyDays": 30, "riskRating": "Medium" },
+      { "id": "s5c5", "name": "Bank detail/payout mismatch", "frequency": "Per Application", "frequencyDays": 30, "riskRating": "Medium" },
+      { "id": "s5c6", "name": "Application data integrity — OCR vs keyed, cloning fingerprint", "frequency": "Per Application", "frequencyDays": 30, "riskRating": "Medium" }
+    ]
+  },
+  {
+    "sectionId": "s6",
+    "sectionName": "Financial Promotions",
+    "controls": [
+      { "id": "s6c1", "name": "Website compliance — clear, fair, not misleading / privacy & cookies", "frequency": "Risk Based", "frequencyDays": 90, "riskRating": "Medium" },
+      { "id": "s6c2", "name": "Social media monitoring for financial promotion posts", "frequency": "Risk Based", "frequencyDays": 90, "riskRating": "Medium" }
+    ]
+  },
+  {
+    "sectionId": "s7",
+    "sectionName": "Communications & Complaints",
+    "controls": [
+      { "id": "s7c1", "name": "Use of alternative channels — monitored & retained", "frequency": "Monthly", "frequencyDays": 30, "riskRating": "Medium" },
+      { "id": "s7c2", "name": "Volume benchmarking vs customer sentiment score", "frequency": "Monthly", "frequencyDays": 30, "riskRating": "High" },
+      { "id": "s7c3", "name": "Root cause analysis & remediation tracking", "frequency": "Monthly", "frequencyDays": 30, "riskRating": "High" },
+      { "id": "s7c4", "name": "Complaints questionnaire", "frequency": "Risk Based", "frequencyDays": 90, "riskRating": "High" }
+    ]
+  },
+  {
+    "sectionId": "s8",
+    "sectionName": "Conduct Oversight",
+    "controls": [
+      { "id": "s8c1", "name": "Arrears, forbearance & referral patterning — dealer-level trends", "frequency": "Trigger Based", "frequencyDays": 30, "riskRating": "Medium" }
+    ]
+  },
+  {
+    "sectionId": "s9",
+    "sectionName": "Policies",
+    "controls": [
+      { "id": "s9c1", "name": "Policy suite review — existence, currency, and date of last review", "frequency": "Annual (after onboarding or after updates)", "frequencyDays": 365, "riskRating": "Medium" }
+    ]
+  }
+]
