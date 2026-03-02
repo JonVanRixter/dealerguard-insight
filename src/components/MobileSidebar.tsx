@@ -11,6 +11,8 @@ import {
   UserPlus,
   ClipboardCheck,
   ShieldBan,
+  ClipboardList,
+  Users,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import klassifyProLogo from "@/assets/klassify-pro-logo.png";
@@ -20,7 +22,9 @@ const navItems = [
   { title: "Pre‑Onboarding", url: "/pre-onboarding", icon: UserPlus },
   { title: "Onboarding", url: "/onboarding", icon: ClipboardCheck },
   { title: "Do Not Deal", url: "/banned-list", icon: ShieldBan },
+  { title: "Lender Directory", url: "/tcg/lenders", icon: Users },
   { title: "Dealer Portfolio", url: "/dealers", icon: Building2 },
+  { title: "Review Queue", url: "/tcg/review-queue", icon: ClipboardList },
   { title: "Documents", url: "/documents", icon: FolderOpen },
   { title: "Alerts", url: "/alerts", icon: Bell },
   { title: "Reports", url: "/reports", icon: FileBarChart },

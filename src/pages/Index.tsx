@@ -153,7 +153,11 @@ const Index = () => {
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Lenders */}
-          <div className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in" style={{ animationDelay: "0ms", animationFillMode: "forwards" }}>
+          <div
+            className="bg-card rounded-xl border border-border p-5 opacity-0 animate-fade-in cursor-pointer hover:border-primary/40 transition-colors"
+            style={{ animationDelay: "0ms", animationFillMode: "forwards" }}
+            onClick={() => navigate("/tcg/lenders")}
+          >
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
               <Users className="w-4 h-4" />
               Total Lenders
