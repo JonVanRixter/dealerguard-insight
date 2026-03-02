@@ -36,7 +36,6 @@ import {
   Download,
   X,
   FolderOpen,
-  CalendarDays,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
@@ -47,35 +46,8 @@ import { BatchAiSummary } from "@/components/dealer/BatchAiSummary";
 import { DuplicateFlagsBanner } from "@/components/dealer/DuplicateFlagsBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { getControlCadence } from "@/utils/auditCheckCadence";
-import auditCheckSchedule from "@/data/tcg/auditCheckSchedule.json";
 
 const ITEMS_PER_PAGE = 15;
-
-const SCHEDULE_LABELS: Record<string, { label: string; icon: string; className: string }> = {
-  overdue: { label: "Overdue checks", icon: "🔴", className: "text-[hsl(0,84%,60%)]" },
-  urgent: { label: "Due within 10 days", icon: "🔴", className: "text-[hsl(0,84%,60%)]" },
-  "due-soon": { label: "Due within 30 days", icon: "🟡", className: "text-[hsl(38,92%,50%)]" },
-};
-
-/** Returns set of dealer IDs matching a schedule filter */
-function getDealerIdsBySchedule(filter: string): Set<string> {
-  const ids = new Set<string>();
-  for (const dealer of tcgDealers) {
-    for (const section of auditCheckSchedule) {
-      for (const ctrl of section.controls) {
-        const cadence = getControlCadence(dealer.name, section.sectionName, ctrl.name, ctrl.id);
-        if (!cadence) continue;
-        const match =
-          (filter === "overdue" && cadence.daysUntilDue <= 0) ||
-          (filter === "urgent" && cadence.daysUntilDue > 0 && cadence.status === "red") ||
-          (filter === "due-soon" && cadence.status === "amber");
-        if (match) ids.add(dealer.id);
-      }
-    }
-  }
-  return ids;
-}
 
 type SortKey = "name" | "score" | "region";
 type SortDir = "asc" | "desc";
@@ -88,22 +60,12 @@ const TrendIcon = ({ trend }: { trend: string }) => {
 
 const Dealers = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const initialRegion = searchParams.get("region") || "all";
-  const scheduleFilter = searchParams.get("schedule") || "";
   const [searchQuery, setSearchQuery] = useState("");
   const [regionFilter, setRegionFilter] = useState(initialRegion);
   const [lenderFilter, setLenderFilter] = useState("all");
   const [scoreRange, setScoreRange] = useState<[number, number]>([0, 100]);
-
-  const scheduleDealerIds = useMemo(
-    () => (scheduleFilter ? getDealerIdsBySchedule(scheduleFilter) : null),
-    [scheduleFilter]
-  );
-
-  const clearScheduleFilter = () => {
-    setSearchParams((prev) => { prev.delete("schedule"); return prev; });
-  };
   const [docCounts, setDocCounts] = useState<Map<string, number>>(new Map());
 
   const fetchDocCounts = useCallback(async () => {
@@ -128,7 +90,7 @@ const Dealers = () => {
   const [viewMode, setViewMode] = useState<"table" | "region">("table");
 
   const isScoreFiltered = scoreRange[0] > 0 || scoreRange[1] < 100;
-  const activeFilterCount = [searchQuery !== "", regionFilter !== "all", lenderFilter !== "all", isScoreFiltered, !!scheduleFilter].filter(Boolean).length;
+  const activeFilterCount = [searchQuery !== "", regionFilter !== "all", lenderFilter !== "all", isScoreFiltered].filter(Boolean).length;
   const isFiltering = activeFilterCount > 0;
 
   const clearAllFilters = () => {
@@ -136,22 +98,12 @@ const Dealers = () => {
     setRegionFilter("all");
     setLenderFilter("all");
     setScoreRange([0, 100]);
-    clearScheduleFilter();
     setCurrentPage(1);
   };
 
   const regions = useMemo(() => [...new Set(dealers.map((d) => d.region))].sort(), []);
 
   const filteredDealers = useMemo(() => {
-    // When schedule filter is active, show only matching TCG dealers
-    if (scheduleDealerIds) {
-      const matching = tcgDealers.filter((d) => scheduleDealerIds.has(d.id));
-      return matching.filter((d) => {
-        const matchesSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
-        const matchesScore = d.score >= scoreRange[0] && d.score <= scoreRange[1];
-        return matchesSearch && matchesScore;
-      });
-    }
     // When lender filter is active, show TCG dealers; otherwise show all dealers
     const baseList = lenderFilter !== "all"
       ? tcgDealers.filter((d) => d.onboarding.lendersUsing.includes(lenderFilter))
@@ -162,7 +114,7 @@ const Dealers = () => {
       const matchesScore = d.score >= scoreRange[0] && d.score <= scoreRange[1];
       return matchesSearch && matchesRegion && matchesScore;
     });
-  }, [searchQuery, regionFilter, lenderFilter, scoreRange, scheduleDealerIds]);
+  }, [searchQuery, regionFilter, lenderFilter, scoreRange]);
 
   const sortedDealers = useMemo(() => {
     const sorted = [...filteredDealers].sort((a, b) => {
@@ -268,27 +220,7 @@ const Dealers = () => {
           </p>
         </div>
 
-        {/* Schedule Filter Banner */}
-        {scheduleFilter && SCHEDULE_LABELS[scheduleFilter] && (
-          <div className="bg-card rounded-xl border border-border p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CalendarDays className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm">
-                <span className="text-muted-foreground">Showing dealers with </span>
-                <span className={`font-semibold ${SCHEDULE_LABELS[scheduleFilter].className}`}>
-                  {SCHEDULE_LABELS[scheduleFilter].icon} {SCHEDULE_LABELS[scheduleFilter].label}
-                </span>
-              </span>
-              <Badge variant="secondary" className="text-xs">
-                {filteredDealers.length} dealer{filteredDealers.length !== 1 ? "s" : ""}
-              </Badge>
-            </div>
-            <Button variant="ghost" size="sm" onClick={clearScheduleFilter} className="gap-1.5 text-muted-foreground hover:text-foreground">
-              <X className="w-4 h-4" />
-              Clear
-            </Button>
-          </div>
-        )}
+
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -431,7 +363,7 @@ const Dealers = () => {
                         <tr
                           key={dealer.name}
                           onClick={() => {
-                            if ((lenderFilter !== "all" || scheduleDealerIds) && 'id' in dealer) {
+                            if (lenderFilter !== "all" && 'id' in dealer) {
                               navigate(`/tcg/dealers/${(dealer as any).id}`);
                             } else {
                               navigate(`/dealer/${encodeURIComponent(dealer.name)}`);
