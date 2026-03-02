@@ -29,6 +29,7 @@ import {
   Filter,
   Zap,
   CalendarCheck,
+  CalendarDays,
   Check,
   Copy,
   UserX,
@@ -39,6 +40,7 @@ import { getOverdueRechecks } from "@/utils/recheckSchedule";
 import { useCompletedRechecks } from "@/hooks/useCompletedRechecks";
 import { DuplicateFlagsBanner } from "@/components/dealer/DuplicateFlagsBanner";
 import { useDismissedDuplicates } from "@/hooks/useDismissedDuplicates";
+import cadenceAlertsData from "@/data/tcg/cadenceAlerts.json";
 
 interface Alert {
   id: string;
@@ -53,6 +55,22 @@ interface Alert {
   comments: string;
   automated: boolean;
   frequency: string;
+}
+
+interface CadenceAlert {
+  id: string;
+  type: string;
+  dealerId: string;
+  dealerName: string;
+  controlId: string;
+  controlName: string;
+  sectionName: string;
+  severity: string;
+  message: string;
+  daysOverdue?: number;
+  daysRemaining?: number;
+  status: string;
+  createdDate: string;
 }
 
 const ITEMS_PER_PAGE = 15;
@@ -154,6 +172,9 @@ const Alerts = () => {
   // Stats
   const criticalCount = allAlerts.filter((a) => a.riskRating === "fail").length;
   const warningCount = allAlerts.filter((a) => a.riskRating === "attention").length;
+  const cadenceAlerts: CadenceAlert[] = cadenceAlertsData as CadenceAlert[];
+  const cadenceOverdueCount = cadenceAlerts.filter((a) => a.type === "Check Overdue").length;
+  const cadenceUrgentCount = cadenceAlerts.filter((a) => a.type === "Check Due Urgently" || a.type === "Check Due Soon").length;
 
   // Overdue re-checks
   const { isCompleted, markComplete } = useCompletedRechecks();
@@ -194,7 +215,7 @@ const Alerts = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-4">
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <ShieldAlert className="w-4 h-4 text-destructive" />
@@ -208,6 +229,15 @@ const Alerts = () => {
               Warning Alerts
             </div>
             <span className="text-3xl font-bold text-foreground">{warningCount}</span>
+          </div>
+          <div className="bg-card rounded-xl border border-border p-5">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+              <CalendarDays className="w-4 h-4 text-destructive" />
+              Check Overdue
+            </div>
+            <span className={`text-3xl font-bold ${cadenceOverdueCount > 0 ? "text-destructive" : "text-foreground"}`}>
+              {cadenceOverdueCount}
+            </span>
           </div>
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
@@ -363,6 +393,89 @@ const Alerts = () => {
 
         {/* Duplicate Flags */}
         <DuplicateFlagsBanner limit={5} compact />
+
+        {/* Cadence-Based Schedule Alerts */}
+        {cadenceAlerts.length > 0 && (
+          <div className="bg-card rounded-xl border border-border">
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-destructive" />
+                <h3 className="text-sm font-semibold text-foreground">Check Schedule Alerts</h3>
+              </div>
+              <Badge variant="destructive" className="text-xs">
+                {cadenceAlerts.length} alert{cadenceAlerts.length !== 1 ? "s" : ""}
+              </Badge>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="text-left px-5 py-3 font-medium w-8"></th>
+                    <th className="text-left px-3 py-3 font-medium">Type</th>
+                    <th className="text-left px-3 py-3 font-medium">Dealer</th>
+                    <th className="text-left px-3 py-3 font-medium">Section</th>
+                    <th className="text-left px-3 py-3 font-medium">Control</th>
+                    <th className="text-left px-3 py-3 font-medium hidden lg:table-cell">Message</th>
+                    <th className="text-center px-3 py-3 font-medium">Severity</th>
+                    <th className="text-center px-3 py-3 font-medium w-20">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cadenceAlerts.map((alert) => {
+                    const isOverdue = alert.type === "Check Overdue";
+                    const isUrgent = alert.type === "Check Due Urgently";
+                    return (
+                      <tr
+                        key={alert.id}
+                        className={`border-b border-border last:border-0 hover:bg-muted/50 transition-colors ${
+                          isOverdue ? "bg-[hsl(0,100%,97%)]" : isUrgent ? "bg-[hsl(48,100%,97%)]" : ""
+                        }`}
+                      >
+                        <td className="pl-5 pr-1 py-3.5 text-base">📅</td>
+                        <td className="px-3 py-3.5">
+                          <Badge
+                            variant={isOverdue ? "destructive" : "outline"}
+                            className="text-[10px] px-1.5 py-0 whitespace-nowrap"
+                          >
+                            {alert.type}
+                          </Badge>
+                        </td>
+                        <td className="px-3 py-3.5">
+                          <button
+                            onClick={() => navigate(`/tcg/dealers/${alert.dealerId}`)}
+                            className="font-medium text-foreground hover:text-primary hover:underline transition-colors text-left"
+                          >
+                            {alert.dealerName}
+                          </button>
+                        </td>
+                        <td className="px-3 py-3.5 text-muted-foreground">{alert.sectionName}</td>
+                        <td className="px-3 py-3.5 text-foreground">{alert.controlName}</td>
+                        <td className="px-3 py-3.5 text-muted-foreground hidden lg:table-cell max-w-xs truncate">
+                          {alert.message}
+                        </td>
+                        <td className="px-3 py-3.5 text-center">
+                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                            {alert.severity}
+                          </Badge>
+                        </td>
+                        <td className="px-3 py-3.5 text-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/tcg/dealers/${alert.dealerId}`)}
+                            className="h-8 px-2"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-card rounded-xl border border-border">
