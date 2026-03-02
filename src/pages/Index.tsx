@@ -27,7 +27,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { dealers, activities } from "@/data/dealers";
 import { tcgDealers, tcgPortfolioStats } from "@/data/tcg/dealers";
-import { tcgLenders, getLenderDealerStats } from "@/data/tcg/lenders";
+import { tcgLenders } from "@/data/tcg/lenders";
 import { TrendHighlightsWidget } from "@/components/dashboard/TrendHighlightsWidget";
 import { useAnimatedCounter } from "@/hooks/useAnimatedCounter";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -239,31 +239,57 @@ const Index = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Lender Name</TableHead>
-                  <TableHead className="text-center">Dealer Count</TableHead>
+                  <TableHead>Lender</TableHead>
+                  <TableHead className="text-center">Dealers</TableHead>
                   <TableHead className="text-center">Avg Score</TableHead>
                   <TableHead className="text-center">Score Range</TableHead>
-                  <TableHead>Last Login</TableHead>
+                  <TableHead className="text-center">Pending Alerts</TableHead>
                   <TableHead className="text-center">Status</TableHead>
+                  <TableHead>Last Login</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {tcgLenders.map((lender) => {
-                  const stats = getLenderDealerStats(lender.id);
-                  const lastLogin = new Date(lender.lastLogin);
+                  const isPending = lender.status === "Pending Activation";
                   return (
-                    <TableRow key={lender.id}>
-                      <TableCell className="font-medium text-foreground">{lender.name}</TableCell>
-                      <TableCell className="text-center">{stats.dealerCount}</TableCell>
-                      <TableCell className="text-center font-semibold">{stats.avgScore}</TableCell>
-                      <TableCell className="text-center font-mono text-sm">{stats.scoreRange}</TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {lastLogin.toLocaleDateString("en-GB")} {lastLogin.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                    <TableRow
+                      key={lender.id}
+                      className="cursor-pointer"
+                      onClick={() => navigate(`/tcg/lenders/${lender.id}`)}
+                    >
+                      <TableCell className="font-medium text-foreground">{lender.tradingName}</TableCell>
+                      <TableCell className="text-center">{lender.dealerCount}</TableCell>
+                      <TableCell className="text-center font-semibold">
+                        {lender.avgPortfolioScore !== null ? lender.avgPortfolioScore : "—"}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-sm">
+                        {lender.scoreRange ? `${lender.scoreRange.min}–${lender.scoreRange.max}` : "—"}
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant={lender.status === "Active" ? "default" : "secondary"}>
-                          {lender.status}
-                        </Badge>
+                        {lender.pendingAlerts === 0
+                          ? <span className="text-muted-foreground">—</span>
+                          : lender.pendingAlerts <= 3
+                            ? <span className="text-[hsl(var(--outcome-pending))] font-semibold">🟡 {lender.pendingAlerts}</span>
+                            : <span className="text-[hsl(var(--outcome-fail))] font-semibold">🔴 {lender.pendingAlerts}</span>
+                        }
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span
+                          className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
+                          style={{
+                            color: isPending ? "hsl(var(--outcome-pending))" : "hsl(var(--outcome-pass))",
+                            backgroundColor: isPending
+                              ? "color-mix(in srgb, hsl(var(--outcome-pending)) 12%, transparent)"
+                              : "color-mix(in srgb, hsl(var(--outcome-pass)) 12%, transparent)",
+                          }}
+                        >
+                          {isPending ? "⏳ Pending" : "● Active"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                        {lender.lastLogin
+                          ? new Date(lender.lastLogin).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+                          : "Never"}
                       </TableCell>
                     </TableRow>
                   );
