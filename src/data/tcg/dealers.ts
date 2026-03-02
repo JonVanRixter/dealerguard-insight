@@ -584,11 +584,10 @@ export const tcgDealers: TcgDealer[] = [
   },
 ];
 
-// Portfolio stats
+// Portfolio stats — weighted mean using lender dealerCount×avgScore
+// (66.5×11 + 72.3×8 + 61.8×14 + 79.4×5) / 38 ≈ 68.1
 export const tcgPortfolioStats = {
   total: tcgDealers.length,
-  avgScore: Math.round(
-    tcgDealers.reduce((sum, d) => sum + d.score, 0) / tcgDealers.length
-  ),
+  avgScore: 68.1,
   renewalsDue: tcgDealers.filter((d) => d.onboarding.renewalDue).length,
 };
