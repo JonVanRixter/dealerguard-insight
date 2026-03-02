@@ -37,6 +37,7 @@ import { PortfolioTrendMini } from "@/components/dashboard/PortfolioTrendMini";
 import { TopRiskDealers } from "@/components/dashboard/TopRiskDealers";
 import { RecheckWidget } from "@/components/dashboard/RecheckWidget";
 import { OnboardingValidityWidget } from "@/components/dashboard/OnboardingValidityWidget";
+import { ScheduleHealthWidget } from "@/components/dashboard/ScheduleHealthWidget";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -190,6 +191,9 @@ const Index = () => {
             <span className="text-4xl font-bold text-foreground">{animatedPending}</span>
           </div>
         </div>
+
+        {/* Schedule Health Widget */}
+        <ScheduleHealthWidget />
 
         {/* Score Distribution + Portfolio Trend */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
