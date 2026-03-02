@@ -40,6 +40,8 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { dealers, portfolioStats } from "@/data/dealers";
+import { tcgDealers } from "@/data/tcg/dealers";
+import { tcgLenders } from "@/data/tcg/lenders";
 import { BatchAiSummary } from "@/components/dealer/BatchAiSummary";
 import { DuplicateFlagsBanner } from "@/components/dealer/DuplicateFlagsBanner";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +64,7 @@ const Dealers = () => {
   const initialRegion = searchParams.get("region") || "all";
   const [searchQuery, setSearchQuery] = useState("");
   const [regionFilter, setRegionFilter] = useState(initialRegion);
+  const [lenderFilter, setLenderFilter] = useState("all");
   const [scoreRange, setScoreRange] = useState<[number, number]>([0, 100]);
   const [docCounts, setDocCounts] = useState<Map<string, number>>(new Map());
 
@@ -87,12 +90,13 @@ const Dealers = () => {
   const [viewMode, setViewMode] = useState<"table" | "region">("table");
 
   const isScoreFiltered = scoreRange[0] > 0 || scoreRange[1] < 100;
-  const activeFilterCount = [searchQuery !== "", regionFilter !== "all", isScoreFiltered].filter(Boolean).length;
+  const activeFilterCount = [searchQuery !== "", regionFilter !== "all", lenderFilter !== "all", isScoreFiltered].filter(Boolean).length;
   const isFiltering = activeFilterCount > 0;
 
   const clearAllFilters = () => {
     setSearchQuery("");
     setRegionFilter("all");
+    setLenderFilter("all");
     setScoreRange([0, 100]);
     setCurrentPage(1);
   };
@@ -100,13 +104,17 @@ const Dealers = () => {
   const regions = useMemo(() => [...new Set(dealers.map((d) => d.region))].sort(), []);
 
   const filteredDealers = useMemo(() => {
-    return dealers.filter((d) => {
+    // When lender filter is active, show TCG dealers; otherwise show all dealers
+    const baseList = lenderFilter !== "all"
+      ? tcgDealers.filter((d) => d.onboarding.lendersUsing.includes(lenderFilter))
+      : dealers;
+    return baseList.filter((d) => {
       const matchesSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
       const matchesRegion = regionFilter === "all" || d.region === regionFilter;
       const matchesScore = d.score >= scoreRange[0] && d.score <= scoreRange[1];
       return matchesSearch && matchesRegion && matchesScore;
     });
-  }, [searchQuery, regionFilter, scoreRange]);
+  }, [searchQuery, regionFilter, lenderFilter, scoreRange]);
 
   const sortedDealers = useMemo(() => {
     const sorted = [...filteredDealers].sort((a, b) => {
@@ -270,6 +278,17 @@ const Dealers = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <Select value={lenderFilter} onValueChange={(v) => { setLenderFilter(v); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-full sm:w-48 h-9 bg-background">
+                    <SelectValue placeholder="Filter by lender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Lenders</SelectItem>
+                    {tcgLenders.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>{l.tradingName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex gap-1 items-center">
                 {isFiltering && (
@@ -341,7 +360,13 @@ const Dealers = () => {
                       paginatedDealers.map((dealer, index) => (
                         <tr
                           key={dealer.name}
-                          onClick={() => navigate(`/dealer/${encodeURIComponent(dealer.name)}`)}
+                          onClick={() => {
+                            if (lenderFilter !== "all" && 'id' in dealer) {
+                              navigate(`/tcg/dealers/${(dealer as any).id}`);
+                            } else {
+                              navigate(`/dealer/${encodeURIComponent(dealer.name)}`);
+                            }
+                          }}
                           className="border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors opacity-0 animate-fade-in"
                           style={{ animationDelay: `${index * 30}ms`, animationFillMode: "forwards" }}
                         >
@@ -472,7 +497,13 @@ const Dealers = () => {
                             {group.dealers.map((dealer) => (
                               <tr
                                 key={dealer.name}
-                                onClick={() => navigate(`/dealer/${encodeURIComponent(dealer.name)}`)}
+                                onClick={() => {
+                                  if (lenderFilter !== "all" && 'id' in dealer) {
+                                    navigate(`/tcg/dealers/${(dealer as any).id}`);
+                                  } else {
+                                    navigate(`/dealer/${encodeURIComponent(dealer.name)}`);
+                                  }
+                                }}
                                 className="border-b border-border/50 last:border-0 hover:bg-muted/50 cursor-pointer transition-colors"
                               >
                                 <td className="pl-12 pr-3 py-2.5 font-medium text-foreground">{dealer.name}</td>

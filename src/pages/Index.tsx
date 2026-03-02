@@ -95,7 +95,7 @@ const Index = () => {
 
   const animatedLenders = useAnimatedCounter(tcgLenders.length);
   const animatedDealers = useAnimatedCounter(tcgPortfolioStats.total);
-  const animatedAvgScore = useAnimatedCounter(tcgPortfolioStats.avgScore);
+  const animatedAvgScore = useAnimatedCounter(Math.round(tcgPortfolioStats.avgScore));
   const animatedPending = useAnimatedCounter(pendingReviews);
 
   const filteredDealers = useMemo(() => {
@@ -188,7 +188,7 @@ const Index = () => {
               Avg Portfolio Score
             </div>
             <div className="flex items-end gap-1">
-              <span className="text-4xl font-bold text-foreground">{animatedAvgScore}</span>
+              <span className="text-4xl font-bold text-foreground">{tcgPortfolioStats.avgScore}</span>
               <span className="text-lg text-muted-foreground mb-0.5">/100</span>
             </div>
           </div>
