@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Users, Building2, AlertTriangle, ChevronRight, LayoutGrid, List, Clock, Send } from "lucide-react";
-import { tcgLenders } from "@/data/tcg/lenders";
+import { allTcgLenders } from "@/data/tcg/lenders";
 
 type SortKey = "name" | "dealerCount" | "avgPortfolioScore" | "pendingAlerts" | "openActions" | "status" | "lastLogin";
 
@@ -19,7 +19,7 @@ const LenderDirectory = () => {
   const [sortAsc, setSortAsc] = useState(true);
 
   const filtered = useMemo(() => {
-    let list = tcgLenders.filter(
+    let list = allTcgLenders.filter(
       (l) =>
         l.name.toLowerCase().includes(search.toLowerCase()) ||
         l.tradingName.toLowerCase().includes(search.toLowerCase())
@@ -40,9 +40,9 @@ const LenderDirectory = () => {
     return list;
   }, [search, sortKey, sortAsc]);
 
-  const totalDealers = tcgLenders.reduce((s, l) => s + l.dealerCount, 0);
-  const activeLenders = tcgLenders.filter((l) => l.status === "Active").length;
-  const pendingLenders = tcgLenders.filter((l) => l.status === "Pending Activation").length;
+  const totalDealers = allTcgLenders.reduce((s, l) => s + l.dealerCount, 0);
+  const activeLenders = allTcgLenders.filter((l) => l.status === "Active").length;
+  const pendingLenders = allTcgLenders.filter((l) => l.status === "Pending Activation").length;
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortAsc(!sortAsc);
@@ -94,7 +94,7 @@ const LenderDirectory = () => {
         {/* KPI strip */}
         <div className="flex flex-wrap gap-3">
           {[
-            { label: "Total Lenders", value: tcgLenders.length },
+            { label: "Total Lenders", value: allTcgLenders.length },
             { label: "Active", value: activeLenders },
             { label: "Pending Activation", value: pendingLenders },
             { label: "Total Dealers Across Platform", value: totalDealers },

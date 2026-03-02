@@ -1,3 +1,4 @@
+import { generateDealers, generateLenders } from "./seedGenerator";
 
 export type TcgFirmType = "AR" | "DA";
 export type OnboardingStatus = "Approved" | "Pending" | "Rejected" | "Expired";
@@ -584,10 +585,16 @@ export const tcgDealers: TcgDealer[] = [
   },
 ];
 
-// Portfolio stats — weighted mean using lender dealerCount×avgScore
-// (66.5×11 + 72.3×8 + 61.8×14 + 79.4×5) / 38 ≈ 68.1
+// Append generated dealers from lenders l006–l040
+const _genLenders = generateLenders();
+const _generatedDealers = generateDealers(_genLenders);
+for (const gd of _generatedDealers) {
+  tcgDealers.push(gd as unknown as TcgDealer);
+}
+
+// Portfolio stats — dynamically computed from full dealer pool
 export const tcgPortfolioStats = {
   total: tcgDealers.length,
-  avgScore: 68.1,
+  avgScore: Math.round(tcgDealers.reduce((s, d) => s + d.score, 0) / tcgDealers.length * 10) / 10,
   renewalsDue: tcgDealers.filter((d) => d.onboarding.renewalDue).length,
 };

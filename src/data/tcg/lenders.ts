@@ -1,4 +1,5 @@
 import { tcgDealers } from "./dealers";
+import { generateLenders, type GeneratedLender } from "./seedGenerator";
 
 export interface TcgTeamMember {
   id: string;
@@ -185,8 +186,23 @@ export const tcgLenders: TcgLender[] = [
   },
 ];
 
+// Generate additional lenders (l006–l040)
+export const generatedLenders = generateLenders();
+
+// Combined list of all lenders
+export const allTcgLenders: TcgLender[] = [
+  ...tcgLenders,
+  ...generatedLenders.map((gl): TcgLender => ({
+    ...gl,
+    teamMembers: gl.teamMembers.map((tm) => ({
+      ...tm,
+      status: tm.status as "Active" | "Invited",
+    })),
+  })),
+];
+
 export function getLenderName(id: string): string {
-  return tcgLenders.find((l) => l.id === id)?.name ?? id;
+  return allTcgLenders.find((l) => l.id === id)?.name ?? id;
 }
 
 /** Compute lender-level dealer stats from the TCG dealer pool */
