@@ -200,6 +200,7 @@ const DealerDetail = () => {
               key={section.id}
               section={section}
               defaultExpanded={index === 0}
+              dealerName={dealerName}
             />
           ))}
         </div>
