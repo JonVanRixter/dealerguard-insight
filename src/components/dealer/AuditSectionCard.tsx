@@ -160,9 +160,16 @@ export function AuditSectionCard({ section, defaultExpanded = false, dealerName 
                       <TableCell className="text-center">
                         <RiskLabel rating={control.riskRating} />
                       </TableCell>
-                      {dealerName && (
+                       {dealerName && (
                         <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">
-                          {cadence ? cadence.lastCheckedLabel : "—"}
+                          {cadence ? (
+                            <div>
+                              <div>{cadence.lastCheckedLabel}</div>
+                              {cadence.lastCheckedBy && (
+                                <div className="text-[10px] text-muted-foreground/70">{cadence.lastCheckedBy}</div>
+                              )}
+                            </div>
+                          ) : "—"}
                         </TableCell>
                       )}
                       {dealerName && (
