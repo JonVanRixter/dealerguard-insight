@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +23,7 @@ import { DealerScoreTrend } from "@/components/dealer/DealerScoreTrend";
 import { DirectorPassportCheck } from "@/components/dealer/DirectorPassportCheck";
 import { FcaRegisterCard } from "@/components/dealer/FcaRegisterCard";
 import { DealerNotes } from "@/components/dealer/DealerNotes";
+import { CheckScheduleHealth } from "@/components/dealer/CheckScheduleHealth";
 import { Badge } from "@/components/ui/badge";
 import { dealers as dealersList } from "@/data/dealers";
 
@@ -33,6 +34,8 @@ const DealerDetail = () => {
   const { settings } = useUserSettings();
   const dealerName = name ? decodeURIComponent(name) : "Unknown Dealer";
   const [docCount, setDocCount] = useState(0);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [passportChecks, setPassportChecks] = useState<PassportCheckEntry[]>([]);
   const [fcaRegisterData, setFcaRegisterData] = useState<FcaRegisterEntry | undefined>(undefined);
@@ -101,6 +104,17 @@ const DealerDetail = () => {
       });
     }
   };
+
+  const handleScrollToSection = useCallback((sectionName: string) => {
+    setExpandedSection(sectionName);
+    // Wait for state update / render, then scroll
+    setTimeout(() => {
+      const el = sectionRefs.current[sectionName];
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
+  }, []);
 
   return (
     <DashboardLayout>
@@ -178,6 +192,12 @@ const DealerDetail = () => {
           </div>
         </div>
 
+        {/* Check Schedule Health */}
+        <CheckScheduleHealth
+          dealerName={dealerName}
+          onScrollToSection={handleScrollToSection}
+        />
+
         <DealerScoreTrend dealerName={dealerName} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -196,12 +216,16 @@ const DealerDetail = () => {
         <div className="space-y-4">
           <h3 className="text-sm font-semibold text-foreground">Audit Sections</h3>
           {audit.sections.map((section, index) => (
-            <AuditSectionCard
+            <div
               key={section.id}
-              section={section}
-              defaultExpanded={index === 0}
-              dealerName={dealerName}
-            />
+              ref={(el) => { sectionRefs.current[section.name] = el; }}
+            >
+              <AuditSectionCard
+                section={section}
+                defaultExpanded={index === 0 || expandedSection === section.name}
+                dealerName={dealerName}
+              />
+            </div>
           ))}
         </div>
       </div>
