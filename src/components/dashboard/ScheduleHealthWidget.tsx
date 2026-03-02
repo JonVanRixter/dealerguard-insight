@@ -62,7 +62,7 @@ export function ScheduleHealthWidget() {
           controls={stats.overdue.controls}
           dealers={stats.overdue.dealers.size}
           className="text-[hsl(0,84%,60%)] font-bold"
-          onView={stats.overdue.controls > 0 ? () => navigate("/tcg/dealers?schedule=overdue") : undefined}
+          onView={stats.overdue.controls > 0 ? () => navigate("/dealers?schedule=overdue") : undefined}
         />
         <Row
           icon="🔴"
@@ -70,7 +70,7 @@ export function ScheduleHealthWidget() {
           controls={stats.urgent.controls}
           dealers={stats.urgent.dealers.size}
           className="text-[hsl(0,84%,60%)]"
-          onView={stats.urgent.controls > 0 ? () => navigate("/tcg/dealers?schedule=urgent") : undefined}
+          onView={stats.urgent.controls > 0 ? () => navigate("/dealers?schedule=urgent") : undefined}
         />
         <Row
           icon="🟡"
@@ -78,7 +78,7 @@ export function ScheduleHealthWidget() {
           controls={stats.dueSoon.controls}
           dealers={stats.dueSoon.dealers.size}
           className="text-[hsl(38,92%,50%)]"
-          onView={stats.dueSoon.controls > 0 ? () => navigate("/tcg/dealers?schedule=due-soon") : undefined}
+          onView={stats.dueSoon.controls > 0 ? () => navigate("/dealers?schedule=due-soon") : undefined}
         />
         <Row
           icon="✅"
