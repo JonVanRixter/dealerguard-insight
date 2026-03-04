@@ -94,6 +94,7 @@ function buildEmptyPolicies(): PolicyEntry[] {
     lastUpdated: null,
     dateUnknown: false,
     notes: "",
+    source: "pending_automation",
   }));
 }
 
