@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,9 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Eye, Search, LayoutGrid, List, Clock, AlertTriangle, XCircle, FileText, Users,
-  ArrowRight,
+  ArrowRight, ArrowUpDown, ArrowUp, ArrowDown, Download, UserPlus,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTcgOnboarding } from "@/hooks/useTcgOnboarding";
@@ -134,11 +136,15 @@ function AppCard({ app, onClick }: { app: OnboardingApplication; onClick: () => 
 export default function TcgOnboardingHub() {
   const navigate = useNavigate();
   const { startNew } = useTcgOnboarding();
+  const { toast } = useToast();
   const [view, setView] = useState<"board" | "list">("board");
   const [search, setSearch] = useState("");
   const [assigneeFilter, setAssigneeFilter] = useState("all");
   const [lenderFilter, setLenderFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortCol, setSortCol] = useState<string>("appRef");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const handleNew = () => {
     startNew();
@@ -158,6 +164,71 @@ export default function TcgOnboardingHub() {
     });
   }, [search, assigneeFilter, lenderFilter, stageFilter]);
 
+  // Sorting for list view
+  const sorted = useMemo(() => {
+    const arr = [...filtered];
+    const dir = sortDir === "asc" ? 1 : -1;
+    arr.sort((a, b) => {
+      let va: any, vb: any;
+      switch (sortCol) {
+        case "appRef": va = a.appRef; vb = b.appRef; break;
+        case "dealerName": va = a.dealerName; vb = b.dealerName; break;
+        case "status": va = a.status; vb = b.status; break;
+        case "stage": va = a.stage; vb = b.stage; break;
+        case "assignedTo": va = a.assignedTo; vb = b.assignedTo; break;
+        case "lender": va = a.requestingLenderName; vb = b.requestingLenderName; break;
+        case "policies": va = a.policyCompletion.percentComplete; vb = b.policyCompletion.percentComplete; break;
+        case "lastUpdated": va = a.lastUpdated; vb = b.lastUpdated; break;
+        case "target": va = a.targetApprovalDate; vb = b.targetApprovalDate; break;
+        default: va = a.appRef; vb = b.appRef;
+      }
+      if (va < vb) return -1 * dir;
+      if (va > vb) return 1 * dir;
+      return 0;
+    });
+    return arr;
+  }, [filtered, sortCol, sortDir]);
+
+  const toggleSort = useCallback((col: string) => {
+    if (sortCol === col) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortCol(col); setSortDir("asc"); }
+  }, [sortCol]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    if (selectedIds.size === sorted.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(sorted.map(a => a.id)));
+  }, [sorted, selectedIds.size]);
+
+  const handleBulkAssign = (user: string) => {
+    toast({ title: "Applications Assigned", description: `${selectedIds.size} application(s) assigned to ${user}.` });
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkExport = () => {
+    const apps = sorted.filter(a => selectedIds.has(a.id));
+    const headers = ["App Ref", "Dealer Name", "Lender", "Stage", "Status", "Policies %", "Assigned To", "Last Updated", "Target"];
+    const rows = apps.map(a => [
+      a.appRef, a.dealerName, a.requestingLenderName, `Stage ${a.stage}`,
+      a.status, `${a.policyCompletion.percentComplete}%`, a.assignedTo,
+      new Date(a.lastUpdated).toLocaleDateString("en-GB"), a.targetApprovalDate,
+    ]);
+    const csv = [headers.join(","), ...rows.map(r => r.map(c => `"${c}"`).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = "onboarding-applications.csv"; link.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Exported", description: `${apps.length} application(s) exported to CSV.` });
+  };
+
   const columns = useMemo(() => ({
     drafts: filtered.filter(a => a.status === "Draft"),
     stage1: filtered.filter(a => a.status === "In Progress" && a.stage === 1),
@@ -176,7 +247,6 @@ export default function TcgOnboardingHub() {
     : "0";
 
   const openApp = (app: OnboardingApplication) => {
-    // Navigate to a detail view — for now open the onboarding page with context
     navigate("/onboarding", { state: { selectedAppId: app.id } });
   };
 
@@ -318,64 +388,116 @@ export default function TcgOnboardingHub() {
 
         {/* List view */}
         {view === "list" && (
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>App Ref</TableHead>
-                    <TableHead>Dealer Name</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Stage</TableHead>
-                    <TableHead>Assigned To</TableHead>
-                    <TableHead>Lender</TableHead>
-                    <TableHead>Pre-Screen</TableHead>
-                    <TableHead>Policies</TableHead>
-                    <TableHead>Target</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map(app => (
-                    <TableRow key={app.id} className="cursor-pointer" onClick={() => openApp(app)}>
-                      <TableCell className="font-mono text-sm">{app.appRef}</TableCell>
-                      <TableCell className="font-medium">{app.dealerName}</TableCell>
-                      <TableCell>{statusBadge(app.status)}</TableCell>
-                      <TableCell>
-                        {app.stage > 0 ? (
-                          <div className="flex items-center gap-2 min-w-[100px]">
-                            <Progress value={app.policyCompletion.percentComplete} className="h-1.5 flex-1" />
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">S{app.stage}</span>
-                          </div>
-                        ) : <span className="text-xs text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell>
-                        <span className={app.assignedTo === "Unassigned" ? "text-outcome-pending font-medium text-sm" : "text-sm"}>
-                          {app.assignedTo}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-xs">{app.requestingLenderName.split(" ").slice(0, 2).join(" ")}</TableCell>
-                      <TableCell>{preScreenIcon(app)}</TableCell>
-                      <TableCell>
-                        {app.policyCompletion.percentComplete > 0 ? (
-                          <div className="flex items-center gap-2">
-                            <Progress value={app.policyCompletion.percentComplete} className="h-1.5 w-14" />
-                            <span className="text-xs">{app.policyCompletion.percentComplete}%</span>
-                          </div>
-                        ) : <span className="text-xs text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell>{daysUntilTarget(app.targetApprovalDate)}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={e => { e.stopPropagation(); openApp(app); }}>
-                          <Eye className="w-3 h-3" /> View
-                        </Button>
-                      </TableCell>
+          <div className="space-y-3">
+            {/* Bulk actions bar */}
+            {selectedIds.size > 0 && (
+              <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-lg px-4 py-2">
+                <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                <Select onValueChange={handleBulkAssign}>
+                  <SelectTrigger className="w-[180px] h-8 text-xs">
+                    <UserPlus className="w-3 h-3 mr-1" />
+                    <SelectValue placeholder="Assign to..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Tom Griffiths">Tom Griffiths</SelectItem>
+                    <SelectItem value="Amara Osei">Amara Osei</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={handleBulkExport}>
+                  <Download className="w-3 h-3" /> Export Selected
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 text-xs ml-auto" onClick={() => setSelectedIds(new Set())}>
+                  Clear
+                </Button>
+              </div>
+            )}
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[40px]">
+                        <Checkbox
+                          checked={selectedIds.size === sorted.length && sorted.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </TableHead>
+                      {[
+                        { key: "appRef", label: "App Ref" },
+                        { key: "dealerName", label: "Dealer Name" },
+                        { key: "lender", label: "Lender" },
+                        { key: "stage", label: "Stage" },
+                        { key: "status", label: "Status" },
+                        { key: "policies", label: "Policies" },
+                        { key: "assignedTo", label: "Assigned" },
+                        { key: "lastUpdated", label: "Last Updated" },
+                        { key: "target", label: "Target" },
+                      ].map(col => (
+                        <TableHead
+                          key={col.key}
+                          className="cursor-pointer select-none hover:text-foreground transition-colors"
+                          onClick={() => toggleSort(col.key)}
+                        >
+                          <span className="flex items-center gap-1">
+                            {col.label}
+                            {sortCol === col.key ? (
+                              sortDir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                            ) : (
+                              <ArrowUpDown className="w-3 h-3 opacity-30" />
+                            )}
+                          </span>
+                        </TableHead>
+                      ))}
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {sorted.map(app => (
+                      <TableRow key={app.id} className="cursor-pointer" onClick={() => openApp(app)}>
+                        <TableCell onClick={e => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedIds.has(app.id)}
+                            onCheckedChange={() => toggleSelect(app.id)}
+                          />
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">{app.appRef}</TableCell>
+                        <TableCell className="font-medium">{app.dealerName}</TableCell>
+                        <TableCell className="text-xs">{app.requestingLenderName.split(" ").slice(0, 2).join(" ")}</TableCell>
+                        <TableCell>
+                          {app.stage > 0 ? (
+                            <span className="text-xs">Stage {app.stage}</span>
+                          ) : <span className="text-xs text-muted-foreground">—</span>}
+                        </TableCell>
+                        <TableCell>{statusBadge(app.status)}</TableCell>
+                        <TableCell>
+                          {app.policyCompletion.percentComplete > 0 ? (
+                            <div className="flex items-center gap-2">
+                              <Progress value={app.policyCompletion.percentComplete} className="h-1.5 w-14" />
+                              <span className="text-xs">{app.policyCompletion.percentComplete}%</span>
+                            </div>
+                          ) : <span className="text-xs text-muted-foreground">0%</span>}
+                        </TableCell>
+                        <TableCell>
+                          <span className={app.assignedTo === "Unassigned" ? "text-outcome-pending font-medium text-sm" : "text-sm"}>
+                            {app.assignedTo === "Unassigned" ? app.assignedTo : app.assignedTo.split(" ").map(n => n[0] + ".").join(" ").slice(0, -1) + " " + app.assignedTo.split(" ").pop()}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {new Date(app.lastUpdated).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
+                        </TableCell>
+                        <TableCell>{daysUntilTarget(app.targetApprovalDate)}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={e => { e.stopPropagation(); openApp(app); }}>
+                            Open
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </DashboardLayout>
