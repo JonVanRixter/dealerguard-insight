@@ -102,6 +102,7 @@ function ChecklistSection({
             const hasScreeningData = !!(item.dataKey && screeningDataMap?.[item.dataKey]);
             const enrichmentRan = !!(screeningDataMap?.["_enrichment"]);
             const isMissing = !!(item.dataKey && enrichmentRan && !screeningDataMap?.[item.dataKey]);
+            const itemSource: FieldSource = hasScreeningData ? "api" : isMissing ? "pending_automation" : checks[i] ? "manual" : "pending_automation";
 
             return (
               <div key={i}>
@@ -124,7 +125,10 @@ function ChecklistSection({
                     <Checkbox checked={checks[i]} onCheckedChange={() => toggle(i)} className="mt-0.5" />
                   )}
                   <div className="flex-1">
-                    <p className={`text-sm font-medium ${isMissing ? "text-destructive" : ""}`}>{item.label}</p>
+                    <p className={`text-sm font-medium flex items-center ${isMissing ? "text-destructive" : ""}`}>
+                      {item.label}
+                      <FieldSourceIndicator source={itemSource} />
+                    </p>
                     {item.description && (
                       <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
                     )}
