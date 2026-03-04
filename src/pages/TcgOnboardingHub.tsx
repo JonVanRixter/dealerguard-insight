@@ -301,21 +301,47 @@ export default function TcgOnboardingHub() {
           </div>
         </div>
 
-        {/* Summary strip */}
-        <div className="flex flex-wrap items-center gap-4 text-sm bg-card border rounded-lg px-4 py-3">
-          <span><span className="font-semibold">{active.length}</span> Active</span>
-          <span className="text-muted-foreground">·</span>
-          <span className={unassigned > 0 ? "text-outcome-pending font-medium" : ""}>
-            <span className="font-semibold">{unassigned}</span> Unassigned
-          </span>
-          <span className="text-muted-foreground">·</span>
-          <span><span className="font-semibold">{pendingApproval}</span> Pending Approval</span>
-          <span className="text-muted-foreground">·</span>
-          <span className={overdueCount > 0 ? "text-outcome-fail font-medium" : ""}>
-            <span className="font-semibold">{overdueCount}</span> Overdue
-          </span>
-          <span className="text-muted-foreground">·</span>
-          <span>Avg Time: <span className="font-semibold">{avgDays}d</span></span>
+        {/* KPI stat cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <Card
+            className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-primary"
+            onClick={() => { setView("board"); setStageFilter("all"); setAssigneeFilter("all"); setLenderFilter("all"); setSearch(""); }}
+          >
+            <CardContent className="p-4 space-y-1">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Total Active</p>
+              <p className="text-3xl font-bold text-foreground">{active.length}</p>
+              <p className="text-[11px] text-muted-foreground">(excl rejected)</p>
+            </CardContent>
+          </Card>
+          <Card
+            className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-[hsl(var(--outcome-pending))]"
+            onClick={() => { setView("board"); setStageFilter("3"); setAssigneeFilter("all"); setLenderFilter("all"); setSearch(""); }}
+          >
+            <CardContent className="p-4 space-y-1">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Pending Approval</p>
+              <p className="text-3xl font-bold text-foreground">{pendingApproval}</p>
+              <p className="text-[11px] text-muted-foreground">(Stage 3)</p>
+            </CardContent>
+          </Card>
+          <Card
+            className={`cursor-pointer hover:shadow-md transition-shadow border-l-4 ${unassigned > 0 ? "border-l-[hsl(var(--outcome-pending))]" : "border-l-muted-foreground/30"}`}
+            onClick={() => { setView("board"); setAssigneeFilter("Unassigned"); setStageFilter("all"); setLenderFilter("all"); setSearch(""); }}
+          >
+            <CardContent className="p-4 space-y-1">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Unassigned</p>
+              <p className="text-3xl font-bold text-foreground">
+                {unassigned} {unassigned > 0 && <span className="text-outcome-pending text-lg">⚠️</span>}
+              </p>
+              <p className="text-[11px] text-muted-foreground">Need assigning</p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-muted-foreground/30">
+            <CardContent className="p-4 space-y-1">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Avg Pipeline Duration</p>
+              <p className="text-3xl font-bold text-foreground">{avgDays} <span className="text-base font-normal text-muted-foreground">days</span></p>
+              <p className="text-[11px] text-muted-foreground">Active apps</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters */}
