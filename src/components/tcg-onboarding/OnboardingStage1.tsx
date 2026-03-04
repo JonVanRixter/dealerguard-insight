@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { AlertTriangle, ChevronDown, Save, ArrowRight, ShieldBan, Info } from "lucide-react";
 import { StageIndicator } from "@/components/tcg-onboarding/StageIndicator";
 import { RunExternalChecks } from "@/components/tcg-onboarding/RunExternalChecks";
+import { FieldSourceIndicator } from "@/components/tcg-onboarding/FieldSourceIndicator";
 import type { TcgOnboardingApp, PreScreenCheck, PreScreenResult } from "@/hooks/useTcgOnboarding";
 
 interface Stage1Props {
