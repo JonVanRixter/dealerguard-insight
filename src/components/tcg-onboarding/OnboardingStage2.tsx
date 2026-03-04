@@ -66,6 +66,10 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
     const updated = policies.map((p) => {
       if (p.id !== polId) return p;
       const next = { ...p, [field]: value };
+      // Auto-set source to manual when user changes exists
+      if (field === "exists" && next.source === "pending_automation") {
+        next.source = "manual";
+      }
       // Clear downstream fields when exists changes
       if (field === "exists") {
         if (value === "no" || value === "na") {
