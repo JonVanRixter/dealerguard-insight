@@ -602,17 +602,23 @@ export default function Onboarding() {
             </div>
           </div>
 
+          {/* Phase 1 source info banner */}
+          <div className="bg-muted/40 border rounded-lg p-3 text-xs text-muted-foreground flex items-start gap-2">
+            <Info className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>Each section shows its data source: <span className="text-outcome-pass-text font-medium">green (API)</span> = auto-populated via external check, <span className="text-primary font-medium">blue (Manual)</span> = entered by staff, <span className="text-outcome-pending-text font-medium">amber (Phase 1)</span> = will be automated in a future release. Staff can manually complete any section where automation is not yet live.</span>
+          </div>
+
           {/* 8-Section Onboarding Checklist */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { name: "Legal Status", status: "complete" as const, score: "100%", detail: "Company House verified" },
-              { name: "FCA Authorisation", status: "complete" as const, score: "100%", detail: "FRN: 123456" },
-              { name: "Financial Checks", status: "pending" as const, score: "50%", detail: "Awaiting credit report" },
-              { name: "DBS / Background", status: "failed" as const, score: "0%", detail: "2 staff need Enhanced DBS" },
-              { name: "Training & Competency", status: "pending" as const, score: "60%", detail: "Certificates under review" },
-              { name: "Complaints Handling", status: "complete" as const, score: "N/A", detail: "New dealer — not applicable" },
-              { name: "Marketing & Promotions", status: "complete" as const, score: "100%", detail: "Website checked" },
-              { name: "KYC / AML", status: "complete" as const, score: "100%", detail: "Sanctions clear" },
+              { name: "Legal Status", status: "complete" as const, score: "100%", detail: "Company House verified", source: "api" as FieldSource, fields: ["Company status", "Incorporation date", "Directors", "PSCs"] },
+              { name: "FCA Authorisation", status: "complete" as const, score: "100%", detail: "FRN: 123456", source: "api" as FieldSource, fields: ["FCA FRN", "Auth status", "Permissions"] },
+              { name: "Financial Checks", status: "pending" as const, score: "50%", detail: "Awaiting credit report", source: "pending_automation" as FieldSource, fields: ["Credit score", "Risk band", "CCJs", "Accounts filed"] },
+              { name: "DBS / Background", status: "failed" as const, score: "0%", detail: "2 staff need Enhanced DBS", source: "pending_automation" as FieldSource, fields: ["Enhanced DBS — Mark Roberts", "Enhanced DBS — Lisa Evans"] },
+              { name: "Training & Competency", status: "pending" as const, score: "60%", detail: "Certificates under review", source: "manual" as FieldSource, fields: ["TCF training cert", "Competency assessment"] },
+              { name: "Complaints Handling", status: "complete" as const, score: "N/A", detail: "New dealer — not applicable", source: "manual" as FieldSource, fields: ["Complaints policy", "Root cause analysis log"] },
+              { name: "Marketing & Promotions", status: "complete" as const, score: "100%", detail: "Website checked", source: "pending_automation" as FieldSource, fields: ["APR displayed", "Commission disclosure", "FCA number on site"] },
+              { name: "KYC / AML", status: "complete" as const, score: "100%", detail: "Sanctions clear", source: "api" as FieldSource, fields: ["Sanctions screening", "PEP check", "Adverse media"] },
             ].map((section) => (
               <div key={section.name} className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-2 mb-2">
@@ -625,7 +631,21 @@ export default function Onboarding() {
                   )}
                   <h3 className="text-sm font-semibold text-foreground">{section.name}</h3>
                 </div>
+                <div className="flex items-center gap-1 mb-2">
+                  <FieldSourceIndicator source={section.source} />
+                </div>
                 <p className="text-xs text-muted-foreground mb-2">{section.detail}</p>
+                {/* Sub-fields with source */}
+                <div className="space-y-1 mb-3">
+                  {section.fields.map((field) => (
+                    <div key={field} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <span className={`w-1 h-1 rounded-full ${
+                        section.source === "api" ? "bg-outcome-pass" : section.source === "manual" ? "bg-primary" : "bg-outcome-pending"
+                      }`} />
+                      {field}
+                    </div>
+                  ))}
+                </div>
                 <div className="flex items-center justify-between">
                   <span className={`text-xs font-semibold ${
                     section.status === "complete" ? "text-outcome-pass" : section.status === "pending" ? "text-outcome-pending" : "text-outcome-fail"
