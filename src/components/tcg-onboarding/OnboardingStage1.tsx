@@ -154,6 +154,12 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
           </CardContent>
         </Card>
 
+        {/* Phase 1 info banner */}
+        <div className="bg-muted/40 border rounded-lg p-3 text-xs text-muted-foreground flex items-start gap-2">
+          <Info className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>In Phase 1, external checks use simulated data. TCG staff can manually enter results where automation is not yet live. Fields will show a source indicator — <span className="text-outcome-pending-text font-medium">amber</span> = future automation, <span className="text-primary font-medium">blue</span> = manual entry, <span className="text-outcome-pass-text font-medium">green</span> = API.</span>
+        </div>
+
         {/* External Checks */}
         <RunExternalChecks
           companiesHouseNumber={app.companiesHouseNumber}
