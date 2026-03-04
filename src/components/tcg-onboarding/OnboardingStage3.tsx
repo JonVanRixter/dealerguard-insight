@@ -10,9 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ArrowLeft, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { StageIndicator } from "@/components/tcg-onboarding/StageIndicator";
+import { FieldSourceIndicator } from "@/components/tcg-onboarding/FieldSourceIndicator";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import type { TcgOnboardingApp, PreScreenResult, PolicyEntry } from "@/hooks/useTcgOnboarding";
+import type { TcgOnboardingApp, PreScreenResult, PolicyEntry, FieldSource } from "@/hooks/useTcgOnboarding";
 
 interface Stage3Props {
   app: TcgOnboardingApp;
