@@ -247,7 +247,7 @@ export default function TcgOnboardingHub() {
     : "0";
 
   const openApp = (app: OnboardingApplication) => {
-    navigate("/onboarding", { state: { selectedAppId: app.id } });
+    navigate(`/tcg/onboarding/${app.id}`);
   };
 
   // Unique lenders for filter
