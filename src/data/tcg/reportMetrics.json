@@ -1,0 +1,165 @@
+{
+  "generatedAt": "2026-03-04T21:00:00",
+  "periodCoverage": "Oct 2025 – Mar 2026",
+  "platformGrowth": {
+    "lenders": [
+      { "month": "2025-10", "label": "Oct 25", "total": 1, "added": 1, "deactivated": 0, "net": 1 },
+      { "month": "2025-11", "label": "Nov 25", "total": 2, "added": 1, "deactivated": 0, "net": 1 },
+      { "month": "2025-12", "label": "Dec 25", "total": 3, "added": 1, "deactivated": 0, "net": 1 },
+      { "month": "2026-01", "label": "Jan 26", "total": 4, "added": 1, "deactivated": 0, "net": 1 },
+      { "month": "2026-02", "label": "Feb 26", "total": 5, "added": 1, "deactivated": 0, "net": 1 },
+      { "month": "2026-03", "label": "Mar 26 (MTD)", "total": 5, "added": 0, "deactivated": 0, "net": 0 }
+    ],
+    "dealers": [
+      { "month": "2025-10", "label": "Oct 25", "total": 4, "added": 4, "deactivated": 0, "net": 4 },
+      { "month": "2025-11", "label": "Nov 25", "total": 11, "added": 7, "deactivated": 0, "net": 7 },
+      { "month": "2025-12", "label": "Dec 25", "total": 19, "added": 9, "deactivated": 1, "net": 8 },
+      { "month": "2026-01", "label": "Jan 26", "total": 29, "added": 11, "deactivated": 1, "net": 10 },
+      { "month": "2026-02", "label": "Feb 26", "total": 38, "added": 10, "deactivated": 1, "net": 9 },
+      { "month": "2026-03", "label": "Mar 26 (MTD)", "total": 38, "added": 2, "deactivated": 0, "net": 2 }
+    ]
+  },
+  "auditsCompleted": {
+    "weekly": [
+      { "week": "W1-Jan", "label": "05 Jan", "total": 6, "scheduled": 5, "reAudit": 1, "failChase": 0 },
+      { "week": "W2-Jan", "label": "12 Jan", "total": 9, "scheduled": 7, "reAudit": 2, "failChase": 0 },
+      { "week": "W3-Jan", "label": "19 Jan", "total": 8, "scheduled": 6, "reAudit": 1, "failChase": 1 },
+      { "week": "W4-Jan", "label": "26 Jan", "total": 12, "scheduled": 10, "reAudit": 1, "failChase": 1 },
+      { "week": "W1-Feb", "label": "02 Feb", "total": 11, "scheduled": 8, "reAudit": 2, "failChase": 1 },
+      { "week": "W2-Feb", "label": "09 Feb", "total": 14, "scheduled": 11, "reAudit": 2, "failChase": 1 },
+      { "week": "W3-Feb", "label": "16 Feb", "total": 13, "scheduled": 10, "reAudit": 2, "failChase": 1 },
+      { "week": "W4-Feb", "label": "23 Feb", "total": 16, "scheduled": 13, "reAudit": 2, "failChase": 1 },
+      { "week": "W1-Mar", "label": "02 Mar", "total": 5, "scheduled": 4, "reAudit": 1, "failChase": 0 }
+    ],
+    "monthly": [
+      { "month": "2025-10", "label": "Oct 25", "total": 14, "scheduled": 12, "reAudit": 2, "failChase": 0 },
+      { "month": "2025-11", "label": "Nov 25", "total": 22, "scheduled": 18, "reAudit": 3, "failChase": 1 },
+      { "month": "2025-12", "label": "Dec 25", "total": 19, "scheduled": 15, "reAudit": 3, "failChase": 1 },
+      { "month": "2026-01", "label": "Jan 26", "total": 35, "scheduled": 28, "reAudit": 5, "failChase": 2 },
+      { "month": "2026-02", "label": "Feb 26", "total": 54, "scheduled": 42, "reAudit": 8, "failChase": 4 },
+      { "month": "2026-03", "label": "Mar 26 (MTD)", "total": 5, "scheduled": 4, "reAudit": 1, "failChase": 0 }
+    ],
+    "quarterly": [
+      { "quarter": "Q4-2025", "label": "Q4 2025", "total": 55, "scheduled": 45, "reAudit": 8, "failChase": 2 },
+      { "quarter": "Q1-2026", "label": "Q1 2026 (MTD)", "total": 94, "scheduled": 74, "reAudit": 14, "failChase": 6 }
+    ],
+    "bySection": [
+      { "sectionId": "s1", "name": "Corporate Governance", "checksCompleted": 142, "passRate": 88, "failRate": 7, "referRate": 5 },
+      { "sectionId": "s2", "name": "Permissions", "checksCompleted": 138, "passRate": 91, "failRate": 5, "referRate": 4 },
+      { "sectionId": "s3", "name": "Sales Process", "checksCompleted": 96, "passRate": 82, "failRate": 12, "referRate": 6 },
+      { "sectionId": "s4", "name": "Consumer Duty", "checksCompleted": 184, "passRate": 74, "failRate": 18, "referRate": 8 },
+      { "sectionId": "s5", "name": "Financial Crime & Fraud", "checksCompleted": 228, "passRate": 90, "failRate": 6, "referRate": 4 },
+      { "sectionId": "s6", "name": "Financial Promotions", "checksCompleted": 76, "passRate": 79, "failRate": 14, "referRate": 7 },
+      { "sectionId": "s7", "name": "Communications & Complaints", "checksCompleted": 114, "passRate": 71, "failRate": 19, "referRate": 10 },
+      { "sectionId": "s8", "name": "Conduct Oversight", "checksCompleted": 38, "passRate": 87, "failRate": 8, "referRate": 5 },
+      { "sectionId": "s9", "name": "Policies", "checksCompleted": 38, "passRate": 84, "failRate": 11, "referRate": 5 }
+    ],
+    "byLender": [
+      { "lenderId": "l001", "name": "Apex Motor Finance", "checksCompleted": 312, "avgScore": 66.5, "passRate": 81 },
+      { "lenderId": "l002", "name": "Meridian Vehicle Finance", "checksCompleted": 224, "avgScore": 72.3, "passRate": 86 },
+      { "lenderId": "l003", "name": "Broadstone Motor Credit", "checksCompleted": 392, "avgScore": 61.8, "passRate": 76 },
+      { "lenderId": "l004", "name": "NR Motor Finance", "checksCompleted": 140, "avgScore": 79.4, "passRate": 91 },
+      { "lenderId": "l005", "name": "Solent Asset Finance", "checksCompleted": 0, "avgScore": null, "passRate": null }
+    ]
+  },
+  "slaPerformance": {
+    "monthly": [
+      { "month": "2025-10", "label": "Oct 25", "totalItems": 8, "metSLA": 8, "breached": 0, "slaMetPct": 100, "avgResolutionHrs": 18 },
+      { "month": "2025-11", "label": "Nov 25", "totalItems": 14, "metSLA": 13, "breached": 1, "slaMetPct": 92.9, "avgResolutionHrs": 22 },
+      { "month": "2025-12", "label": "Dec 25", "totalItems": 11, "metSLA": 10, "breached": 1, "slaMetPct": 90.9, "avgResolutionHrs": 26 },
+      { "month": "2026-01", "label": "Jan 26", "totalItems": 22, "metSLA": 20, "breached": 2, "slaMetPct": 90.9, "avgResolutionHrs": 21 },
+      { "month": "2026-02", "label": "Feb 26", "totalItems": 31, "metSLA": 27, "breached": 4, "slaMetPct": 87.1, "avgResolutionHrs": 24 },
+      { "month": "2026-03", "label": "Mar 26 (MTD)", "totalItems": 4, "metSLA": 3, "breached": 1, "slaMetPct": 75.0, "avgResolutionHrs": 19 }
+    ],
+    "byPriority": [
+      { "priority": "Critical", "totalItems": 12, "metSLA": 9, "breached": 3, "slaMetPct": 75.0, "avgResolutionHrs": 6.2, "slaWindowHrs": 8 },
+      { "priority": "High", "totalItems": 38, "metSLA": 33, "breached": 5, "slaMetPct": 86.8, "avgResolutionHrs": 19.4, "slaWindowHrs": 24 },
+      { "priority": "Normal", "totalItems": 40, "metSLA": 38, "breached": 2, "slaMetPct": 95.0, "avgResolutionHrs": 31.8, "slaWindowHrs": 48 }
+    ],
+    "byTCGUser": [
+      { "userId": "u_tg", "name": "Tom Griffiths", "totalItems": 52, "metSLA": 46, "breached": 6, "slaMetPct": 88.5, "avgResolutionHrs": 22 },
+      { "userId": "u_ao", "name": "Amara Osei", "totalItems": 38, "metSLA": 34, "breached": 4, "slaMetPct": 89.5, "avgResolutionHrs": 19 }
+    ]
+  },
+  "onboardingMetrics": {
+    "monthly": [
+      { "month": "2025-10", "label": "Oct 25", "initiated": 4, "approved": 3, "rejected": 0, "inProgress": 1, "avgDaysToApprove": 7.2 },
+      { "month": "2025-11", "label": "Nov 25", "initiated": 9, "approved": 7, "rejected": 1, "inProgress": 1, "avgDaysToApprove": 8.1 },
+      { "month": "2025-12", "label": "Dec 25", "initiated": 10, "approved": 8, "rejected": 1, "inProgress": 1, "avgDaysToApprove": 9.4 },
+      { "month": "2026-01", "label": "Jan 26", "initiated": 13, "approved": 10, "rejected": 1, "inProgress": 2, "avgDaysToApprove": 8.8 },
+      { "month": "2026-02", "label": "Feb 26", "initiated": 14, "approved": 9, "rejected": 1, "inProgress": 4, "avgDaysToApprove": 8.4 },
+      { "month": "2026-03", "label": "Mar 26 (MTD)", "initiated": 4, "approved": 0, "rejected": 0, "inProgress": 4, "avgDaysToApprove": null }
+    ],
+    "byStage": [
+      { "stage": "Draft", "count": 4, "avgDaysInStage": 1.2 },
+      { "stage": "Stage 1 — Pre-Screen", "count": 4, "avgDaysInStage": 2.1 },
+      { "stage": "Stage 2 — Policies", "count": 10, "avgDaysInStage": 5.4 },
+      { "stage": "Stage 3 — Review", "count": 5, "avgDaysInStage": 1.8 },
+      { "stage": "Approved", "count": 37, "avgDaysInStage": null },
+      { "stage": "Rejected", "count": 2, "avgDaysInStage": null }
+    ],
+    "rejectionReasons": [
+      { "reason": "FCA authorisation lapsed", "count": 1 },
+      { "reason": "Director sanctions confirmed", "count": 1 }
+    ],
+    "byLender": [
+      { "lenderId": "l001", "name": "Apex", "initiated": 22, "approved": 17, "rejected": 2, "avgDays": 8.2 },
+      { "lenderId": "l002", "name": "Meridian", "initiated": 10, "approved": 8, "rejected": 0, "avgDays": 7.9 },
+      { "lenderId": "l003", "name": "Broadstone", "initiated": 15, "approved": 11, "rejected": 0, "avgDays": 9.1 },
+      { "lenderId": "l004", "name": "NR Finance", "initiated": 6, "approved": 5, "rejected": 0, "avgDays": 7.4 },
+      { "lenderId": "l005", "name": "Solent", "initiated": 1, "approved": 0, "rejected": 0, "avgDays": null }
+    ]
+  },
+  "alertMetrics": {
+    "monthly": [
+      { "month": "2025-10", "label": "Oct 25", "generated": 9, "acknowledged": 9, "avgHrsToAck": 14.2 },
+      { "month": "2025-11", "label": "Nov 25", "generated": 18, "acknowledged": 17, "avgHrsToAck": 16.8 },
+      { "month": "2025-12", "label": "Dec 25", "generated": 22, "acknowledged": 21, "avgHrsToAck": 19.1 },
+      { "month": "2026-01", "label": "Jan 26", "generated": 31, "acknowledged": 28, "avgHrsToAck": 18.4 },
+      { "month": "2026-02", "label": "Feb 26", "generated": 47, "acknowledged": 43, "avgHrsToAck": 17.2 },
+      { "month": "2026-03", "label": "Mar 26 (MTD)", "generated": 8, "acknowledged": 5, "avgHrsToAck": 11.0 }
+    ],
+    "byType": [
+      { "type": "Threshold Breach", "total": 48, "acknowledged": 45, "ackRate": 93.8 },
+      { "type": "Document Expiry", "total": 38, "acknowledged": 37, "ackRate": 97.4 },
+      { "type": "Check Due Soon", "total": 31, "acknowledged": 28, "ackRate": 90.3 },
+      { "type": "Fail Chase Triggered", "total": 14, "acknowledged": 11, "ackRate": 78.6 },
+      { "type": "SLA Breach", "total": 9, "acknowledged": 8, "ackRate": 88.9 },
+      { "type": "Re-Check Completed", "total": 4, "acknowledged": 4, "ackRate": 100.0 }
+    ]
+  },
+  "reCheckMetrics": {
+    "monthly": [
+      { "month": "2026-01", "label": "Jan 26", "submitted": 3, "completed": 2, "failChases": 1, "avgResolutionHrs": 28 },
+      { "month": "2026-02", "label": "Feb 26", "submitted": 8, "completed": 5, "failChases": 3, "avgResolutionHrs": 24 },
+      { "month": "2026-03", "label": "Mar 26 (MTD)", "submitted": 4, "completed": 1, "failChases": 3, "avgResolutionHrs": 20 }
+    ],
+    "outcomeBreakdown": [
+      { "outcome": "Confirmed — no change", "count": 5, "pct": 62.5 },
+      { "outcome": "Score updated upward", "count": 2, "pct": 25.0 },
+      { "outcome": "Score updated downward", "count": 1, "pct": 12.5 }
+    ]
+  },
+  "platformHealthSnapshot": {
+    "asOf": "2026-03-04",
+    "totalLenders": 5,
+    "activeLenders": 4,
+    "pendingLenders": 1,
+    "totalDealers": 38,
+    "activeDealers": 36,
+    "deactivatedDealers": 2,
+    "avgPortfolioScore": 68.1,
+    "scoreDistribution": {
+      "0_24": 2,
+      "25_49": 5,
+      "50_74": 18,
+      "75_100": 13
+    },
+    "openManualReviewItems": 7,
+    "openReCheckRequests": 3,
+    "slaBreachedItems": 1,
+    "checksOverdue": 4,
+    "checksAmber": 12,
+    "checksRed": 3
+  }
+}
