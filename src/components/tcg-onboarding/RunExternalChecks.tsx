@@ -76,13 +76,13 @@ export function RunExternalChecks({ companiesHouseNumber, app, onUpdate }: Props
     const updatedChecks = app.preScreenChecks.map((check) => {
       switch (check.id) {
         case "ch":
-          return { ...check, result: mapResult(ch.overallResult), notes: check.notes || "Auto-filled from simulated check" };
+          return { ...check, result: mapResult(ch.overallResult), notes: check.notes || "Auto-filled from simulated check", source: "api" as const };
         case "fca":
-          return { ...check, result: mapResult(fca.overallResult), notes: check.notes || "Auto-filled from simulated check" };
+          return { ...check, result: mapResult(fca.overallResult), notes: check.notes || "Auto-filled from simulated check", source: "api" as const };
         case "fin":
-          return { ...check, result: mapResult(cs.overallResult), notes: check.notes || "Auto-filled from simulated check" };
+          return { ...check, result: mapResult(cs.overallResult), notes: check.notes || "Auto-filled from simulated check", source: "api" as const };
         case "aml":
-          return { ...check, result: (allSanctionsClear ? "pass" : "refer") as PreScreenResult, notes: check.notes || "Auto-filled from simulated check" };
+          return { ...check, result: (allSanctionsClear ? "pass" : "refer") as PreScreenResult, notes: check.notes || "Auto-filled from simulated check", source: "api" as const };
         default:
           return check;
       }
@@ -101,6 +101,13 @@ export function RunExternalChecks({ companiesHouseNumber, app, onUpdate }: Props
       addressStreet: addressParts[0] || "",
       addressTown: addressParts[1] || "",
       addressPostcode: addressParts[addressParts.length - 1] || "",
+      fieldSources: {
+        companyName: "api",
+        companiesHouseNumber: "api",
+        addressStreet: "api",
+        addressTown: "api",
+        addressPostcode: "api",
+      } as any,
     });
 
     toast({ title: "Form pre-filled", description: "Company details populated from Companies House data." });

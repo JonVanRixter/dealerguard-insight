@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { AlertTriangle, ChevronDown, Save, ArrowRight, ShieldBan, Info } from "lucide-react";
 import { StageIndicator } from "@/components/tcg-onboarding/StageIndicator";
 import { RunExternalChecks } from "@/components/tcg-onboarding/RunExternalChecks";
+import { FieldSourceIndicator } from "@/components/tcg-onboarding/FieldSourceIndicator";
 import type { TcgOnboardingApp, PreScreenCheck, PreScreenResult } from "@/hooks/useTcgOnboarding";
 
 interface Stage1Props {
@@ -38,9 +39,15 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
   };
 
   const updateCheck = (checkId: string, field: "result" | "notes", value: string) => {
-    const updated = app.preScreenChecks.map((c) =>
-      c.id === checkId ? { ...c, [field]: field === "result" ? value as PreScreenResult : value } : c
-    );
+    const updated = app.preScreenChecks.map((c) => {
+      if (c.id !== checkId) return c;
+      const next = { ...c, [field]: field === "result" ? value as PreScreenResult : value };
+      // If user manually sets result, mark source as manual (unless already api)
+      if (field === "result" && next.source !== "api") {
+        next.source = "manual";
+      }
+      return next;
+    });
     onUpdate({ preScreenChecks: updated });
   };
 
@@ -85,50 +92,50 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Company Name (legal) *</Label>
+                <Label className="flex items-center">Company Name (legal) * <FieldSourceIndicator source={app.fieldSources.companyName} /></Label>
                 <Input value={app.companyName} onChange={(e) => onUpdate({ companyName: e.target.value })} placeholder="Enter legal company name" />
               </div>
               <div className="space-y-2">
-                <Label>Companies House Number *</Label>
+                <Label className="flex items-center">Companies House Number * <FieldSourceIndicator source={app.fieldSources.companiesHouseNumber} /></Label>
                 <Input value={app.companiesHouseNumber} onChange={(e) => handleChChange(e.target.value)} placeholder="e.g. 08421573" maxLength={8} />
               </div>
               <div className="space-y-2">
-                <Label>Trading Name *</Label>
+                <Label className="flex items-center">Trading Name * <FieldSourceIndicator source={app.fieldSources.tradingName} /></Label>
                 <Input value={app.tradingName} onChange={(e) => onUpdate({ tradingName: e.target.value })} placeholder="Trading name" />
               </div>
               <div className="space-y-2">
-                <Label>Website URL *</Label>
+                <Label className="flex items-center">Website URL * <FieldSourceIndicator source={app.fieldSources.websiteUrl} /></Label>
                 <Input value={app.websiteUrl} onChange={(e) => onUpdate({ websiteUrl: e.target.value })} placeholder="https://..." />
               </div>
               <div className="space-y-2">
-                <Label>Primary Contact Name *</Label>
+                <Label className="flex items-center">Primary Contact Name * <FieldSourceIndicator source={app.fieldSources.primaryContactName} /></Label>
                 <Input value={app.primaryContactName} onChange={(e) => onUpdate({ primaryContactName: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Primary Contact Email *</Label>
+                <Label className="flex items-center">Primary Contact Email * <FieldSourceIndicator source={app.fieldSources.primaryContactEmail} /></Label>
                 <Input type="email" value={app.primaryContactEmail} onChange={(e) => onUpdate({ primaryContactEmail: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Primary Contact Phone *</Label>
+                <Label className="flex items-center">Primary Contact Phone * <FieldSourceIndicator source={app.fieldSources.primaryContactPhone} /></Label>
                 <Input value={app.primaryContactPhone} onChange={(e) => onUpdate({ primaryContactPhone: e.target.value })} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Street</Label>
+                <Label className="flex items-center">Street <FieldSourceIndicator source={app.fieldSources.addressStreet} /></Label>
                 <Input value={app.addressStreet} onChange={(e) => onUpdate({ addressStreet: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Town</Label>
+                <Label className="flex items-center">Town <FieldSourceIndicator source={app.fieldSources.addressTown} /></Label>
                 <Input value={app.addressTown} onChange={(e) => onUpdate({ addressTown: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>County</Label>
+                <Label className="flex items-center">County <FieldSourceIndicator source={app.fieldSources.addressCounty} /></Label>
                 <Input value={app.addressCounty} onChange={(e) => onUpdate({ addressCounty: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Postcode</Label>
+                <Label className="flex items-center">Postcode <FieldSourceIndicator source={app.fieldSources.addressPostcode} /></Label>
                 <Input value={app.addressPostcode} onChange={(e) => onUpdate({ addressPostcode: e.target.value })} />
               </div>
             </div>
@@ -153,6 +160,12 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
           </CardContent>
         </Card>
 
+        {/* Phase 1 info banner */}
+        <div className="bg-muted/40 border rounded-lg p-3 text-xs text-muted-foreground flex items-start gap-2">
+          <Info className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>In Phase 1, external checks use simulated data. TCG staff can manually enter results where automation is not yet live. Fields will show a source indicator — <span className="text-outcome-pending-text font-medium">amber</span> = future automation, <span className="text-primary font-medium">blue</span> = manual entry, <span className="text-outcome-pass-text font-medium">green</span> = API.</span>
+        </div>
+
         {/* External Checks */}
         <RunExternalChecks
           companiesHouseNumber={app.companiesHouseNumber}
@@ -170,6 +183,7 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
                   <div className="flex items-center gap-3">
                     <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     <span className="font-medium text-sm">{check.label}</span>
+                    <FieldSourceIndicator source={check.source} />
                   </div>
                   {resultPill(check.result)}
                 </CollapsibleTrigger>

@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ArrowLeft, ArrowRight, Upload, Trash2 } from "lucide-react";
 import { StageIndicator } from "@/components/tcg-onboarding/StageIndicator";
+import { FieldSourceIndicator } from "@/components/tcg-onboarding/FieldSourceIndicator";
 import type { TcgOnboardingApp, PolicyEntry } from "@/hooks/useTcgOnboarding";
 
 interface Stage2Props {
@@ -65,6 +66,10 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
     const updated = policies.map((p) => {
       if (p.id !== polId) return p;
       const next = { ...p, [field]: value };
+      // Auto-set source to manual when user changes exists
+      if (field === "exists" && next.source === "pending_automation") {
+        next.source = "manual";
+      }
       // Clear downstream fields when exists changes
       if (field === "exists") {
         if (value === "no" || value === "na") {
@@ -128,7 +133,7 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
                     {catPolicies.map((pol) => (
                       <div key={pol.id} className="border rounded-lg p-4 space-y-3">
                         <div className="flex items-start justify-between gap-4">
-                          <h4 className="font-medium text-sm">{pol.name}</h4>
+                          <h4 className="font-medium text-sm flex items-center">{pol.name} <FieldSourceIndicator source={pol.source} /></h4>
                         </div>
 
                         {/* Exists radio */}

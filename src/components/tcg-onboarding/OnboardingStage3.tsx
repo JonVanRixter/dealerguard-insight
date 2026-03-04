@@ -10,9 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ArrowLeft, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { StageIndicator } from "@/components/tcg-onboarding/StageIndicator";
+import { FieldSourceIndicator } from "@/components/tcg-onboarding/FieldSourceIndicator";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import type { TcgOnboardingApp, PreScreenResult, PolicyEntry } from "@/hooks/useTcgOnboarding";
+import type { TcgOnboardingApp, PreScreenResult, PolicyEntry, FieldSource } from "@/hooks/useTcgOnboarding";
 
 interface Stage3Props {
   app: TcgOnboardingApp;
@@ -97,6 +98,25 @@ export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove,
           Review & Approve — {app.tradingName || app.companyName || "New Dealer"}
         </h1>
 
+        {/* Source summary */}
+        {(() => {
+          const allSources: FieldSource[] = [
+            ...Object.values(app.fieldSources),
+            ...app.preScreenChecks.map((c) => c.source),
+            ...visiblePolicies.map((p) => p.source),
+          ];
+          const apiCount = allSources.filter((s) => s === "api").length;
+          const manualCount = allSources.filter((s) => s === "manual").length;
+          const pendingCount = allSources.filter((s) => s === "pending_automation").length;
+          return (
+            <div className="flex gap-4 text-xs text-muted-foreground bg-muted/40 border rounded-lg px-4 py-2">
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-outcome-pass" />{apiCount} via API</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary" />{manualCount} manual</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-outcome-pending" />{pendingCount} pending automation</span>
+            </div>
+          );
+        })()}
+
         {/* Section A — Pre-Screen */}
         <Card>
           <CardHeader><CardTitle>Pre-Screen Summary</CardTitle></CardHeader>
@@ -111,6 +131,7 @@ export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove,
               <TableHeader>
                 <TableRow>
                   <TableHead>Check</TableHead>
+                  <TableHead>Source</TableHead>
                   <TableHead>Result</TableHead>
                   <TableHead>Notes</TableHead>
                 </TableRow>
@@ -119,6 +140,7 @@ export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove,
                 {app.preScreenChecks.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium text-sm">{c.label}</TableCell>
+                    <TableCell><FieldSourceIndicator source={c.source} /></TableCell>
                     <TableCell>{preScreenPill(c.result)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.notes || "—"}</TableCell>
                   </TableRow>

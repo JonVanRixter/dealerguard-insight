@@ -1,48 +1,40 @@
 
 
-## Plan: Phase 1 Manual-Entry Data Source Model for Onboarding
+## Plan: Surface Policy Documents on TCG Dealer Profile + Lender Documents Tab
 
 ### What this achieves
-Every external data field in the onboarding workflow gets a `source` property (`"api"`, `"manual"`, or `"pending_automation"`) tracked in the data model. In Phase 1, all fields default to `"pending_automation"`. When TCG staff manually enters a value, the source flips to `"manual"`. When the simulated external checks run, the source becomes `"api"`. The UI shows a subtle inline indicator next to each field label so TCG staff know which fields are automated vs manual vs waiting, without cluttering the form. This ensures the audit trail is clean from day one and the transition to full automation is seamless.
+The TCG dealer profile will display a dedicated **Documents** tab showing all 26 policy documents from the onboarding audit -- clearly indicating which documents were uploaded and which are missing. The Lender Profile's Documents tab will be upgraded to show the same policy document data (filtered to that lender's dealers), following the `lenderReportSurface.json` rules: lenders see policy name, existence status, last updated date, and whether a document is available -- but not the actual files. This creates the foundation for a future "Request Document" flow between the Lender Portal and Klassify Pro.
 
 ### Changes
 
-**1. Extend data model (`src/hooks/useTcgOnboarding.ts`)**
-- Add `source: "api" | "manual" | "pending_automation"` to `PreScreenCheck` interface (default: `"pending_automation"`)
-- Add `source` to `PolicyEntry` interface (default: `"pending_automation"`)
-- Add `source` to each field group in `TcgOnboardingApp`: new property `fieldSources: Record<string, "api" | "manual" | "pending_automation">` tracking company name, CH number, address fields, contact fields, etc. Default all to `"pending_automation"`
-- In `updateCurrent`, when a basic field changes and was previously empty, auto-set its source to `"manual"`
-- Update `defaultPreScreenChecks` to include `source: "pending_automation"`
-- Update `buildEmptyPolicies` to include `source: "pending_automation"`
+**1. Add "Documents" tab to TCG Dealer Detail (`src/pages/TcgDealerDetail.tsx`)**
+- Add a 4th tab: `Documents` (with `FileText` icon) alongside Overview, Policies, External Checks.
+- Create a new component `src/components/tcg-dealer/DealerDocumentsTab.tsx` that:
+  - Takes the `DealerPolicyRecord` (or null) as a prop.
+  - Groups policies by category (same grouping as PolicyTab).
+  - Each row shows: policy name, existence status (Yes/No pill), document status (Uploaded with filename + view icon, or "Not uploaded" with amber warning), last updated date.
+  - Summary strip at top: X documents uploaded, Y missing, Z policies not in place.
+  - For dealers without a policy record, show an empty state: "No onboarding documents recorded for this dealer."
+  - Clean card-based layout with collapsible category groups matching the existing PolicyTab aesthetic.
 
-**2. Create source indicator component (`src/components/tcg-onboarding/FieldSourceIndicator.tsx`)**
-- Tiny inline component (~30 lines) that renders next to field labels
-- `"api"`: green dot + "API" text (when automated check has populated)
-- `"manual"`: blue dot + "Manual" text (TCG staff typed it)
-- `"pending_automation"`: amber dot + "Manual (Phase 1)" text with a tooltip: "This field will be automated via API in a future release"
-- All rendered at `text-[10px]` size, non-intrusive, consistent with platform aesthetic
+**2. Upgrade Lender Profile Documents Tab (`src/pages/LenderProfile.tsx`)**
+- Replace the current placeholder documents table (lines 482-538) with a proper policy-document view.
+- For each dealer under this lender, look up `getPolicyRecord(dealerId)`.
+- Display a per-dealer accordion/card showing:
+  - Dealer name as header with summary counts (e.g., "14/22 documents available").
+  - Inside: policy rows with columns: Policy Name, Exists, Document Available (Yes/No -- not the file), Last Updated.
+  - Where no document exists: show "No document" in muted text.
+  - Where no policy record exists for a dealer: show "Onboarding documents pending" message.
+- Add a read-only tooltip note: "To request a copy of a policy document, contact TCG directly."
+- Maintain the existing `Lock` read-only badge in the tab header.
 
-**3. Update Stage 1 form (`src/components/tcg-onboarding/OnboardingStage1.tsx`)**
-- Import `FieldSourceIndicator`
-- Next to each form field label (Company Name, CH Number, Trading Name, etc.), render the indicator using `app.fieldSources[fieldKey]`
-- Group the "External Checks" section with a small info banner: "In Phase 1, external checks are simulated. TCG staff can manually enter results where automation is not yet live."
-- Pre-screen checks: show source indicator next to each check label
-
-**4. Update RunExternalChecks (`src/components/tcg-onboarding/RunExternalChecks.tsx`)**
-- When simulated checks complete and auto-populate pre-screen results, set each check's `source` to `"api"`
-- When pre-filling form fields from Companies House data, set those field sources to `"api"`
-
-**5. Update Stage 2 form (`src/components/tcg-onboarding/OnboardingStage2.tsx`)**
-- Show `FieldSourceIndicator` next to each policy name
-- When TCG staff changes a policy's `exists` value, set `source` to `"manual"`
-
-**6. Update Stage 3 review (`src/components/tcg-onboarding/OnboardingStage3.tsx`)**
-- In the read-only review, show source indicators so the approver can see which data was API-sourced vs manually entered
-- Add a summary count at the top of the review: "X fields via API, Y fields manual, Z fields pending"
+**3. Data flow**
+- Both views consume `getPolicyRecord()` from `src/data/tcg/dealerPolicies.ts` -- no new data files needed.
+- For dealers that don't have explicit policy records (d012-d038 and generated dealers), the components will show an appropriate "No documents recorded" state.
 
 ### Technical details
-- `FieldSourceIndicator` is a pure presentational component: `({ source }: { source: "api" | "manual" | "pending_automation" }) => JSX`
-- `fieldSources` is a flat `Record<string, Source>` with keys like `"companyName"`, `"companiesHouseNumber"`, `"addressStreet"`, etc.
-- No database changes needed -- all data is in the client-side onboarding state
-- The source tracking is internal to the data model; badges are subtle and don't change the form interaction pattern
+
+- `DealerDocumentsTab` component: ~120 lines, reuses `ExistsPill`-style badges, `Collapsible` groups, same grid layout as PolicyTab but read-only (no edit buttons).
+- Lender Profile Documents tab: refactor inline JSX (lines 482-538) to iterate over `lenderDealers`, calling `getPolicyRecord()` per dealer, rendering collapsible dealer sections.
+- No database changes required -- all data comes from the existing mock policy framework.
 
