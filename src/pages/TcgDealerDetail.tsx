@@ -4,12 +4,13 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, TrendingUp, TrendingDown, Minus, MapPin, Phone, Building2, ShieldCheck, Search } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Minus, MapPin, Phone, Building2, ShieldCheck, Search, FileText } from "lucide-react";
 import { tcgDealers, type TcgDealer } from "@/data/tcg/dealers";
 import { getPolicyRecord } from "@/data/tcg/dealerPolicies";
 import { getLenderName } from "@/data/tcg/lenders";
 import { PolicyTab } from "@/components/tcg-dealer/PolicyTab";
 import { ExternalChecksTab } from "@/components/tcg-dealer/ExternalChecksTab";
+import { DealerDocumentsTab } from "@/components/tcg-dealer/DealerDocumentsTab";
 
 function TrendIcon({ trend }: { trend: string }) {
   if (trend === "up") return <TrendingUp className="w-4 h-4 text-score-up" />;
@@ -145,6 +146,10 @@ export default function TcgDealerDetail() {
               <Search className="w-3.5 h-3.5" />
               External Checks
             </TabsTrigger>
+            <TabsTrigger value="documents" className="gap-1.5">
+              <FileText className="w-3.5 h-3.5" />
+              Documents
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -163,6 +168,16 @@ export default function TcgDealerDetail() {
 
           <TabsContent value="checks">
             <ExternalChecksTab dealerId={dealer.id} />
+          </TabsContent>
+
+          <TabsContent value="documents">
+            {policyRecord ? (
+              <DealerDocumentsTab policyRecord={policyRecord} />
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                No onboarding documents recorded for this dealer.
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
