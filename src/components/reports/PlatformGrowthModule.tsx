@@ -19,10 +19,10 @@ const dealersByLender = [
 ];
 
 const scoreBands = [
-  { band: "0–24 (Critical)", count: health.scoreDistribution["0_24"], pct: ((health.scoreDistribution["0_24"] / health.totalDealers) * 100).toFixed(1), color: "bg-red-500" },
-  { band: "25–49 (Red)", count: health.scoreDistribution["25_49"], pct: ((health.scoreDistribution["25_49"] / health.totalDealers) * 100).toFixed(1), color: "bg-orange-500" },
-  { band: "50–74 (Amber)", count: health.scoreDistribution["50_74"], pct: ((health.scoreDistribution["50_74"] / health.totalDealers) * 100).toFixed(1), color: "bg-yellow-500" },
-  { band: "75–100 (Green)", count: health.scoreDistribution["75_100"], pct: ((health.scoreDistribution["75_100"] / health.totalDealers) * 100).toFixed(1), color: "bg-emerald-500" },
+  { band: "0–24", count: health.scoreDistribution["0_24"], pct: ((health.scoreDistribution["0_24"] / health.totalDealers) * 100).toFixed(1) },
+  { band: "25–49", count: health.scoreDistribution["25_49"], pct: ((health.scoreDistribution["25_49"] / health.totalDealers) * 100).toFixed(1) },
+  { band: "50–74", count: health.scoreDistribution["50_74"], pct: ((health.scoreDistribution["50_74"] / health.totalDealers) * 100).toFixed(1) },
+  { band: "75–100", count: health.scoreDistribution["75_100"], pct: ((health.scoreDistribution["75_100"] / health.totalDealers) * 100).toFixed(1) },
 ];
 
 // Period aggregates (using full dataset for now)
@@ -148,8 +148,7 @@ export function PlatformGrowthModule() {
                 <tr className="border-b border-border text-muted-foreground">
                   <th className="text-left px-5 py-2.5 font-medium">Score Band</th>
                   <th className="text-right px-3 py-2.5 font-medium">Count</th>
-                  <th className="text-right px-3 py-2.5 font-medium">% of Total</th>
-                  <th className="text-center px-5 py-2.5 font-medium">Status</th>
+                  <th className="text-right px-5 py-2.5 font-medium">% of Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -157,10 +156,7 @@ export function PlatformGrowthModule() {
                   <tr key={b.band} className="border-b border-border last:border-0">
                     <td className="px-5 py-3 font-medium text-foreground">{b.band}</td>
                     <td className="px-3 py-3 text-right text-foreground font-semibold">{b.count}</td>
-                    <td className="px-3 py-3 text-right text-muted-foreground">{b.pct}%</td>
-                    <td className="px-5 py-3 text-center">
-                      <span className={`inline-block w-3 h-3 rounded-full ${b.color}`} />
-                    </td>
+                    <td className="px-5 py-3 text-right text-muted-foreground">{b.pct}%</td>
                   </tr>
                 ))}
               </tbody>
