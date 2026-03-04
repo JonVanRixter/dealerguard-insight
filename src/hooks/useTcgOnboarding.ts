@@ -31,6 +31,14 @@ export interface PolicyEntry {
 
 export type AppStatus = "draft" | "in_progress" | "pending_approval" | "approved" | "rejected";
 
+export const TRACKABLE_FIELDS = [
+  "companyName", "companiesHouseNumber", "tradingName", "websiteUrl",
+  "primaryContactName", "primaryContactEmail", "primaryContactPhone",
+  "addressStreet", "addressTown", "addressCounty", "addressPostcode",
+] as const;
+
+export type TrackableField = typeof TRACKABLE_FIELDS[number];
+
 export interface TcgOnboardingApp {
   id: string;
   appRef: string;
@@ -48,6 +56,7 @@ export interface TcgOnboardingApp {
   distributeInsurance: boolean | null;
   preScreenChecks: PreScreenCheck[];
   policies: PolicyEntry[];
+  fieldSources: Record<TrackableField, FieldSource>;
   status: AppStatus;
   currentStage: 1 | 2 | 3;
   startedBy: string;
