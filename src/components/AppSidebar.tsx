@@ -28,7 +28,7 @@ const navItems = [
   { title: "Review Queue", url: "/tcg/review-queue", icon: ClipboardList },
   { title: "Documents", url: "/documents", icon: FolderOpen },
   { title: "Alerts", url: "/alerts", icon: Bell },
-  { title: "Reports", url: "/reports", icon: FileBarChart },
+  { title: "Reports & Analytics", url: "/reports", icon: FileBarChart },
   { title: "Comparison", url: "/comparison", icon: GitCompare },
   { title: "Trends", url: "/trends", icon: TrendingUp },
   { title: "Settings", url: "/settings", icon: Settings },
