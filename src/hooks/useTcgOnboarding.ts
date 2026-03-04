@@ -167,7 +167,14 @@ export function useTcgOnboarding() {
   const updateCurrent = useCallback((partial: Partial<TcgOnboardingApp>) => {
     setCurrent((prev) => {
       if (!prev) return prev;
-      const next = { ...prev, ...partial };
+      // Auto-set field sources to "manual" when a tracked field changes from empty
+      const updatedSources = { ...prev.fieldSources, ...(partial.fieldSources || {}) };
+      for (const key of TRACKABLE_FIELDS) {
+        if (key in partial && !prev[key] && (partial as any)[key] && updatedSources[key] === "pending_automation") {
+          updatedSources[key] = "manual";
+        }
+      }
+      const next = { ...prev, ...partial, fieldSources: updatedSources };
       // debounced persist
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
