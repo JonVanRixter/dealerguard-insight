@@ -86,15 +86,15 @@ export function AuditsCompletedModule() {
         <p className="text-xs text-muted-foreground mb-4">100% stacked breakdown for each compliance section</p>
         <div className="space-y-3">
           {bySection.map((sec) => {
-            const isWorst = sec.sectionId === worstFailSection.sectionId;
+            const isHighFail = sec.failRate >= 18; // Consumer Duty (18%) and Comms & Complaints (19%)
             return (
               <div key={sec.sectionId}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-medium text-foreground truncate max-w-[200px]">{sec.name}</span>
                   <div className="flex items-center gap-2 text-[11px]">
-                    {isWorst && (
+                    {isHighFail && (
                       <span className="text-destructive font-semibold flex items-center gap-0.5">
-                        <AlertTriangle className="w-3 h-3" /> Highest fail rate
+                        <AlertTriangle className="w-3 h-3" /> ⚠️ High fail rate
                       </span>
                     )}
                     <span className="text-outcome-pass font-medium">{sec.passRate}%</span>
