@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/dialog";
 import { allTcgLenders } from "@/data/tcg/lenders";
 import { tcgDealers } from "@/data/tcg/dealers";
+import { getPolicyRecord } from "@/data/tcg/dealerPolicies";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronRight as ChevronRightCollapse } from "lucide-react";
 import {
   ArrowLeft,
   Building2,
@@ -107,6 +110,64 @@ const LenderProfile = () => {
     return <span className="text-[hsl(var(--outcome-fail))] font-semibold">🔴 {count}</span>;
   };
 
+function LenderDealerDocSection({ dealerName, uploaded, total, policies }: {
+  dealerName: string;
+  uploaded: number;
+  total: number;
+  policies: { id: string; name: string; category: string; exists: boolean; documentUploaded: boolean; lastUpdated: string | null }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const fmtDate = (d: string | null) =>
+    d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger className="flex items-center justify-between w-full px-5 py-3 hover:bg-muted/30 transition-colors">
+        <div className="flex items-center gap-2">
+          {open ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRightCollapse className="w-4 h-4 text-muted-foreground" />}
+          <span className="text-sm font-medium text-foreground">{dealerName}</span>
+        </div>
+        <Badge variant="secondary" className="text-xs">{uploaded}/{total} documents available</Badge>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="px-5 pb-3">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Policy Name</TableHead>
+                <TableHead className="text-center">Exists</TableHead>
+                <TableHead className="text-center">Document Available</TableHead>
+                <TableHead>Last Updated</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {policies.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell className="text-sm text-foreground">{p.name}</TableCell>
+                  <TableCell className="text-center">
+                    {p.exists
+                      ? <Badge className="bg-outcome-pass-bg text-outcome-pass-text text-xs">Yes</Badge>
+                      : <Badge className="bg-outcome-fail-bg text-outcome-fail-text text-xs">No</Badge>
+                    }
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {p.exists
+                      ? p.documentUploaded
+                        ? <Badge className="bg-outcome-pass-bg text-outcome-pass-text text-xs">Yes</Badge>
+                        : <span className="text-xs text-muted-foreground">No document</span>
+                      : <span className="text-xs text-muted-foreground">—</span>
+                    }
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{fmtDate(p.lastUpdated)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
 
 
   const handleAddNote = () => {
@@ -483,7 +544,7 @@ const LenderProfile = () => {
             <div className="bg-card rounded-xl border border-border">
               <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <FileText className="w-4 h-4" /> Documents
+                  <FileText className="w-4 h-4" /> Policy Documents
                 </h3>
                 <Tooltip>
                   <TooltipTrigger>
@@ -491,49 +552,49 @@ const LenderProfile = () => {
                       <Lock className="w-3 h-3" /> Read-only
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent>Document management is handled by the lender.</TooltipContent>
+                  <TooltipContent>To request a copy of a policy document, contact TCG directly.</TooltipContent>
                 </Tooltip>
               </div>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Document Name</TableHead>
-                      <TableHead>Dealer</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Upload Date</TableHead>
-                      <TableHead>Expiry Date</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {lenderDealers.length > 0 ? (
-                      lenderDealers.slice(0, 5).map((d) => (
-                        <TableRow key={d.id}>
-                          <TableCell className="font-medium text-foreground">
-                            {d.tradingName} — Compliance Pack
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">{d.name}</TableCell>
-                          <TableCell className="text-muted-foreground">Compliance</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{d.lastAudit}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {d.onboarding.validUntil ? formatDate(d.onboarding.validUntil) : "—"}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant="default">Active</Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          No documents available.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+
+              <div className="px-5 py-3 border-b border-border bg-muted/30">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Info className="w-3.5 h-3.5" />
+                  Lenders can view policy existence and dates. Actual documents are available on request from TCG.
+                </div>
               </div>
+
+              {lenderDealers.length > 0 ? (
+                <div className="divide-y divide-border">
+                  {lenderDealers.map((dealer) => {
+                    const record = getPolicyRecord(dealer.id);
+                    if (!record) {
+                      return (
+                        <div key={dealer.id} className="px-5 py-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-foreground">{dealer.name}</span>
+                            <Badge variant="secondary" className="text-xs">Onboarding documents pending</Badge>
+                          </div>
+                        </div>
+                      );
+                    }
+                    const uploaded = record.policies.filter((p) => p.documentUploaded).length;
+                    const total = record.policies.length;
+                    return (
+                      <LenderDealerDocSection
+                        key={dealer.id}
+                        dealerName={dealer.name}
+                        uploaded={uploaded}
+                        total={total}
+                        policies={record.policies}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="px-5 py-8 text-center text-muted-foreground text-sm">
+                  No dealers associated with this lender.
+                </div>
+              )}
             </div>
           </TabsContent>
 
