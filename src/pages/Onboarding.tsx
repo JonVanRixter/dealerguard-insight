@@ -21,10 +21,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { FieldSourceIndicator, type FieldSource } from "@/components/tcg-onboarding/FieldSourceIndicator";
 import {
   Building2, PoundSterling, Users, FileText,
   CheckCircle2, FileUp, ArrowLeft, ArrowRight, Loader2, ShieldCheck, Download,
-  XCircle, AlertTriangle, Mail, Send,
+  XCircle, AlertTriangle, Mail, Send, Info,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
