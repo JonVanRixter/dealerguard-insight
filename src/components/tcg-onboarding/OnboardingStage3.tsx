@@ -98,6 +98,25 @@ export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove,
           Review & Approve — {app.tradingName || app.companyName || "New Dealer"}
         </h1>
 
+        {/* Source summary */}
+        {(() => {
+          const allSources: FieldSource[] = [
+            ...Object.values(app.fieldSources),
+            ...app.preScreenChecks.map((c) => c.source),
+            ...visiblePolicies.map((p) => p.source),
+          ];
+          const apiCount = allSources.filter((s) => s === "api").length;
+          const manualCount = allSources.filter((s) => s === "manual").length;
+          const pendingCount = allSources.filter((s) => s === "pending_automation").length;
+          return (
+            <div className="flex gap-4 text-xs text-muted-foreground bg-muted/40 border rounded-lg px-4 py-2">
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-outcome-pass" />{apiCount} via API</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary" />{manualCount} manual</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-outcome-pending" />{pendingCount} pending automation</span>
+            </div>
+          );
+        })()}
+
         {/* Section A — Pre-Screen */}
         <Card>
           <CardHeader><CardTitle>Pre-Screen Summary</CardTitle></CardHeader>
