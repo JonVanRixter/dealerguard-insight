@@ -2,6 +2,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 import { ClipboardCheck, CheckCircle2, XCircle, Clock, TrendingUp, TrendingDown, Minus, AlertTriangle, Lightbulb } from "lucide-react";
+import { InsightCallout } from "./InsightCallout";
 import { ReportChartTooltip } from "./ReportChartTooltip";
 import reportMetrics from "@/data/tcg/reportMetrics.json";
 
@@ -212,6 +213,10 @@ export function OnboardingMetricsModule() {
           </div>
         </div>
       </div>
+      {/* Insight callout */}
+      <InsightCallout type="positive">
+        Average time to approval has reduced from 9.4 days in Dec 25 to 8.4 days in Feb 26 — process efficiency is improving. Stage 2 (Policies) remains the primary bottleneck.
+      </InsightCallout>
     </div>
   );
 }

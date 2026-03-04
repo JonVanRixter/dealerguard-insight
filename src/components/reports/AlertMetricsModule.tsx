@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { ReportChartTooltip } from "./ReportChartTooltip";
+import { InsightCallout } from "./InsightCallout";
 import reportMetrics from "@/data/tcg/reportMetrics.json";
 
 const { monthly, byType } = reportMetrics.alertMetrics;
@@ -59,6 +60,11 @@ export function AlertMetricsModule() {
           </div>
         </div>
       </div>
+
+      {/* Insight callout */}
+      <InsightCallout type="warning">
+        Fail Chase Triggered alerts have the lowest acknowledgement rate across all alert types (78.6%). These are the highest-risk category. Consider escalation workflows.
+      </InsightCallout>
     </div>
   );
 }

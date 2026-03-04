@@ -3,6 +3,7 @@ import {
 } from "recharts";
 import { RefreshCw, AlertTriangle, CheckCircle2, Clock, TrendingUp, TrendingDown, Minus, Lightbulb, ArrowRight } from "lucide-react";
 import { ReportChartTooltip } from "./ReportChartTooltip";
+import { InsightCallout } from "./InsightCallout";
 import reportMetrics from "@/data/tcg/reportMetrics.json";
 import { useNavigate } from "react-router-dom";
 
@@ -175,6 +176,11 @@ export function ReCheckMetricsModule() {
           </button>
         </div>
       </div>
+
+      {/* Insight callout */}
+      <InsightCallout type="positive">
+        Re-check resolution time improved from 28 hrs in Jan to 24 hrs in Feb. Early trends suggest the re-check workflow is embedding well into TCG operations.
+      </InsightCallout>
     </div>
   );
 }

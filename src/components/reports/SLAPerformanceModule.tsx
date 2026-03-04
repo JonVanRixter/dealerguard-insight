@@ -3,6 +3,7 @@ import {
   ReferenceLine, ReferenceArea,
 } from "recharts";
 import { Clock, AlertTriangle, TrendingUp, TrendingDown, Minus, CheckCircle2, Users } from "lucide-react";
+import { InsightCallout } from "./InsightCallout";
 import { ReportChartTooltip } from "./ReportChartTooltip";
 import reportMetrics from "@/data/tcg/reportMetrics.json";
 
@@ -237,6 +238,11 @@ export function SLAPerformanceModule() {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Insight callout */}
+      <InsightCallout type="warning">
+        Critical SLA performance (75%) is below the 90% platform target. As volume scales, dedicated resourcing for high-priority items is recommended.
+      </InsightCallout>
     </div>
   );
 }
