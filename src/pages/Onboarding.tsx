@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,14 +11,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { FieldSourceIndicator } from "@/components/tcg-onboarding/FieldSourceIndicator";
 import {
   seederApplications, getOnboardingStats,
   type OnboardingApplication, type OnboardingAppStatus,
 } from "@/data/tcg/onboardingApplications";
+import { masterPolicyList } from "@/data/tcg/dealerPolicies";
 import {
   Plus, Search, Filter, Clock, CheckCircle2, AlertTriangle, XCircle,
-  FileText, Users, Eye, ArrowRight, BarChart3, Loader2,
+  FileText, Users, Eye, ArrowRight, BarChart3, Loader2, Upload, Pencil,
+  ExternalLink,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -50,6 +56,15 @@ function preScreenSummary(app: OnboardingApplication) {
   return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs">In progress</Badge>;
 }
 
+/* ── Days until target ────────────────────────────────────── */
+function daysUntilTarget(target: string) {
+  const days = Math.ceil((new Date(target).getTime() - Date.now()) / 86400000);
+  if (days < 0) return <span className="text-outcome-fail text-xs font-medium">⏰ {Math.abs(days)}d overdue</span>;
+  if (days <= 3) return <span className="text-outcome-fail text-xs font-medium">🔴 {days}d</span>;
+  if (days <= 7) return <span className="text-outcome-pending text-xs font-medium">🟡 {days}d</span>;
+  return <span className="text-muted-foreground text-xs">{days}d</span>;
+}
+
 /* ── Stage progress bar ───────────────────────────────────── */
 function stageBar(app: OnboardingApplication) {
   const pct = app.stage === 0 ? 0 :
@@ -66,156 +81,149 @@ function stageBar(app: OnboardingApplication) {
   );
 }
 
-/* ── Days until target ────────────────────────────────────── */
-function daysUntilTarget(target: string) {
-  const days = Math.ceil((new Date(target).getTime() - Date.now()) / 86400000);
-  if (days < 0) return <span className="text-outcome-fail text-xs font-medium">⏰ {Math.abs(days)}d overdue</span>;
-  if (days <= 3) return <span className="text-outcome-fail text-xs font-medium">🔴 {days}d</span>;
-  if (days <= 7) return <span className="text-outcome-pending text-xs font-medium">🟡 {days}d</span>;
-  return <span className="text-muted-foreground text-xs">{days}d</span>;
-}
+/* ── Upload Policy List Modal ─────────────────────────────── */
+function UploadPolicyModal({ open, onClose, navigate }: { open: boolean; onClose: () => void; navigate: (path: string) => void }) {
+  const { toast } = useToast();
+  const [selectedAppId, setSelectedAppId] = useState<string>("");
+  const [uploadType, setUploadType] = useState<"apply-standard" | "upload-custom">("apply-standard");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-/* ── Application detail modal ─────────────────────────────── */
-function AppDetailModal({ app, open, onClose }: { app: OnboardingApplication | null; open: boolean; onClose: () => void }) {
-  if (!app) return null;
-  const r = app.preScreenResults;
-  const checkItems = [
-    { label: "Companies House", result: r.companiesHouse },
-    { label: "FCA Register", result: r.fcaRegister },
-    { label: "Financial Standing", result: r.financialStanding },
-    { label: "Sanctions / AML", result: r.sanctionsAml },
-    { label: "Website Check", result: r.websiteCheck },
-  ];
+  const applicableApps = seederApplications.filter(a =>
+    a.status !== "Rejected" && a.status !== "Approved"
+  );
 
-  const resultColor = (res: string) =>
-    res === "Pass" ? "text-outcome-pass" :
-    res === "Fail" ? "text-outcome-fail" :
-    res === "Refer for Manual Review" ? "text-outcome-pending" :
-    res === "In progress" ? "text-blue-600" : "text-muted-foreground";
+  const handleApplyStandard = () => {
+    if (!selectedAppId) {
+      toast({ title: "Select an application", variant: "destructive" });
+      return;
+    }
+    toast({
+      title: "✅ Policy framework applied",
+      description: `${masterPolicyList.length} policies loaded into the application. Navigate to Stage 2 to complete.`,
+    });
+    onClose();
+    navigate(`/tcg/onboarding/${selectedAppId}`);
+  };
 
-  const resultSource = (res: string) =>
-    res === "Pass" ? "api" as const :
-    res === "Fail" ? "api" as const :
-    res === "Refer for Manual Review" ? "manual" as const : "pending_automation" as const;
+  const handleFileUpload = () => {
+    if (!selectedAppId) {
+      toast({ title: "Select an application first", variant: "destructive" });
+      return;
+    }
+    toast({
+      title: "✅ Policy list uploaded",
+      description: "Custom policy list parsed and applied. Navigate to Stage 2 to review and complete.",
+    });
+    onClose();
+    navigate(`/tcg/onboarding/${selectedAppId}`);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={o => !o && onClose()}>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {app.dealerName}
-            {statusBadge(app.status)}
+            <Upload className="w-5 h-5" /> Apply Policy Framework
           </DialogTitle>
-          <DialogDescription>{app.appRef} · Requesting lender: {app.requestingLenderName}</DialogDescription>
+          <DialogDescription>
+            Load the standard 26-policy compliance framework into an application, or upload a custom policy list.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
-          {/* Company details */}
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p className="text-muted-foreground">Trading Name</p>
-              <p className="font-medium">{app.tradingName || "—"}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">CH Number</p>
-              <p className="font-mono font-medium">{app.companiesHouseNo || "—"}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Primary Contact</p>
-              <p className="font-medium">{app.primaryContact.name || "—"}</p>
-              {app.primaryContact.email && <p className="text-xs text-muted-foreground">{app.primaryContact.email}</p>}
-            </div>
-            <div>
-              <p className="text-muted-foreground">Address</p>
-              <p className="font-medium text-xs">
-                {app.registeredAddress.street ? `${app.registeredAddress.street}, ${app.registeredAddress.town}, ${app.registeredAddress.postcode}` : "—"}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Assigned To</p>
-              <p className="font-medium">{app.assignedTo}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Target Approval</p>
-              <p className="font-medium">{app.targetApprovalDate} {daysUntilTarget(app.targetApprovalDate)}</p>
-            </div>
+        <div className="space-y-4">
+          {/* Select application */}
+          <div>
+            <Label className="text-sm font-medium">Target Application</Label>
+            <Select value={selectedAppId} onValueChange={setSelectedAppId}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select an application..." />
+              </SelectTrigger>
+              <SelectContent>
+                {applicableApps.map(app => (
+                  <SelectItem key={app.id} value={app.id}>
+                    {app.appRef} — {app.dealerName} (Stage {app.stage})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Pre-screen checks */}
-          <div>
-            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4" /> Pre-Screen Checks
-            </h4>
-            <div className="space-y-1.5">
-              {checkItems.map(c => (
-                <div key={c.label} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-                  <span className="text-sm flex items-center gap-1.5">
-                    {c.label}
-                    <FieldSourceIndicator source={resultSource(c.result)} />
-                  </span>
-                  <span className={`text-sm font-medium ${resultColor(c.result)}`}>{c.result}</span>
+          {/* Upload type selection */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Policy Source</Label>
+
+            <Card
+              className={`cursor-pointer transition-shadow hover:shadow-sm ${uploadType === "apply-standard" ? "ring-2 ring-primary border-primary" : ""}`}
+              onClick={() => setUploadType("apply-standard")}
+            >
+              <CardContent className="p-3 flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full border-2 border-primary flex items-center justify-center shrink-0 mt-0.5">
+                  {uploadType === "apply-standard" && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                 </div>
-              ))}
+                <div>
+                  <p className="text-sm font-medium">Apply Standard Framework</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Load all {masterPolicyList.length} standard compliance policies ({masterPolicyList.filter(p => p.category !== "Insurance (if applicable)").length} core + {masterPolicyList.filter(p => p.category === "Insurance (if applicable)").length} insurance).
+                    Categories: Core Compliance, Finance & Credit, Customer Protection, Financial Crime, Data & Information, People & Governance, Operational, Insurance.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className={`cursor-pointer transition-shadow hover:shadow-sm ${uploadType === "upload-custom" ? "ring-2 ring-primary border-primary" : ""}`}
+              onClick={() => setUploadType("upload-custom")}
+            >
+              <CardContent className="p-3 flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full border-2 border-primary flex items-center justify-center shrink-0 mt-0.5">
+                  {uploadType === "upload-custom" && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Upload Custom Policy List</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Upload a CSV or Excel file with your own policy list. Expected columns: Policy Name, Category, Required (Y/N).
+                  </p>
+                  {uploadType === "upload-custom" && (
+                    <div className="mt-2">
+                      <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileUpload} />
+                      <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => fileInputRef.current?.click()}>
+                        <Upload className="w-3 h-3" /> Choose File
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Policy preview */}
+          {uploadType === "apply-standard" && (
+            <div className="rounded-lg border bg-muted/30 p-3 max-h-[200px] overflow-y-auto">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">
+                {masterPolicyList.length} POLICIES IN STANDARD FRAMEWORK
+              </p>
+              {[...new Set(masterPolicyList.map(p => p.category))].map(cat => {
+                const catPolicies = masterPolicyList.filter(p => p.category === cat);
+                return (
+                  <div key={cat} className="mb-2">
+                    <p className="text-[11px] font-semibold text-foreground">{cat} ({catPolicies.length})</p>
+                    {catPolicies.map(p => (
+                      <p key={p.id} className="text-[10px] text-muted-foreground ml-3">• {p.name}</p>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
-            {r.notes && (
-              <p className="text-xs text-outcome-pending-text mt-2 bg-outcome-pending-bg rounded p-2">{r.notes}</p>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            {uploadType === "apply-standard" && (
+              <Button onClick={handleApplyStandard} disabled={!selectedAppId} className="gap-1">
+                <CheckCircle2 className="w-4 h-4" /> Apply & Open Application
+              </Button>
             )}
           </div>
-
-          {/* Policy completion */}
-          <div>
-            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-              <FileText className="w-4 h-4" /> Policy Framework
-            </h4>
-            <div className="flex items-center gap-3">
-              <Progress value={app.policyCompletion.percentComplete} className="h-3 flex-1" />
-              <span className="text-sm font-medium">{app.policyCompletion.confirmed}/{app.policyCompletion.total} ({app.policyCompletion.percentComplete}%)</span>
-            </div>
-          </div>
-
-          {/* Manual review items */}
-          {app.manualReviewItems.length > 0 && (
-            <div className="rounded-lg border border-outcome-pending/30 bg-outcome-pending-bg p-3">
-              <h4 className="text-sm font-semibold text-outcome-pending-text mb-1 flex items-center gap-1">
-                <AlertTriangle className="w-4 h-4" /> Manual Review Required
-              </h4>
-              <ul className="text-sm text-outcome-pending-text space-y-0.5">
-                {app.manualReviewItems.map((item, i) => <li key={i}>• {item}</li>)}
-              </ul>
-            </div>
-          )}
-
-          {/* Notes */}
-          {app.notes && (
-            <div>
-              <h4 className="text-sm font-semibold mb-1">Notes</h4>
-              <p className="text-sm text-muted-foreground bg-muted/50 rounded p-2">{app.notes}</p>
-            </div>
-          )}
-
-          {/* History */}
-          <div>
-            <h4 className="text-sm font-semibold mb-2">Activity History</h4>
-            <div className="space-y-2 max-h-[200px] overflow-y-auto">
-              {app.history.map((h, i) => (
-                <div key={i} className="flex gap-3 text-xs">
-                  <span className="text-muted-foreground whitespace-nowrap">{new Date(h.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}</span>
-                  <span className="text-foreground">{h.action}</span>
-                  <span className="text-muted-foreground ml-auto">{h.user}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Rejection reason */}
-          {app.rejectionReason && (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-              <p className="text-sm font-medium text-destructive flex items-center gap-1">
-                <XCircle className="w-4 h-4" /> Rejected: {app.rejectionReason}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">By {app.approvalBy} on {app.approvalDate}</p>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -225,12 +233,13 @@ function AppDetailModal({ app, open, onClose }: { app: OnboardingApplication | n
 /* ── Main page ────────────────────────────────────────────── */
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
-  const [selectedApp, setSelectedApp] = useState<OnboardingApplication | null>(null);
   const [activeTab, setActiveTab] = useState("pipeline");
   const [referralFilter, setReferralFilter] = useState(false);
+  const [policyModalOpen, setPolicyModalOpen] = useState(false);
 
   const stats = useMemo(() => getOnboardingStats(seederApplications), []);
 
@@ -252,6 +261,10 @@ export default function Onboarding() {
     rejected: filtered.filter(a => a.status === "Rejected"),
   }), [filtered]);
 
+  const openApp = (app: OnboardingApplication) => {
+    navigate(`/tcg/onboarding/${app.id}`);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -263,9 +276,14 @@ export default function Onboarding() {
               Live queue of dealer applications — {stats.total} applications across all stages.
             </p>
           </div>
-          <Button className="gap-2" onClick={() => navigate("/pre-onboarding")}>
-            <Plus className="w-4 h-4" /> New Application
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="gap-2" onClick={() => setPolicyModalOpen(true)}>
+              <Upload className="w-4 h-4" /> Apply Policy List
+            </Button>
+            <Button className="gap-2" onClick={() => navigate("/tcg/onboarding/new")}>
+              <Plus className="w-4 h-4" /> New Application
+            </Button>
+          </div>
         </div>
 
         {/* KPI cards */}
@@ -280,11 +298,10 @@ export default function Onboarding() {
           ].map(kpi => (
             <Card
               key={kpi.label}
-              className={`${kpi.filter ? "cursor-pointer hover:shadow-md transition-shadow" : ""} ${statusFilter === kpi.filter ? "ring-2 ring-primary" : ""}`}
+              className={`${kpi.filter ? "cursor-pointer hover:shadow-md transition-shadow" : ""} ${statusFilter === kpi.filter || (kpi.filter === "referrals" && referralFilter) ? "ring-2 ring-primary" : ""}`}
               onClick={() => {
                 if (!kpi.filter) return;
                 if (kpi.filter === "referrals") {
-                  // Filter to apps with manual review items
                   setStatusFilter("all");
                   setSearch("");
                   setAssigneeFilter("all");
@@ -309,6 +326,24 @@ export default function Onboarding() {
           ))}
         </div>
 
+        {/* Active filter indicator */}
+        {(statusFilter !== "all" || referralFilter) && (
+          <div className="flex items-center gap-2 text-sm bg-primary/5 border border-primary/20 rounded-lg px-4 py-2">
+            <span className="text-primary font-medium">
+              Filtered: {referralFilter ? "Referrals only" : statusFilter}
+            </span>
+            <span className="text-muted-foreground">· {filtered.length} application{filtered.length !== 1 ? "s" : ""}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs ml-auto"
+              onClick={() => { setStatusFilter("all"); setReferralFilter(false); }}
+            >
+              Clear filter ✕
+            </Button>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-xs">
@@ -320,7 +355,7 @@ export default function Onboarding() {
               className="pl-9"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setReferralFilter(false); }}>
             <SelectTrigger className="w-[170px]">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="All statuses" />
@@ -376,7 +411,7 @@ export default function Onboarding() {
                     <Card
                       key={app.id}
                       className="cursor-pointer hover:shadow-md transition-shadow"
-                      onClick={() => setSelectedApp(app)}
+                      onClick={() => openApp(app)}
                     >
                       <CardContent className="p-3 space-y-2">
                         <div className="flex items-center justify-between">
@@ -385,7 +420,9 @@ export default function Onboarding() {
                         </div>
                         <p className="text-sm font-medium leading-tight">{app.dealerName}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-muted-foreground">{app.assignedTo}</span>
+                          <span className={`text-[11px] ${app.assignedTo === "Unassigned" ? "text-outcome-pending font-medium" : "text-muted-foreground"}`}>
+                            👤 {app.assignedTo}
+                          </span>
                           {preScreenSummary(app)}
                         </div>
                         {app.policyCompletion.percentComplete > 0 && (
@@ -400,7 +437,12 @@ export default function Onboarding() {
                             {app.manualReviewItems.length} referral{app.manualReviewItems.length > 1 ? "s" : ""}
                           </div>
                         )}
-                        <Badge variant="outline" className="text-[10px]">{app.requestingLenderName.split(" ").slice(0, 2).join(" ")}</Badge>
+                        <div className="flex items-center justify-between pt-1">
+                          <Badge variant="outline" className="text-[10px]">{app.requestingLenderName.split(" ").slice(0, 2).join(" ")}</Badge>
+                          <Button variant="ghost" size="sm" className="h-5 text-[10px] gap-0.5 text-primary px-1">
+                            <Pencil className="w-3 h-3" /> Edit
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -430,12 +472,16 @@ export default function Onboarding() {
                   </TableHeader>
                   <TableBody>
                     {filtered.map(app => (
-                      <TableRow key={app.id} className="cursor-pointer" onClick={() => setSelectedApp(app)}>
+                      <TableRow key={app.id} className="cursor-pointer" onClick={() => openApp(app)}>
                         <TableCell className="font-mono text-sm">{app.appRef}</TableCell>
                         <TableCell className="font-medium">{app.dealerName}</TableCell>
                         <TableCell>{statusBadge(app.status)}</TableCell>
                         <TableCell>{stageBar(app)}</TableCell>
-                        <TableCell className="text-sm">{app.assignedTo}</TableCell>
+                        <TableCell>
+                          <span className={`text-sm ${app.assignedTo === "Unassigned" ? "text-outcome-pending font-medium" : ""}`}>
+                            {app.assignedTo}
+                          </span>
+                        </TableCell>
                         <TableCell>
                           <span className="text-xs">{app.requestingLenderName.split(" ").slice(0, 2).join(" ")}</span>
                         </TableCell>
@@ -452,8 +498,13 @@ export default function Onboarding() {
                         </TableCell>
                         <TableCell>{daysUntilTarget(app.targetApprovalDate)}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={(e) => { e.stopPropagation(); setSelectedApp(app); }}>
-                            <Eye className="w-3 h-3" /> View
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs gap-1"
+                            onClick={(e) => { e.stopPropagation(); openApp(app); }}
+                          >
+                            <Pencil className="w-3 h-3" /> Open
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -465,8 +516,8 @@ export default function Onboarding() {
           </TabsContent>
         </Tabs>
 
-        {/* Detail modal */}
-        <AppDetailModal app={selectedApp} open={!!selectedApp} onClose={() => setSelectedApp(null)} />
+        {/* Policy upload modal */}
+        <UploadPolicyModal open={policyModalOpen} onClose={() => setPolicyModalOpen(false)} navigate={navigate} />
       </div>
     </DashboardLayout>
   );
