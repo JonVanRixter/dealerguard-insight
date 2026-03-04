@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ArrowLeft, ArrowRight, Upload, Trash2 } from "lucide-react";
 import { StageIndicator } from "@/components/tcg-onboarding/StageIndicator";
+import { FieldSourceIndicator } from "@/components/tcg-onboarding/FieldSourceIndicator";
 import type { TcgOnboardingApp, PolicyEntry } from "@/hooks/useTcgOnboarding";
 
 interface Stage2Props {
