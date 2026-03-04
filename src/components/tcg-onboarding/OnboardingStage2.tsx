@@ -133,7 +133,7 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
                     {catPolicies.map((pol) => (
                       <div key={pol.id} className="border rounded-lg p-4 space-y-3">
                         <div className="flex items-start justify-between gap-4">
-                          <h4 className="font-medium text-sm">{pol.name}</h4>
+                          <h4 className="font-medium text-sm flex items-center">{pol.name} <FieldSourceIndicator source={pol.source} /></h4>
                         </div>
 
                         {/* Exists radio */}

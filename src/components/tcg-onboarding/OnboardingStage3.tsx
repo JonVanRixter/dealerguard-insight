@@ -131,6 +131,7 @@ export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove,
               <TableHeader>
                 <TableRow>
                   <TableHead>Check</TableHead>
+                  <TableHead>Source</TableHead>
                   <TableHead>Result</TableHead>
                   <TableHead>Notes</TableHead>
                 </TableRow>
@@ -139,6 +140,7 @@ export function OnboardingStage3({ app, onUpdate, onBack, onNavigate, onApprove,
                 {app.preScreenChecks.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium text-sm">{c.label}</TableCell>
+                    <TableCell><FieldSourceIndicator source={c.source} /></TableCell>
                     <TableCell>{preScreenPill(c.result)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.notes || "—"}</TableCell>
                   </TableRow>

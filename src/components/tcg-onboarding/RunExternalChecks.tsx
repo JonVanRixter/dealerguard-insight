@@ -101,6 +101,13 @@ export function RunExternalChecks({ companiesHouseNumber, app, onUpdate }: Props
       addressStreet: addressParts[0] || "",
       addressTown: addressParts[1] || "",
       addressPostcode: addressParts[addressParts.length - 1] || "",
+      fieldSources: {
+        companyName: "api",
+        companiesHouseNumber: "api",
+        addressStreet: "api",
+        addressTown: "api",
+        addressPostcode: "api",
+      } as any,
     });
 
     toast({ title: "Form pre-filled", description: "Company details populated from Companies House data." });

@@ -177,6 +177,7 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
                   <div className="flex items-center gap-3">
                     <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     <span className="font-medium text-sm">{check.label}</span>
+                    <FieldSourceIndicator source={check.source} />
                   </div>
                   {resultPill(check.result)}
                 </CollapsibleTrigger>
