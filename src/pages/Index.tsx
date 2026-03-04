@@ -38,7 +38,7 @@ import { TopRiskDealers } from "@/components/dashboard/TopRiskDealers";
 import { RecheckWidget } from "@/components/dashboard/RecheckWidget";
 import { OnboardingValidityWidget } from "@/components/dashboard/OnboardingValidityWidget";
 import { ScheduleHealthWidget } from "@/components/dashboard/ScheduleHealthWidget";
-
+import { ReportsSnapshotWidget } from "@/components/dashboard/ReportsSnapshotWidget";
 const ITEMS_PER_PAGE = 10;
 
 const TrendIcon = ({ trend }: { trend: string }) => {
@@ -311,6 +311,9 @@ const Index = () => {
             </Table>
           </div>
         </div>
+
+        {/* Reports Quick-Access Panel */}
+        <ReportsSnapshotWidget />
 
         {/* Section Compliance + Regional Summary + Top Risk */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
