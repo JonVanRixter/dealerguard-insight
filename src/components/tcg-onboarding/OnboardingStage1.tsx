@@ -39,9 +39,15 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
   };
 
   const updateCheck = (checkId: string, field: "result" | "notes", value: string) => {
-    const updated = app.preScreenChecks.map((c) =>
-      c.id === checkId ? { ...c, [field]: field === "result" ? value as PreScreenResult : value } : c
-    );
+    const updated = app.preScreenChecks.map((c) => {
+      if (c.id !== checkId) return c;
+      const next = { ...c, [field]: field === "result" ? value as PreScreenResult : value };
+      // If user manually sets result, mark source as manual (unless already api)
+      if (field === "result" && next.source !== "api") {
+        next.source = "manual";
+      }
+      return next;
+    });
     onUpdate({ preScreenChecks: updated });
   };
 
