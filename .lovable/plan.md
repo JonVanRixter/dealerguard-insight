@@ -1,26 +1,40 @@
 
 
-## Fix: Bridge the Height Gap by Expanding Report Summary Header
+## Plan: Surface Policy Documents on TCG Dealer Profile + Lender Documents Tab
 
-### Problem
-The left column's two stacked cards are slightly shorter than the Report Summary table, and the current `h-0 min-h-full overflow-hidden` approach forces a hard clip on the Action Status card, making it look "squared off" and unnatural.
-
-### Approach
-Instead of forcing the left column to clip, increase the Report Summary table's header area to naturally grow taller and bridge the small gap. This is a subtle, elegant fix -- add more vertical padding and spacing to the Report Summary card header so the table becomes slightly taller, matching the natural height of the two left-column cards.
+### What this achieves
+The TCG dealer profile will display a dedicated **Documents** tab showing all 26 policy documents from the onboarding audit -- clearly indicating which documents were uploaded and which are missing. The Lender Profile's Documents tab will be upgraded to show the same policy document data (filtered to that lender's dealers), following the `lenderReportSurface.json` rules: lenders see policy name, existence status, last updated date, and whether a document is available -- but not the actual files. This creates the foundation for a future "Request Document" flow between the Lender Portal and Klassify Pro.
 
 ### Changes
 
-**1. `src/pages/DealerDetail.tsx` -- Remove the forced height clamp**
-- Change the left column from `lg:h-0 lg:min-h-full overflow-hidden` back to just `min-h-0` so the cards render at their natural height without clipping.
+**1. Add "Documents" tab to TCG Dealer Detail (`src/pages/TcgDealerDetail.tsx`)**
+- Add a 4th tab: `Documents` (with `FileText` icon) alongside Overview, Policies, External Checks.
+- Create a new component `src/components/tcg-dealer/DealerDocumentsTab.tsx` that:
+  - Takes the `DealerPolicyRecord` (or null) as a prop.
+  - Groups policies by category (same grouping as PolicyTab).
+  - Each row shows: policy name, existence status (Yes/No pill), document status (Uploaded with filename + view icon, or "Not uploaded" with amber warning), last updated date.
+  - Summary strip at top: X documents uploaded, Y missing, Z policies not in place.
+  - For dealers without a policy record, show an empty state: "No onboarding documents recorded for this dealer."
+  - Clean card-based layout with collapsible category groups matching the existing PolicyTab aesthetic.
 
-**2. `src/components/dealer/ReportSummaryCard.tsx` -- Expand the header area**
-- Increase header padding from `px-5 py-4` to `px-5 py-5` (adds ~8px total height).
-- Bump the title text from `text-sm` to `text-base` for a slightly more prominent header.
-- Add a subtle description line beneath the title (e.g. "Section-by-section compliance breakdown") in `text-xs text-muted-foreground` to add another ~20px of natural height.
-- Increase table row vertical padding from `py-3` to `py-3.5` across thead and tbody rows, adding ~8px per row across 8+ rows (~64px total).
+**2. Upgrade Lender Profile Documents Tab (`src/pages/LenderProfile.tsx`)**
+- Replace the current placeholder documents table (lines 482-538) with a proper policy-document view.
+- For each dealer under this lender, look up `getPolicyRecord(dealerId)`.
+- Display a per-dealer accordion/card showing:
+  - Dealer name as header with summary counts (e.g., "14/22 documents available").
+  - Inside: policy rows with columns: Policy Name, Exists, Document Available (Yes/No -- not the file), Last Updated.
+  - Where no document exists: show "No document" in muted text.
+  - Where no policy record exists for a dealer: show "Onboarding documents pending" message.
+- Add a read-only tooltip note: "To request a copy of a policy document, contact TCG directly."
+- Maintain the existing `Lock` read-only badge in the tab header.
 
-Combined, these tweaks add roughly 90-100px of natural height to the Report Summary, which should close the gap with the two left-column cards without any forced clipping or overflow hacks.
+**3. Data flow**
+- Both views consume `getPolicyRecord()` from `src/data/tcg/dealerPolicies.ts` -- no new data files needed.
+- For dealers that don't have explicit policy records (d012-d038 and generated dealers), the components will show an appropriate "No documents recorded" state.
 
-### Result
-Both columns will render at their natural heights. The Report Summary table gains a slightly more spacious, premium feel via its expanded header and row padding, and its total height will match (or very slightly exceed) the left-column stack. No content gets clipped or squared off.
+### Technical details
+
+- `DealerDocumentsTab` component: ~120 lines, reuses `ExistsPill`-style badges, `Collapsible` groups, same grid layout as PolicyTab but read-only (no edit buttons).
+- Lender Profile Documents tab: refactor inline JSX (lines 482-538) to iterate over `lenderDealers`, calling `getPolicyRecord()` per dealer, rendering collapsible dealer sections.
+- No database changes required -- all data comes from the existing mock policy framework.
 
