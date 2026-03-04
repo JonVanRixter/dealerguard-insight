@@ -1,866 +1,451 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { OnboardingDocUpload } from "@/components/onboarding/OnboardingDocUpload";
-import { CreditSafeSearch } from "@/components/onboarding/CreditSafeSearch";
-import { DealerEnrichment } from "@/components/onboarding/DealerEnrichment";
-import { ScreeningDataBadge } from "@/components/onboarding/ScreeningDataBadge";
-import { FcaRegisterCard } from "@/components/dealer/FcaRegisterCard";
-import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
-import { useToast } from "@/hooks/use-toast";
-import { ScreeningDataEditor } from "@/components/onboarding/ScreeningDataEditor";
-import { generateOnboardingPdf } from "@/utils/onboardingPdfExport";
-import { useAuth } from "@/contexts/AuthContext";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { FieldSourceIndicator, type FieldSource } from "@/components/tcg-onboarding/FieldSourceIndicator";
+import { FieldSourceIndicator } from "@/components/tcg-onboarding/FieldSourceIndicator";
 import {
-  Building2, PoundSterling, Users, FileText,
-  CheckCircle2, FileUp, ArrowLeft, ArrowRight, Loader2, ShieldCheck, Download,
-  XCircle, AlertTriangle, Mail, Send, Info,
+  seederApplications, getOnboardingStats,
+  type OnboardingApplication, type OnboardingAppStatus,
+} from "@/data/tcg/onboardingApplications";
+import {
+  Plus, Search, Filter, Clock, CheckCircle2, AlertTriangle, XCircle,
+  FileText, Users, Eye, ArrowRight, BarChart3, Loader2,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-/* ------------------------------------------------------------------ */
-/*  Shared checklist item                                              */
-/* ------------------------------------------------------------------ */
-interface CheckItem {
-  label: string;
-  description?: string;
-  docCategory?: string;
-  dataKey?: string;
-}
-
-function ChecklistSection({
-  title,
-  sectionKey,
-  description,
-  icon: Icon,
-  items,
-  dealerName,
-  savedChecks,
-  onChecksChange,
-  screeningDataMap,
-}: {
-  title: string;
-  sectionKey: string;
-  description: string;
-  icon: React.ElementType;
-  items: CheckItem[];
-  dealerName: string;
-  savedChecks: boolean[];
-  onChecksChange: (checks: boolean[]) => void;
-  screeningDataMap?: Record<string, string>;
-}) {
-  const checks = useMemo(() => {
-    const base = savedChecks.length === items.length ? [...savedChecks] : new Array(items.length).fill(false);
-    items.forEach((item, i) => {
-      if (item.dataKey && screeningDataMap?.[item.dataKey] && !base[i]) {
-        base[i] = true;
-      }
-    });
-    return base;
-  }, [savedChecks, items, screeningDataMap]);
-
-  useEffect(() => {
-    const orig = savedChecks.length === items.length ? savedChecks : new Array(items.length).fill(false);
-    const hasChange = checks.some((v, i) => v !== orig[i]);
-    if (hasChange) onChecksChange(checks);
-  }, [checks]);
-
-  const toggle = (i: number) => {
-    const next = checks.map((v: boolean, j: number) => (j === i ? !v : v));
-    onChecksChange(next);
+/* ── Status badge ─────────────────────────────────────────── */
+function statusBadge(status: OnboardingAppStatus) {
+  const map: Record<OnboardingAppStatus, string> = {
+    Draft: "bg-muted text-muted-foreground",
+    "In Progress": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+    "Pending Approval": "bg-outcome-pending-bg text-outcome-pending-text",
+    Approved: "bg-outcome-pass-bg text-outcome-pass-text",
+    Rejected: "bg-outcome-fail-bg text-outcome-fail-text",
   };
-  const done = checks.filter(Boolean).length;
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Icon className="w-5 h-5 text-primary" />
-          <CardTitle className="text-lg">{title}</CardTitle>
-        </div>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{done} / {items.length} completed</span>
-          <span>{Math.round((done / items.length) * 100)}%</span>
-        </div>
-        <Progress value={(done / items.length) * 100} className="h-2" />
-
-        <div className="space-y-2">
-          {items.map((item, i) => {
-            const hasScreeningData = !!(item.dataKey && screeningDataMap?.[item.dataKey]);
-            const enrichmentRan = !!(screeningDataMap?.["_enrichment"]);
-            const isMissing = !!(item.dataKey && enrichmentRan && !screeningDataMap?.[item.dataKey]);
-            const itemSource: FieldSource = hasScreeningData ? "api" : isMissing ? "pending_automation" : checks[i] ? "manual" : "pending_automation";
-
-            return (
-              <div key={i}>
-                <label
-                  className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
-                    hasScreeningData
-                      ? "border-emerald-500/40 bg-emerald-500/5"
-                      : isMissing
-                        ? "border-destructive/40 bg-destructive/5"
-                        : checks[i]
-                          ? "border-primary/40 bg-primary/5"
-                          : "border-border hover:border-primary/20"
-                  }`}
-                >
-                  {hasScreeningData ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
-                  ) : isMissing ? (
-                    <XCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
-                  ) : (
-                    <Checkbox checked={checks[i]} onCheckedChange={() => toggle(i)} className="mt-0.5" />
-                  )}
-                  <div className="flex-1">
-                    <p className={`text-sm font-medium flex items-center ${isMissing ? "text-destructive" : ""}`}>
-                      {item.label}
-                      <FieldSourceIndicator source={itemSource} />
-                    </p>
-                    {item.description && (
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
-                    )}
-                    {hasScreeningData && (
-                      <div className="mt-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
-                        <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">{screeningDataMap![item.dataKey!]}</p>
-                        <p className="text-[10px] text-emerald-600/70 dark:text-emerald-500/70 mt-0.5">✓ Auto-populated from screening</p>
-                      </div>
-                    )}
-                    {isMissing && (
-                      <div className="mt-1.5 rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2">
-                        <p className="text-xs text-destructive font-medium flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" /> NOT FOUND — requires manual input
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </label>
-                {item.docCategory && dealerName && (
-                  <div className="ml-9 mt-2 mb-1">
-                    <OnboardingDocUpload dealerName={dealerName} category={item.docCategory} compact />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {dealerName && (
-          <div className="space-y-2 pt-2 border-t border-border">
-            <p className="text-sm font-medium flex items-center gap-2">
-              <FileUp className="w-4 h-4" /> Upload Documents for {title}
-            </p>
-            <OnboardingDocUpload dealerName={dealerName} category={title} compact />
-          </div>
-        )}
-
-        {done === items.length && (
-          <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-            <p className="text-sm font-medium">All items in this section are complete.</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+  return <Badge className={map[status]}>{status}</Badge>;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Section data                                                       */
-/* ------------------------------------------------------------------ */
-const businessItems: CheckItem[] = [
-  { label: "Company registration number", description: "Verified against Companies House", dataKey: "companyRegNo" },
-  { label: "Registered address", description: "Official registered office address", dataKey: "registeredAddress" },
-  { label: "Trading address(es)", description: "All physical trading locations" },
-  { label: "VAT registration", description: "VAT number and registration certificate", docCategory: "Financial", dataKey: "vatRegistration" },
-  { label: "FCA permissions", description: "If offering retail finance — FCA registration details", docCategory: "Compliance", dataKey: "fcaPermissions" },
-  { label: "FCA FRN & Status", description: "FCA Firm Reference Number and authorisation status", dataKey: "fcaFrn" },
-  { label: "Company name & status", description: "Official registered name and current status", dataKey: "companyName" },
-  { label: "Organisational chart", description: "Company structure showing key personnel and reporting lines", docCategory: "Compliance" },
-];
+/* ── Pre-screen summary ───────────────────────────────────── */
+function preScreenSummary(app: OnboardingApplication) {
+  const r = app.preScreenResults;
+  const checks = [r.companiesHouse, r.fcaRegister, r.financialStanding, r.sanctionsAml, r.websiteCheck];
+  const passes = checks.filter(c => c === "Pass").length;
+  const fails = checks.filter(c => c === "Fail").length;
+  const refers = checks.filter(c => c === "Refer for Manual Review").length;
+  const notStarted = checks.filter(c => c === "Not started").length;
 
-const financialItems: CheckItem[] = [
-  { label: "Credit score & risk band", description: "CreditSafe credit score and risk assessment", dataKey: "creditScore" },
-  { label: "Last 3 years audited accounts", description: "Filed accounts for the most recent 3 financial years", docCategory: "Financial" },
-  { label: "Latest management accounts", description: "Most recent month-end or quarter-end management accounts", docCategory: "Financial" },
-  { label: "Stock audit statements", description: "Required if changing funder — current stock position and valuations", docCategory: "Financial" },
-  { label: "Bank statements (3–12 months)", description: "Duration depends on policy — primary business account(s)", docCategory: "Financial" },
-];
+  if (notStarted === 5) return <span className="text-muted-foreground text-xs">Not started</span>;
+  if (fails > 0) return <Badge className="bg-outcome-fail-bg text-outcome-fail-text text-xs">❌ {fails} fail</Badge>;
+  if (refers > 0) return <Badge className="bg-outcome-pending-bg text-outcome-pending-text text-xs">⚠️ {refers} refer</Badge>;
+  if (passes === 5) return <Badge className="bg-outcome-pass-bg text-outcome-pass-text text-xs">✓ All pass</Badge>;
+  return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs">In progress</Badge>;
+}
 
-const directorsItems: CheckItem[] = [
-  { label: "Director details for KYC / AML", description: "Full name, DOB, residential address, nationality for each director", docCategory: "Compliance", dataKey: "fcaIndividuals" },
-  { label: "Directorship history", description: "Previous and concurrent directorships for all directors" },
-  { label: "Personal guarantees", description: "If required — signed PG documentation from guarantors", docCategory: "Legal" },
-];
-
-const supportingItems: CheckItem[] = [
-  { label: "Insurance details", description: "Motor trade insurance, public liability, employers' liability", docCategory: "Compliance" },
-  { label: "Dealer website & digital footprint", description: "Website URL, social media presence, online reviews" },
-];
-
-const SECTIONS = [
-  { key: "business", label: "Business Info", icon: Building2, title: "A. Business Information", desc: "Core company registration and structure details.", items: businessItems },
-  { key: "financial", label: "Financial Info", icon: PoundSterling, title: "B. Financial Information", desc: "Financial statements and banking evidence.", items: financialItems },
-  { key: "directors", label: "Directors & Shareholders", icon: Users, title: "C. Directors & Shareholders", desc: "Identity verification and personal guarantee requirements.", items: directorsItems },
-  { key: "supporting", label: "Supporting Docs", icon: FileText, title: "D. Supporting Documents", desc: "Insurance, web presence, and additional evidence.", items: supportingItems },
-];
-
-/* ------------------------------------------------------------------ */
-/*  Detail modal data for demo mode                                    */
-/* ------------------------------------------------------------------ */
-function DbsDetailContent() {
-  const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploaded, setUploaded] = useState<string | null>(null);
-
+/* ── Stage progress bar ───────────────────────────────────── */
+function stageBar(app: OnboardingApplication) {
+  const pct = app.stage === 0 ? 0 :
+    app.stage === 1 ? (app.stage1Complete ? 33 : 15) :
+    app.stage === 2 ? (app.stage2Complete ? 66 : 33 + (app.policyCompletion.percentComplete / 100 * 33)) :
+    app.stage === 3 ? (app.stage3Complete ? 100 : 85) : 0;
   return (
-    <div className="space-y-4">
-      <div>
-        <p className="text-sm text-muted-foreground mb-2">Staff Requiring Enhanced DBS Checks</p>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-            <div>
-              <p className="text-sm font-medium text-foreground">Mark Roberts — Sales Manager</p>
-              <p className="text-xs text-muted-foreground">Enhanced DBS required</p>
-            </div>
-            <Badge variant="destructive" className="text-xs">{uploaded ? "Pending Review" : "Missing"}</Badge>
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-            <div>
-              <p className="text-sm font-medium text-foreground">Lisa Evans — Sales Executive</p>
-              <p className="text-xs text-muted-foreground">Enhanced DBS required</p>
-            </div>
-            <Badge variant="destructive" className="text-xs">Missing</Badge>
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-4 text-sm">
-        <div><p className="text-muted-foreground">Deadline</p><p className="font-medium text-destructive">14 days remaining</p></div>
-        <div><p className="text-muted-foreground">Status</p><p className="font-medium text-destructive">{uploaded ? "Certificate received — Under TCG review" : "Action Required"}</p></div>
-      </div>
-      {uploaded && (
-        <div className="flex items-center gap-2 text-sm text-outcome-pass">
-          <CheckCircle2 className="w-4 h-4" /> {uploaded}
-        </div>
-      )}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".pdf"
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            setUploaded(file.name);
-            toast({ title: "DBS certificate uploaded successfully", description: "Certificate received — Under TCG review" });
-          }
-          e.target.value = "";
-        }}
-      />
-      <Button variant="outline" size="sm" className="gap-2" onClick={() => fileInputRef.current?.click()}>
-        <FileUp className="w-4 h-4" /> Upload DBS Certificate
-      </Button>
+    <div className="flex items-center gap-2 min-w-[120px]">
+      <Progress value={pct} className="h-2 flex-1" />
+      <span className="text-xs text-muted-foreground whitespace-nowrap">
+        {app.stage > 0 ? `S${app.stage}` : "—"} {app.policyCompletion.percentComplete > 0 ? `· ${app.policyCompletion.percentComplete}%` : ""}
+      </span>
     </div>
   );
 }
 
-function TrainingDetailContent() {
-  const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploaded, setUploaded] = useState<string | null>(null);
+/* ── Days until target ────────────────────────────────────── */
+function daysUntilTarget(target: string) {
+  const days = Math.ceil((new Date(target).getTime() - Date.now()) / 86400000);
+  if (days < 0) return <span className="text-outcome-fail text-xs font-medium">⏰ {Math.abs(days)}d overdue</span>;
+  if (days <= 3) return <span className="text-outcome-fail text-xs font-medium">🔴 {days}d</span>;
+  if (days <= 7) return <span className="text-outcome-pending text-xs font-medium">🟡 {days}d</span>;
+  return <span className="text-muted-foreground text-xs">{days}d</span>;
+}
+
+/* ── Application detail modal ─────────────────────────────── */
+function AppDetailModal({ app, open, onClose }: { app: OnboardingApplication | null; open: boolean; onClose: () => void }) {
+  if (!app) return null;
+  const r = app.preScreenResults;
+  const checkItems = [
+    { label: "Companies House", result: r.companiesHouse },
+    { label: "FCA Register", result: r.fcaRegister },
+    { label: "Financial Standing", result: r.financialStanding },
+    { label: "Sanctions / AML", result: r.sanctionsAml },
+    { label: "Website Check", result: r.websiteCheck },
+  ];
+
+  const resultColor = (res: string) =>
+    res === "Pass" ? "text-outcome-pass" :
+    res === "Fail" ? "text-outcome-fail" :
+    res === "Refer for Manual Review" ? "text-outcome-pending" :
+    res === "In progress" ? "text-blue-600" : "text-muted-foreground";
+
+  const resultSource = (res: string) =>
+    res === "Pass" ? "api" as const :
+    res === "Fail" ? "api" as const :
+    res === "Refer for Manual Review" ? "manual" as const : "pending_automation" as const;
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4 text-sm">
-        <div><p className="text-muted-foreground">Certificates Uploaded</p><p className="font-medium text-foreground">{uploaded ? 2 : 1}</p></div>
-        <div><p className="text-muted-foreground">Status</p><p className="font-medium text-outcome-pending">Under Review</p></div>
-      </div>
-      <div>
-        <p className="text-sm text-muted-foreground mb-2">Staff Training Records</p>
-        <div className="rounded-lg border border-border p-3">
-          <div className="flex items-center justify-between">
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {app.dealerName}
+            {statusBadge(app.status)}
+          </DialogTitle>
+          <DialogDescription>{app.appRef} · Requesting lender: {app.requestingLenderName}</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-5">
+          {/* Company details */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-sm font-medium text-foreground">J. Smith (Director)</p>
-              <p className="text-xs text-muted-foreground">TCF Annual Refresher 2025</p>
+              <p className="text-muted-foreground">Trading Name</p>
+              <p className="font-medium">{app.tradingName || "—"}</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge className="bg-outcome-pending/15 text-outcome-pending border-outcome-pending/30 text-xs">Under Review</Badge>
-              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1"><Download className="w-3 h-3" /> View</Button>
+            <div>
+              <p className="text-muted-foreground">CH Number</p>
+              <p className="font-mono font-medium">{app.companiesHouseNo || "—"}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Primary Contact</p>
+              <p className="font-medium">{app.primaryContact.name || "—"}</p>
+              {app.primaryContact.email && <p className="text-xs text-muted-foreground">{app.primaryContact.email}</p>}
+            </div>
+            <div>
+              <p className="text-muted-foreground">Address</p>
+              <p className="font-medium text-xs">
+                {app.registeredAddress.street ? `${app.registeredAddress.street}, ${app.registeredAddress.town}, ${app.registeredAddress.postcode}` : "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Assigned To</p>
+              <p className="font-medium">{app.assignedTo}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Target Approval</p>
+              <p className="font-medium">{app.targetApprovalDate} {daysUntilTarget(app.targetApprovalDate)}</p>
             </div>
           </div>
-        </div>
-        {uploaded && (
-          <div className="rounded-lg border border-border p-3 mt-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-outcome-pass" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">{uploaded}</p>
-                  <p className="text-xs text-muted-foreground">Uploaded just now</p>
+
+          {/* Pre-screen checks */}
+          <div>
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4" /> Pre-Screen Checks
+            </h4>
+            <div className="space-y-1.5">
+              {checkItems.map(c => (
+                <div key={c.label} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                  <span className="text-sm flex items-center gap-1.5">
+                    {c.label}
+                    <FieldSourceIndicator source={resultSource(c.result)} />
+                  </span>
+                  <span className={`text-sm font-medium ${resultColor(c.result)}`}>{c.result}</span>
                 </div>
-              </div>
-              <Badge className="bg-outcome-pending/15 text-outcome-pending border-outcome-pending/30 text-xs">Under Review</Badge>
+              ))}
+            </div>
+            {r.notes && (
+              <p className="text-xs text-outcome-pending-text mt-2 bg-outcome-pending-bg rounded p-2">{r.notes}</p>
+            )}
+          </div>
+
+          {/* Policy completion */}
+          <div>
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <FileText className="w-4 h-4" /> Policy Framework
+            </h4>
+            <div className="flex items-center gap-3">
+              <Progress value={app.policyCompletion.percentComplete} className="h-3 flex-1" />
+              <span className="text-sm font-medium">{app.policyCompletion.confirmed}/{app.policyCompletion.total} ({app.policyCompletion.percentComplete}%)</span>
             </div>
           </div>
-        )}
-      </div>
-      <div className="rounded-lg border border-outcome-pending/30 bg-outcome-pending-bg p-3">
-        <p className="text-sm text-outcome-pending-text">TCG Operations team is reviewing the uploaded certificate. Expected completion: 2 business days.</p>
-      </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".pdf,.jpg,.png"
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            setUploaded(file.name);
-            toast({ title: "Certificate uploaded for review", description: `${file.name} has been submitted for TCG Operations review.` });
-          }
-          e.target.value = "";
-        }}
-      />
-      <Button variant="outline" size="sm" className="gap-2" onClick={() => fileInputRef.current?.click()}>
-        <FileUp className="w-4 h-4" /> Upload Certificate
-      </Button>
-    </div>
+
+          {/* Manual review items */}
+          {app.manualReviewItems.length > 0 && (
+            <div className="rounded-lg border border-outcome-pending/30 bg-outcome-pending-bg p-3">
+              <h4 className="text-sm font-semibold text-outcome-pending-text mb-1 flex items-center gap-1">
+                <AlertTriangle className="w-4 h-4" /> Manual Review Required
+              </h4>
+              <ul className="text-sm text-outcome-pending-text space-y-0.5">
+                {app.manualReviewItems.map((item, i) => <li key={i}>• {item}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {/* Notes */}
+          {app.notes && (
+            <div>
+              <h4 className="text-sm font-semibold mb-1">Notes</h4>
+              <p className="text-sm text-muted-foreground bg-muted/50 rounded p-2">{app.notes}</p>
+            </div>
+          )}
+
+          {/* History */}
+          <div>
+            <h4 className="text-sm font-semibold mb-2">Activity History</h4>
+            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+              {app.history.map((h, i) => (
+                <div key={i} className="flex gap-3 text-xs">
+                  <span className="text-muted-foreground whitespace-nowrap">{new Date(h.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}</span>
+                  <span className="text-foreground">{h.action}</span>
+                  <span className="text-muted-foreground ml-auto">{h.user}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Rejection reason */}
+          {app.rejectionReason && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+              <p className="text-sm font-medium text-destructive flex items-center gap-1">
+                <XCircle className="w-4 h-4" /> Rejected: {app.rejectionReason}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">By {app.approvalBy} on {app.approvalDate}</p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-const STATIC_SECTION_DETAILS: Record<string, { title: string; content: React.ReactNode }> = {
-  "Legal Status": {
-    title: "Legal Status — Details",
-    content: (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><p className="text-muted-foreground">Company Status</p><p className="font-medium text-foreground">Active</p></div>
-          <div><p className="text-muted-foreground">Incorporation Date</p><p className="font-medium text-foreground">12 Mar 2018</p></div>
-          <div><p className="text-muted-foreground">Company Number</p><p className="font-medium text-foreground">11234567</p></div>
-          <div><p className="text-muted-foreground">Last Verified</p><p className="font-medium text-foreground">10 Feb 2026</p></div>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground mb-1">Directors</p>
-          <ul className="text-sm space-y-1">
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> James Thompson — Appointed 12 Mar 2018</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Sarah Mitchell — Appointed 05 Jun 2020</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> David Chen — Appointed 14 Jan 2023</li>
-          </ul>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground mb-1">Persons of Significant Control</p>
-          <ul className="text-sm space-y-1">
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> James Thompson — 75%+ shares</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Sarah Mitchell — 25%+ shares</li>
-          </ul>
-        </div>
-      </div>
-    ),
-  },
-  "FCA Authorisation": {
-    title: "FCA Authorisation — Details",
-    content: (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><p className="text-muted-foreground">FCA Reference</p><p className="font-medium text-foreground">FRN: 123456</p></div>
-          <div><p className="text-muted-foreground">Status</p><p className="font-medium text-outcome-pass">Authorised</p></div>
-          <div><p className="text-muted-foreground">Last Checked</p><p className="font-medium text-foreground">10 Feb 2026</p></div>
-          <div><p className="text-muted-foreground">Warnings</p><p className="font-medium text-foreground">None</p></div>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground mb-1">Permissions</p>
-          <ul className="text-sm space-y-1">
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Consumer Credit</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Credit Broking</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Debt Administration</li>
-          </ul>
-        </div>
-      </div>
-    ),
-  },
-  "Financial Checks": {
-    title: "Financial Checks — Details",
-    content: (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><p className="text-muted-foreground">Credit Score</p><p className="font-medium text-outcome-pending">62 / 100</p></div>
-          <div><p className="text-muted-foreground">Risk Band</p><p className="font-medium text-outcome-pending">Medium</p></div>
-          <div><p className="text-muted-foreground">Report Status</p><p className="font-medium text-outcome-pending">Awaiting full report</p></div>
-          <div><p className="text-muted-foreground">Last Updated</p><p className="font-medium text-foreground">08 Feb 2026</p></div>
-        </div>
-        <div className="rounded-lg border border-outcome-pending/30 bg-outcome-pending-bg p-3">
-          <p className="text-sm text-outcome-pending-text flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Full credit report is pending. Preliminary score retrieved.</p>
-        </div>
-      </div>
-    ),
-  },
-  "Complaints Handling": {
-    title: "Complaints Handling — Details",
-    content: (
-      <div className="space-y-4 text-sm">
-        <p className="text-muted-foreground">This is a new dealer with no complaint history. Section marked as N/A.</p>
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-          <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> No action required at this stage.</p>
-        </div>
-      </div>
-    ),
-  },
-  "Marketing & Promotions": {
-    title: "Marketing & Promotions — Details",
-    content: (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><p className="text-muted-foreground">Website</p><p className="font-medium text-foreground">www.newstartmotors.co.uk</p></div>
-          <div><p className="text-muted-foreground">Last Checked</p><p className="font-medium text-foreground">09 Feb 2026</p></div>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground mb-1">Compliance Checklist</p>
-          <ul className="text-sm space-y-1">
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Representative APR displayed</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Commission disclosure visible</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> FCA registration number on site</li>
-            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-outcome-pass" /> Privacy policy compliant</li>
-          </ul>
-        </div>
-      </div>
-    ),
-  },
-  "KYC / AML": {
-    title: "KYC / AML — Details",
-    content: (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><p className="text-muted-foreground">Sanctions Check</p><p className="font-medium text-outcome-pass">Clear</p></div>
-          <div><p className="text-muted-foreground">PEP Check</p><p className="font-medium text-outcome-pass">Clear</p></div>
-          <div><p className="text-muted-foreground">AML Risk Rating</p><p className="font-medium text-outcome-pass">Low</p></div>
-          <div><p className="text-muted-foreground">Last Verified</p><p className="font-medium text-foreground">10 Feb 2026</p></div>
-        </div>
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-          <p className="text-sm flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> All KYC/AML checks passed. No adverse findings.</p>
-        </div>
-      </div>
-    ),
-  },
-};
-
-/* ------------------------------------------------------------------ */
-/*  Main page                                                          */
-/* ------------------------------------------------------------------ */
+/* ── Main page ────────────────────────────────────────────── */
 export default function Onboarding() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const locState = location.state as { dealerName?: string; companyNumber?: string; screeningResults?: Record<string, string> } | null;
-  const { toast } = useToast();
-  const { demoMode } = useAuth();
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+  const [selectedApp, setSelectedApp] = useState<OnboardingApplication | null>(null);
+  const [activeTab, setActiveTab] = useState("pipeline");
 
-  const { state, update, saving, save } = useOnboardingPersistence();
-  const [activeTab, setActiveTab] = useState("business");
-  const [detailModal, setDetailModal] = useState<string | null>(null);
-  const [requestInfoOpen, setRequestInfoOpen] = useState(false);
-  const [emailBody, setEmailBody] = useState(
-    `Dear NewStart Motors Ltd,\n\nThank you for your application to join our dealer network.\n\nFollowing our review, we require the following additional information before we can proceed:\n\n• Enhanced DBS certificates for 2 staff members (Sales Manager, Sales Executive)\n• Latest management accounts (Q4 2025)\n\nPlease submit these documents within 14 business days.\n\nIf you have any questions, please don't hesitate to contact us.\n\nKind regards,\nJoel Knight\nThe Compliance Guys`
-  );
+  const stats = useMemo(() => getOnboardingStats(seederApplications), []);
 
-  const dealerName = state.dealerName || locState?.dealerName || "";
-  const companyNumber = state.companyNumber || locState?.companyNumber || "";
-
-  const [seeded, setSeeded] = useState(false);
-  if (!seeded && locState?.dealerName && !state.dealerName) {
-    setSeeded(true);
-    update({
-      dealerName: locState.dealerName,
-      companyNumber: locState.companyNumber || "",
-      stage: "application",
-      screeningResults: locState.screeningResults || {},
+  const filtered = useMemo(() => {
+    return seederApplications.filter(app => {
+      if (search && !app.dealerName.toLowerCase().includes(search.toLowerCase()) && !app.appRef.toLowerCase().includes(search.toLowerCase())) return false;
+      if (statusFilter !== "all" && app.status !== statusFilter) return false;
+      if (assigneeFilter !== "all" && app.assignedTo !== assigneeFilter) return false;
+      return true;
     });
-  }
+  }, [search, statusFilter, assigneeFilter]);
 
-  const screeningDataMap = useMemo(() => {
-    const results = state.screeningResults || locState?.screeningResults || {};
-    const map: Record<string, string> = {};
-    if (results.creditSafe) {
-      try {
-        const cs = JSON.parse(results.creditSafe);
-        if (cs.regNo) map.companyRegNo = cs.regNo;
-        if (cs.score) map.creditScore = `${cs.score}/${cs.maxScore || "100"} (${cs.riskLevel || "N/A"})`;
-        if (cs.companyName) map.companyName = cs.companyName;
-        if (cs.status) map.companyStatus = cs.status;
-      } catch {}
-    }
-    if (results.fca) {
-      try {
-        const fca = JSON.parse(results.fca);
-        if (fca.permissions?.length > 0) {
-          map.fcaPermissions = fca.permissions.slice(0, 3).join(", ") + (fca.permissions.length > 3 ? ` (+${fca.permissions.length - 3} more)` : "");
-        }
-        if (fca.frn) map.fcaFrn = `FRN: ${fca.frn} — ${fca.status || "Unknown"}`;
-        if (fca.individuals?.length > 0) {
-          map.fcaIndividuals = fca.individuals.slice(0, 3).map((i: any) => i.name).join(", ") + (fca.individuals.length > 3 ? ` (+${fca.individuals.length - 3} more)` : "");
-        }
-        if (fca.companiesHouseNumber) map.companyRegNo = map.companyRegNo || fca.companiesHouseNumber;
-        if (fca.address) {
-          const addr = typeof fca.address === 'string' ? fca.address : Object.values(fca.address || {}).filter(Boolean).join(", ");
-          if (addr) map.registeredAddress = addr;
-        }
-      } catch {}
-    }
-    if (results.companiesHouse) {
-      try {
-        const ch = JSON.parse(results.companiesHouse);
-        if (ch.registeredAddress) map.registeredAddress = map.registeredAddress || ch.registeredAddress;
-        if (ch.vatNumber) map.vatRegistration = ch.vatNumber;
-        if (ch.companyNumber) map.companyRegNo = map.companyRegNo || ch.companyNumber;
-      } catch {}
-    }
-    if (!map.companyRegNo && companyNumber) map.companyRegNo = companyNumber;
-    if (results._overrides) {
-      try { Object.assign(map, JSON.parse(results._overrides)); } catch {}
-    }
-    if (results._enrichment) map._enrichment = "true";
-    for (const [k, v] of Object.entries(results)) {
-      if (!k.startsWith("_") && k !== "creditSafe" && k !== "fca" && k !== "companiesHouse" && typeof v === "string" && v && !map[k]) {
-        map[k] = v;
-      }
-    }
-    return map;
-  }, [state.screeningResults, locState?.screeningResults, companyNumber]);
-
-  const tabOrder = SECTIONS.map((s) => s.key);
-  const currentIdx = tabOrder.indexOf(activeTab);
-  const checklistProgress = (state.checklistProgress || {}) as Record<string, boolean[]>;
-
-  const updateChecks = (sectionKey: string, checks: boolean[]) => {
-    const next = { ...checklistProgress, [sectionKey]: checks };
-    update({ checklistProgress: next });
-  };
-
-  const handleComplete = () => {
-    update({ stage: "completed", status: "passed" });
-    save();
-    toast({ title: "Application Complete", description: `${dealerName} application marked as complete.` });
-  };
-
-  const totalItems = SECTIONS.reduce((sum, s) => sum + s.items.length, 0);
-  const completedItems = SECTIONS.reduce((sum, s) => {
-    const checks = checklistProgress[s.key] || [];
-    return sum + checks.filter(Boolean).length;
-  }, 0);
-  const overallPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-
-  // Render detail content — use component for interactive ones, static for others
-  const renderDetailContent = () => {
-    if (!detailModal) return null;
-    if (detailModal === "DBS / Background") return <DbsDetailContent />;
-    if (detailModal === "Training & Competency") return <TrainingDetailContent />;
-    const staticDetail = STATIC_SECTION_DETAILS[detailModal];
-    return staticDetail?.content || null;
-  };
-
-  const getDetailTitle = () => {
-    if (!detailModal) return "";
-    if (detailModal === "DBS / Background") return "DBS / Background Checks — Details";
-    if (detailModal === "Training & Competency") return "Training & Competency — Details";
-    return STATIC_SECTION_DETAILS[detailModal]?.title || detailModal;
-  };
-
-  if (demoMode) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Application &amp; Due Diligence</h1>
-            <p className="text-muted-foreground mt-1">
-              Structured dealer application pack — collect and verify all required information.
-            </p>
-          </div>
-
-          {/* Onboarding Score Card */}
-          <div className="bg-card rounded-xl border border-border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">NewStart Motors Ltd — Onboarding Progress</h2>
-                <p className="text-sm text-muted-foreground">6 of 8 sections complete</p>
-              </div>
-              <Badge className="bg-outcome-pending/15 text-outcome-pending border-outcome-pending/30 text-sm px-3 py-1">Pending Documents</Badge>
-            </div>
-            <Progress value={75} className="h-3 mb-3" />
-            <div className="flex gap-3">
-              <Button className="gap-2" onClick={() => toast({ title: "Dealer Approved", description: "NewStart Motors Ltd has been approved and added to the active portfolio." })}>
-                <CheckCircle2 className="w-4 h-4" /> Approve Dealer
-              </Button>
-              <Button variant="outline" className="gap-2" onClick={() => setRequestInfoOpen(true)}>
-                <Mail className="w-4 h-4" /> Request More Info
-              </Button>
-            </div>
-          </div>
-
-          {/* Phase 1 source info banner */}
-          <div className="bg-muted/40 border rounded-lg p-3 text-xs text-muted-foreground flex items-start gap-2">
-            <Info className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>Each section shows its data source: <span className="text-outcome-pass-text font-medium">green (API)</span> = auto-populated via external check, <span className="text-primary font-medium">blue (Manual)</span> = entered by staff, <span className="text-outcome-pending-text font-medium">amber (Phase 1)</span> = will be automated in a future release. Staff can manually complete any section where automation is not yet live.</span>
-          </div>
-
-          {/* 8-Section Onboarding Checklist */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { name: "Legal Status", status: "complete" as const, score: "100%", detail: "Company House verified", source: "api" as FieldSource, fields: ["Company status", "Incorporation date", "Directors", "PSCs"] },
-              { name: "FCA Authorisation", status: "complete" as const, score: "100%", detail: "FRN: 123456", source: "api" as FieldSource, fields: ["FCA FRN", "Auth status", "Permissions"] },
-              { name: "Financial Checks", status: "pending" as const, score: "50%", detail: "Awaiting credit report", source: "pending_automation" as FieldSource, fields: ["Credit score", "Risk band", "CCJs", "Accounts filed"] },
-              { name: "DBS / Background", status: "failed" as const, score: "0%", detail: "2 staff need Enhanced DBS", source: "pending_automation" as FieldSource, fields: ["Enhanced DBS — Mark Roberts", "Enhanced DBS — Lisa Evans"] },
-              { name: "Training & Competency", status: "pending" as const, score: "60%", detail: "Certificates under review", source: "manual" as FieldSource, fields: ["TCF training cert", "Competency assessment"] },
-              { name: "Complaints Handling", status: "complete" as const, score: "N/A", detail: "New dealer — not applicable", source: "manual" as FieldSource, fields: ["Complaints policy", "Root cause analysis log"] },
-              { name: "Marketing & Promotions", status: "complete" as const, score: "100%", detail: "Website checked", source: "pending_automation" as FieldSource, fields: ["APR displayed", "Commission disclosure", "FCA number on site"] },
-              { name: "KYC / AML", status: "complete" as const, score: "100%", detail: "Sanctions clear", source: "api" as FieldSource, fields: ["Sanctions screening", "PEP check", "Adverse media"] },
-            ].map((section) => (
-              <div key={section.name} className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-2 mb-2">
-                  {section.status === "complete" ? (
-                    <CheckCircle2 className="w-5 h-5 text-outcome-pass" />
-                  ) : section.status === "pending" ? (
-                    <AlertTriangle className="w-5 h-5 text-outcome-pending" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-outcome-fail" />
-                  )}
-                  <h3 className="text-sm font-semibold text-foreground">{section.name}</h3>
-                </div>
-                <div className="flex items-center gap-1 mb-2">
-                  <FieldSourceIndicator source={section.source} />
-                </div>
-                <p className="text-xs text-muted-foreground mb-2">{section.detail}</p>
-                {/* Sub-fields with source */}
-                <div className="space-y-1 mb-3">
-                  {section.fields.map((field) => (
-                    <div key={field} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                      <span className={`w-1 h-1 rounded-full ${
-                        section.source === "api" ? "bg-outcome-pass" : section.source === "manual" ? "bg-primary" : "bg-outcome-pending"
-                      }`} />
-                      {field}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-semibold ${
-                    section.status === "complete" ? "text-outcome-pass" : section.status === "pending" ? "text-outcome-pending" : "text-outcome-fail"
-                  }`}>
-                    {section.status === "complete" ? "✓ Complete" : section.status === "pending" ? "⚠ Pending" : "✗ Failed"}
-                  </span>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setDetailModal(section.name)}>View Details</Button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Detail Modal */}
-          <Dialog open={!!detailModal} onOpenChange={(open) => !open && setDetailModal(null)}>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>{getDetailTitle()}</DialogTitle>
-                <DialogDescription>Detailed compliance information for this section.</DialogDescription>
-              </DialogHeader>
-              {renderDetailContent()}
-            </DialogContent>
-          </Dialog>
-
-          {/* Request More Info Modal */}
-          <Dialog open={requestInfoOpen} onOpenChange={setRequestInfoOpen}>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Request Additional Information</DialogTitle>
-                <DialogDescription>Send an email to the dealer requesting missing documents or information.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground mb-1">To</p>
-                    <p className="font-medium text-foreground">contact@newstartmotors.co.uk</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground mb-1">Subject</p>
-                    <p className="font-medium text-foreground">Additional Information Required — Dealer Onboarding</p>
-                  </div>
-                </div>
-                <Textarea
-                  value={emailBody}
-                  onChange={(e) => setEmailBody(e.target.value)}
-                  className="min-h-[250px] text-sm"
-                />
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setRequestInfoOpen(false)}>Cancel</Button>
-                  <Button className="gap-2" onClick={() => {
-                    setRequestInfoOpen(false);
-                    toast({ title: "Request Sent", description: "Email sent to contact@newstartmotors.co.uk" });
-                  }}>
-                    <Send className="w-4 h-4" /> Send Request
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const byStage = useMemo(() => ({
+    drafts: filtered.filter(a => a.status === "Draft"),
+    stage1: filtered.filter(a => a.status === "In Progress" && a.stage === 1),
+    stage2: filtered.filter(a => a.status === "In Progress" && a.stage === 2),
+    stage3: filtered.filter(a => a.status === "Pending Approval"),
+    rejected: filtered.filter(a => a.status === "Rejected"),
+  }), [filtered]);
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Application &amp; Due Diligence</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Onboarding Pipeline</h1>
             <p className="text-muted-foreground mt-1">
-              Structured dealer application pack — collect and verify all required information.
+              Live queue of dealer applications — {stats.total} applications across all stages.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {saving && <span className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Saving…</span>}
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() =>
-                generateOnboardingPdf({
-                  dealerName,
-                  companyNumber,
-                  screeningDataMap,
-                  checklistProgress,
-                  sections: SECTIONS.map((s) => ({ key: s.key, title: s.title, items: s.items })),
-                })
-              }
-            >
-              <Download className="w-4 h-4" /> Export PDF
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={() => navigate("/pre-onboarding")}>
-              <ArrowLeft className="w-4 h-4" /> Back to Pre‑Onboarding
-            </Button>
-          </div>
+          <Button className="gap-2" onClick={() => navigate("/pre-onboarding")}>
+            <Plus className="w-4 h-4" /> New Application
+          </Button>
         </div>
 
-        <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-sm">
-                {dealerName && (
-                  <Badge variant="secondary" className="gap-1">
-                    <Building2 className="w-3 h-3" /> {dealerName}
-                  </Badge>
-                )}
-                {companyNumber && (
-                  <span className="text-muted-foreground">Co. #{companyNumber}</span>
-                )}
-                <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400">
-                  Pre-Screening Passed
-                </Badge>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <span className="text-muted-foreground">{overallPct}% complete</span>
-                <Progress value={overallPct} className="h-2 w-32" />
-              </div>
-            </div>
-            <div className="pt-2 border-t border-border">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Automatic Dealer Enrichment</p>
-              <DealerEnrichment
-                dealerName={dealerName}
-                companyNumber={companyNumber}
-                autoTrigger
-                onEnriched={(result, screeningMap) => {
-                  const enrichmentData: Record<string, string> = {};
-                  for (const [k, v] of Object.entries(screeningMap)) {
-                    if (v) enrichmentData[k] = v;
-                  }
-                  enrichmentData._enrichment = JSON.stringify(result);
-                  update({ screeningResults: { ...state.screeningResults, ...enrichmentData } });
-                }}
-              />
-            </div>
-            <div className="pt-2 border-t border-border">
-              <p className="text-xs font-medium text-muted-foreground mb-2">CreditSafe Report</p>
-              <CreditSafeSearch
-                defaultSearch={dealerName}
-                companyNumber={companyNumber}
-                onResult={(res) => {
-                  update({ screeningResults: { ...state.screeningResults, creditSafe: JSON.stringify(res) } });
-                }}
-              />
-            </div>
-            <div className="pt-2 border-t border-border">
-              <p className="text-xs font-medium text-muted-foreground mb-2">FCA Register</p>
-              <FcaRegisterCard
-                dealerName={dealerName}
-                onDataLoaded={(data) => {
-                  const fcaData: any = { ...data };
-                  update({ screeningResults: { ...state.screeningResults, fca: JSON.stringify(fcaData) } });
-                }}
-              />
-            </div>
-            {Object.keys(screeningDataMap).length > 0 && (
-              <div className="pt-2 border-t border-border">
-                <ScreeningDataEditor
-                  screeningDataMap={screeningDataMap}
-                  onUpdate={(updated) => {
-                    update({ screeningResults: { ...state.screeningResults, _overrides: JSON.stringify(updated) } });
-                  }}
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* KPI cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {[
+            { label: "Drafts", value: stats.drafts, icon: FileText, color: "text-muted-foreground" },
+            { label: "In Progress", value: stats.inProgress, icon: Loader2, color: "text-blue-600" },
+            { label: "Pending Approval", value: stats.pendingApproval, icon: Clock, color: "text-outcome-pending" },
+            { label: "Rejected", value: stats.rejected, icon: XCircle, color: "text-outcome-fail" },
+            { label: "Referrals", value: stats.referrals, icon: AlertTriangle, color: "text-outcome-pending" },
+            { label: "Avg Policy %", value: `${stats.avgPolicyCompletion}%`, icon: BarChart3, color: "text-primary" },
+          ].map(kpi => (
+            <Card key={kpi.label}>
+              <CardContent className="p-4 flex items-center gap-3">
+                <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
+                <div>
+                  <p className="text-2xl font-bold">{kpi.value}</p>
+                  <p className="text-xs text-muted-foreground">{kpi.label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="flex-wrap">
-            {SECTIONS.map((s) => (
-              <TabsTrigger key={s.key} value={s.key} className="gap-2">
-                <s.icon className="w-4 h-4" />{s.label}
-              </TabsTrigger>
-            ))}
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3">
+          <div className="relative flex-1 min-w-[200px] max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search dealer or ref..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[170px]">
+              <Filter className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="Draft">Draft</SelectItem>
+              <SelectItem value="In Progress">In Progress</SelectItem>
+              <SelectItem value="Pending Approval">Pending Approval</SelectItem>
+              <SelectItem value="Rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+            <SelectTrigger className="w-[170px]">
+              <Users className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="All assignees" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Assignees</SelectItem>
+              <SelectItem value="Tom Griffiths">Tom Griffiths</SelectItem>
+              <SelectItem value="Amara Osei">Amara Osei</SelectItem>
+              <SelectItem value="Unassigned">Unassigned</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Main content */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="pipeline">Pipeline View</TabsTrigger>
+            <TabsTrigger value="table">Table View</TabsTrigger>
           </TabsList>
 
-          {SECTIONS.map((s) => (
-            <TabsContent key={s.key} value={s.key}>
-              <ChecklistSection
-                title={s.title}
-                sectionKey={s.key}
-                description={s.desc}
-                icon={s.icon}
-                items={s.items}
-                dealerName={dealerName}
-                savedChecks={checklistProgress[s.key] || []}
-                onChecksChange={(checks) => updateChecks(s.key, checks)}
-                screeningDataMap={screeningDataMap}
-              />
-            </TabsContent>
-          ))}
+          {/* Pipeline (Kanban-style columns) */}
+          <TabsContent value="pipeline" className="mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {[
+                { title: "📋 Drafts", apps: byStage.drafts, color: "border-muted" },
+                { title: "🔍 Stage 1 — Pre-Screen", apps: byStage.stage1, color: "border-blue-300 dark:border-blue-700" },
+                { title: "📄 Stage 2 — Policies", apps: byStage.stage2, color: "border-blue-500 dark:border-blue-600" },
+                { title: "✅ Stage 3 — Approval", apps: byStage.stage3, color: "border-outcome-pending" },
+                { title: "❌ Rejected", apps: byStage.rejected, color: "border-destructive/40" },
+              ].map(col => (
+                <div key={col.title} className={`rounded-xl border-2 ${col.color} bg-muted/20 p-3 space-y-2`}>
+                  <h3 className="text-sm font-semibold flex items-center justify-between">
+                    {col.title}
+                    <Badge variant="secondary" className="text-xs">{col.apps.length}</Badge>
+                  </h3>
+                  {col.apps.length === 0 && (
+                    <p className="text-xs text-muted-foreground py-4 text-center">No applications</p>
+                  )}
+                  {col.apps.map(app => (
+                    <Card
+                      key={app.id}
+                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => setSelectedApp(app)}
+                    >
+                      <CardContent className="p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-[11px] text-muted-foreground">{app.appRef}</span>
+                          {daysUntilTarget(app.targetApprovalDate)}
+                        </div>
+                        <p className="text-sm font-medium leading-tight">{app.dealerName}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-muted-foreground">{app.assignedTo}</span>
+                          {preScreenSummary(app)}
+                        </div>
+                        {app.policyCompletion.percentComplete > 0 && (
+                          <div className="flex items-center gap-2">
+                            <Progress value={app.policyCompletion.percentComplete} className="h-1.5 flex-1" />
+                            <span className="text-[10px] text-muted-foreground">{app.policyCompletion.percentComplete}%</span>
+                          </div>
+                        )}
+                        {app.manualReviewItems.length > 0 && (
+                          <div className="flex items-center gap-1 text-[10px] text-outcome-pending">
+                            <AlertTriangle className="w-3 h-3" />
+                            {app.manualReviewItems.length} referral{app.manualReviewItems.length > 1 ? "s" : ""}
+                          </div>
+                        )}
+                        <Badge variant="outline" className="text-[10px]">{app.requestingLenderName.split(" ").slice(0, 2).join(" ")}</Badge>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* Table view */}
+          <TabsContent value="table" className="mt-4">
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>App Ref</TableHead>
+                      <TableHead>Dealer Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Stage</TableHead>
+                      <TableHead>Assigned To</TableHead>
+                      <TableHead>Lender</TableHead>
+                      <TableHead>Pre-Screen</TableHead>
+                      <TableHead>Policies</TableHead>
+                      <TableHead>Target</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map(app => (
+                      <TableRow key={app.id} className="cursor-pointer" onClick={() => setSelectedApp(app)}>
+                        <TableCell className="font-mono text-sm">{app.appRef}</TableCell>
+                        <TableCell className="font-medium">{app.dealerName}</TableCell>
+                        <TableCell>{statusBadge(app.status)}</TableCell>
+                        <TableCell>{stageBar(app)}</TableCell>
+                        <TableCell className="text-sm">{app.assignedTo}</TableCell>
+                        <TableCell>
+                          <span className="text-xs">{app.requestingLenderName.split(" ").slice(0, 2).join(" ")}</span>
+                        </TableCell>
+                        <TableCell>{preScreenSummary(app)}</TableCell>
+                        <TableCell>
+                          {app.policyCompletion.percentComplete > 0 ? (
+                            <div className="flex items-center gap-2">
+                              <Progress value={app.policyCompletion.percentComplete} className="h-1.5 w-16" />
+                              <span className="text-xs">{app.policyCompletion.percentComplete}%</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{daysUntilTarget(app.targetApprovalDate)}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={(e) => { e.stopPropagation(); setSelectedApp(app); }}>
+                            <Eye className="w-3 h-3" /> View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
 
-        <div className="flex justify-between">
-          <Button
-            variant="outline"
-            disabled={currentIdx === 0}
-            onClick={() => setActiveTab(tabOrder[currentIdx - 1])}
-            className="gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" /> Previous Section
-          </Button>
-          {currentIdx < tabOrder.length - 1 ? (
-            <Button onClick={() => setActiveTab(tabOrder[currentIdx + 1])} className="gap-2">
-              Next Section <ArrowRight className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button className="gap-2" onClick={handleComplete} disabled={overallPct < 100}>
-              <CheckCircle2 className="w-4 h-4" /> Mark Application Complete
-            </Button>
-          )}
-        </div>
+        {/* Detail modal */}
+        <AppDetailModal app={selectedApp} open={!!selectedApp} onClose={() => setSelectedApp(null)} />
       </div>
     </DashboardLayout>
   );
