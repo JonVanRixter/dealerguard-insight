@@ -5,6 +5,7 @@ import { masterPolicyList } from "@/data/tcg/dealerPolicies";
 // ── Types ──────────────────────────────────────────────────
 
 export type PreScreenResult = "pass" | "fail" | "refer" | null;
+export type FieldSource = "api" | "manual" | "pending_automation";
 
 export interface PreScreenCheck {
   id: string;
@@ -12,6 +13,7 @@ export interface PreScreenCheck {
   description: string;
   result: PreScreenResult;
   notes: string;
+  source: FieldSource;
 }
 
 export interface PolicyEntry {
@@ -24,6 +26,7 @@ export interface PolicyEntry {
   lastUpdated: string | null;
   dateUnknown: boolean;
   notes: string;
+  source: FieldSource;
 }
 
 export type AppStatus = "draft" | "in_progress" | "pending_approval" | "approved" | "rejected";
