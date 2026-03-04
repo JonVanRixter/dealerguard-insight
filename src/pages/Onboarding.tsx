@@ -230,6 +230,7 @@ export default function Onboarding() {
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [selectedApp, setSelectedApp] = useState<OnboardingApplication | null>(null);
   const [activeTab, setActiveTab] = useState("pipeline");
+  const [referralFilter, setReferralFilter] = useState(false);
 
   const stats = useMemo(() => getOnboardingStats(seederApplications), []);
 
@@ -238,9 +239,10 @@ export default function Onboarding() {
       if (search && !app.dealerName.toLowerCase().includes(search.toLowerCase()) && !app.appRef.toLowerCase().includes(search.toLowerCase())) return false;
       if (statusFilter !== "all" && app.status !== statusFilter) return false;
       if (assigneeFilter !== "all" && app.assignedTo !== assigneeFilter) return false;
+      if (referralFilter && app.manualReviewItems.length === 0) return false;
       return true;
     });
-  }, [search, statusFilter, assigneeFilter]);
+  }, [search, statusFilter, assigneeFilter, referralFilter]);
 
   const byStage = useMemo(() => ({
     drafts: filtered.filter(a => a.status === "Draft"),
@@ -269,14 +271,33 @@ export default function Onboarding() {
         {/* KPI cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {[
-            { label: "Drafts", value: stats.drafts, icon: FileText, color: "text-muted-foreground" },
-            { label: "In Progress", value: stats.inProgress, icon: Loader2, color: "text-blue-600" },
-            { label: "Pending Approval", value: stats.pendingApproval, icon: Clock, color: "text-outcome-pending" },
-            { label: "Rejected", value: stats.rejected, icon: XCircle, color: "text-outcome-fail" },
-            { label: "Referrals", value: stats.referrals, icon: AlertTriangle, color: "text-outcome-pending" },
-            { label: "Avg Policy %", value: `${stats.avgPolicyCompletion}%`, icon: BarChart3, color: "text-primary" },
+            { label: "Drafts", value: stats.drafts, icon: FileText, color: "text-muted-foreground", filter: "Draft" },
+            { label: "In Progress", value: stats.inProgress, icon: Loader2, color: "text-blue-600", filter: "In Progress" },
+            { label: "Pending Approval", value: stats.pendingApproval, icon: Clock, color: "text-outcome-pending", filter: "Pending Approval" },
+            { label: "Rejected", value: stats.rejected, icon: XCircle, color: "text-outcome-fail", filter: "Rejected" },
+            { label: "Referrals", value: stats.referrals, icon: AlertTriangle, color: "text-outcome-pending", filter: "referrals" },
+            { label: "Avg Policy %", value: `${stats.avgPolicyCompletion}%`, icon: BarChart3, color: "text-primary", filter: null },
           ].map(kpi => (
-            <Card key={kpi.label}>
+            <Card
+              key={kpi.label}
+              className={`${kpi.filter ? "cursor-pointer hover:shadow-md transition-shadow" : ""} ${statusFilter === kpi.filter ? "ring-2 ring-primary" : ""}`}
+              onClick={() => {
+                if (!kpi.filter) return;
+                if (kpi.filter === "referrals") {
+                  // Filter to apps with manual review items
+                  setStatusFilter("all");
+                  setSearch("");
+                  setAssigneeFilter("all");
+                  setActiveTab("table");
+                  setReferralFilter(prev => !prev);
+                } else {
+                  setReferralFilter(false);
+                  setStatusFilter(statusFilter === kpi.filter ? "all" : kpi.filter);
+                  setSearch("");
+                  setAssigneeFilter("all");
+                }
+              }}
+            >
               <CardContent className="p-4 flex items-center gap-3">
                 <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
                 <div>
