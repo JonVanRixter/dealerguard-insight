@@ -18,6 +18,7 @@ import PreOnboarding from "./pages/PreOnboarding";
 import Onboarding from "./pages/Onboarding";
 import BannedList from "./pages/BannedList";
 import TcgOnboardingWorkflow from "./pages/TcgOnboardingWorkflow";
+import TcgOnboardingHub from "./pages/TcgOnboardingHub";
 import TcgDealerDetail from "./pages/TcgDealerDetail";
 import ReviewQueue from "./pages/ReviewQueue";
 import LenderDirectory from "./pages/LenderDirectory";
@@ -60,6 +61,7 @@ const AppRoutes = () => (
     <Route path="/pre-onboarding" element={<ProtectedRoute><PreOnboarding /></ProtectedRoute>} />
     <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
     <Route path="/banned-list" element={<ProtectedRoute><BannedList /></ProtectedRoute>} />
+    <Route path="/tcg/onboarding" element={<ProtectedRoute><TcgOnboardingHub /></ProtectedRoute>} />
     <Route path="/tcg/onboarding/new" element={<ProtectedRoute><TcgOnboardingWorkflow /></ProtectedRoute>} />
     <Route path="/tcg/onboarding/new" element={<ProtectedRoute><TcgOnboardingWorkflow /></ProtectedRoute>} />
     <Route path="/tcg/onboarding/:appId/stage-:stage" element={<ProtectedRoute><TcgOnboardingWorkflow /></ProtectedRoute>} />
