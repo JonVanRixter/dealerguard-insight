@@ -127,6 +127,7 @@ function createBlankApp(): TcgOnboardingApp {
     distributeInsurance: null,
     preScreenChecks: defaultPreScreenChecks.map((c) => ({ ...c })),
     policies: buildEmptyPolicies(),
+    fieldSources: defaultFieldSources(),
     status: "draft",
     currentStage: 1,
     startedBy: "Tom Griffiths",
