@@ -2,6 +2,7 @@ import {
   ComposedChart, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line,
 } from "recharts";
 import { TrendingUp, TrendingDown, Minus, Building2, Users } from "lucide-react";
+import { InsightCallout } from "./InsightCallout";
 import { ReportChartTooltip } from "./ReportChartTooltip";
 import reportMetrics from "@/data/tcg/reportMetrics.json";
 
@@ -172,6 +173,11 @@ export function PlatformGrowthModule() {
           </div>
         </div>
       </div>
+
+      {/* Insight callout */}
+      <InsightCallout type="positive">
+        Dealer count grew by 36% from Q4 2025 to Q1 2026. Growth is accelerating month-on-month as new lenders onboard.
+      </InsightCallout>
     </div>
   );
 }

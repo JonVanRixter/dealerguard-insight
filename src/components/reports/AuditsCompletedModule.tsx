@@ -3,6 +3,7 @@ import {
   ComposedChart, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line, Cell,
 } from "recharts";
 import { CheckCircle2, ClipboardCheck, RefreshCw, TrendingUp, TrendingDown, Minus, AlertTriangle, Calendar, ArrowRight } from "lucide-react";
+import { InsightCallout } from "./InsightCallout";
 import { ReportChartTooltip } from "./ReportChartTooltip";
 import reportMetrics from "@/data/tcg/reportMetrics.json";
 import { useNavigate } from "react-router-dom";
@@ -210,6 +211,11 @@ export function AuditsCompletedModule() {
           </button>
         </div>
       </div>
+
+      {/* Insight callout */}
+      <InsightCallout type="warning">
+        Consumer Duty and Communications & Complaints have the highest fail rates (18% and 19%). These sections align with FCA Consumer Duty obligations — recommend monitoring closely.
+      </InsightCallout>
     </div>
   );
 }
