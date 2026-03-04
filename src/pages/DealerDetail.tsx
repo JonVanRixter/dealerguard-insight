@@ -15,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { DealerDocuments } from "@/components/dealer/DealerDocuments";
 import { DealerRecheckTimeline } from "@/components/dealer/DealerRecheckTimeline";
+import { DealerDocumentsTab } from "@/components/tcg-dealer/DealerDocumentsTab";
+import { getPolicyRecordByName } from "@/data/tcg/dealerPolicies";
 import { CreditSafeCard } from "@/components/dealer/CreditSafeCard";
 import { SectionRadarChart } from "@/components/dealer/SectionRadarChart";
 import { ControlsBreakdownChart } from "@/components/dealer/ControlsBreakdownChart";
@@ -210,7 +212,19 @@ const DealerDetail = () => {
         <DirectorPassportCheck dealerName={dealerName} />
         <KeyActionsTable actions={audit.keyActions} />
         <DealerRecheckTimeline dealerName={dealerName} dealerRag={audit.overallScore >= 80 ? "green" : "other"} />
-        <DealerNotes dealerName={dealerName} />
+        {/* Onboarding Policy Documents */}
+        {(() => {
+          const policyRecord = getPolicyRecordByName(dealerName);
+          return policyRecord ? (
+            <DealerDocumentsTab policyRecord={policyRecord} />
+          ) : (
+            <div className="bg-card rounded-xl border border-border px-5 py-6">
+              <h3 className="text-sm font-semibold text-foreground">Onboarding Documents</h3>
+              <p className="text-sm text-muted-foreground mt-1">No onboarding policy documents have been recorded for this dealer.</p>
+            </div>
+          );
+        })()}
+
         <DealerDocuments dealerName={dealerName} />
 
         <div className="space-y-4">

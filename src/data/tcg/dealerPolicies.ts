@@ -248,6 +248,10 @@ export function getPolicyRecord(dealerId: string): DealerPolicyRecord | undefine
   return dealerPolicies.find((r) => r.dealerId === dealerId);
 }
 
+export function getPolicyRecordByName(dealerName: string): DealerPolicyRecord | undefined {
+  return dealerPolicies.find((r) => r.dealerName === dealerName);
+}
+
 export function getPolicySummary(dealerId: string) {
   const record = getPolicyRecord(dealerId);
   if (!record) return null;
