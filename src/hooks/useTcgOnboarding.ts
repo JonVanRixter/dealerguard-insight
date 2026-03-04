@@ -70,12 +70,18 @@ export interface TcgOnboardingApp {
 }
 
 const defaultPreScreenChecks: PreScreenCheck[] = [
-  { id: "ch", label: "Companies House Status", description: "Company active, directors listed, PSCs disclosed", result: null, notes: "" },
-  { id: "fca", label: "FCA Authorisation", description: "Authorised, permissions correct, not lapsed", result: null, notes: "" },
-  { id: "fin", label: "Initial Financial Standing", description: "Credit score (manual entry), CCJs, accounts filed", result: null, notes: "" },
-  { id: "aml", label: "Sanctions & AML Initial Screen", description: "Sanctions clear, no PEPs, adverse media check", result: null, notes: "" },
-  { id: "web", label: "Website & Initial Trading Check", description: "Active website, APR visible, risk warnings present", result: null, notes: "" },
+  { id: "ch", label: "Companies House Status", description: "Company active, directors listed, PSCs disclosed", result: null, notes: "", source: "pending_automation" },
+  { id: "fca", label: "FCA Authorisation", description: "Authorised, permissions correct, not lapsed", result: null, notes: "", source: "pending_automation" },
+  { id: "fin", label: "Initial Financial Standing", description: "Credit score (manual entry), CCJs, accounts filed", result: null, notes: "", source: "pending_automation" },
+  { id: "aml", label: "Sanctions & AML Initial Screen", description: "Sanctions clear, no PEPs, adverse media check", result: null, notes: "", source: "pending_automation" },
+  { id: "web", label: "Website & Initial Trading Check", description: "Active website, APR visible, risk warnings present", result: null, notes: "", source: "pending_automation" },
 ];
+
+function defaultFieldSources(): Record<TrackableField, FieldSource> {
+  const sources = {} as Record<TrackableField, FieldSource>;
+  for (const f of TRACKABLE_FIELDS) sources[f] = "pending_automation";
+  return sources;
+}
 
 function buildEmptyPolicies(): PolicyEntry[] {
   return masterPolicyList.map((p) => ({
