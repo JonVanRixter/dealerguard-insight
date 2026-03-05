@@ -25,17 +25,17 @@ export function OnboardingValidityWidget() {
   }, []);
 
   const pipeline = useMemo(() => {
-    const active = seederApplications.filter(a => a.status !== "Rejected" && a.status !== "Approved");
-    const pending = seederApplications.filter(a => a.status === "Pending Approval").length;
+    const active = seederApplications.filter(a => a.status !== "Complete" && a.status !== "Ready to Transfer");
+    const complete = seederApplications.filter(a => a.status === "Complete").length;
     const unassigned = seederApplications.filter(a => a.assignedTo === "Unassigned").length;
     const drafts = seederApplications.filter(a => a.status === "Draft").length;
     const s1 = seederApplications.filter(a => a.status === "In Progress" && a.stage === 1).length;
     const s2 = seederApplications.filter(a => a.status === "In Progress" && a.stage === 2).length;
-    const s3 = pending;
+    const ready = seederApplications.filter(a => a.status === "Ready to Transfer").length;
     const avgDays = active.length > 0
       ? (active.reduce((s, a) => s + (Date.now() - new Date(a.initiatedDate).getTime()) / 86400000, 0) / active.length).toFixed(1)
       : "0";
-    return { active: active.length, pending, unassigned, avgDays, drafts, s1, s2, s3 };
+    return { active: active.length, complete, unassigned, avgDays, drafts, s1, s2, ready };
   }, []);
 
   return (
@@ -46,36 +46,16 @@ export function OnboardingValidityWidget() {
         <p className="text-xs text-muted-foreground mt-0.5">TCG dealer onboarding status</p>
       </div>
       <div className="divide-y divide-border">
-        <button
-          onClick={() => navigate("/pre-onboarding?filter=valid")}
-          className="flex items-center justify-between w-full px-5 py-3 hover:bg-muted/50 transition-colors"
-        >
-          <div className="flex items-center gap-2 text-sm">
-            <ShieldCheck className="w-4 h-4 text-outcome-pass" />
-            <span className="text-foreground">Valid onboarding</span>
-          </div>
+        <button onClick={() => navigate("/pre-onboarding?filter=valid")} className="flex items-center justify-between w-full px-5 py-3 hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-2 text-sm"><ShieldCheck className="w-4 h-4 text-outcome-pass" /><span className="text-foreground">Valid onboarding</span></div>
           <span className="text-lg font-bold text-outcome-pass">{counts.valid}</span>
         </button>
-
-        <button
-          onClick={() => navigate("/pre-onboarding?filter=renewal")}
-          className="flex items-center justify-between w-full px-5 py-3 hover:bg-muted/50 transition-colors"
-        >
-          <div className="flex items-center gap-2 text-sm">
-            <AlertTriangle className="w-4 h-4 text-outcome-pending" />
-            <span className="text-foreground">Renewal due (≤30 days)</span>
-          </div>
+        <button onClick={() => navigate("/pre-onboarding?filter=renewal")} className="flex items-center justify-between w-full px-5 py-3 hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-2 text-sm"><AlertTriangle className="w-4 h-4 text-outcome-pending" /><span className="text-foreground">Renewal due (≤30 days)</span></div>
           <span className="text-lg font-bold text-outcome-pending">{counts.renewalDue}</span>
         </button>
-
-        <button
-          onClick={() => navigate("/pre-onboarding?filter=expired")}
-          className="flex items-center justify-between w-full px-5 py-3 hover:bg-muted/50 transition-colors"
-        >
-          <div className="flex items-center gap-2 text-sm">
-            <ShieldAlert className="w-4 h-4 text-outcome-fail" />
-            <span className="text-foreground">Expired onboarding</span>
-          </div>
+        <button onClick={() => navigate("/pre-onboarding?filter=expired")} className="flex items-center justify-between w-full px-5 py-3 hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-2 text-sm"><ShieldAlert className="w-4 h-4 text-outcome-fail" /><span className="text-foreground">Expired onboarding</span></div>
           <span className="text-lg font-bold text-outcome-fail">{counts.expired}</span>
         </button>
       </div>
@@ -87,19 +67,14 @@ export function OnboardingValidityWidget() {
             <span className="text-sm">🏗️</span>
             <h3 className="text-sm font-semibold text-foreground">Onboarding Pipeline</h3>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs gap-1 text-primary h-7"
-            onClick={() => navigate("/tcg/onboarding")}
-          >
+          <Button variant="ghost" size="sm" className="text-xs gap-1 text-primary h-7" onClick={() => navigate("/tcg/onboarding")}>
             View Pipeline <ArrowRight className="w-3 h-3" />
           </Button>
         </div>
         <div className="px-5 pb-3 space-y-2">
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <span>Active: <span className="font-semibold">{pipeline.active}</span></span>
-            <span>Pending approval: <span className="font-semibold">{pipeline.pending}</span></span>
+            <span>Complete: <span className="font-semibold">{pipeline.complete}</span></span>
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <span className={pipeline.unassigned > 0 ? "text-outcome-pending font-medium" : ""}>
@@ -114,7 +89,7 @@ export function OnboardingValidityWidget() {
             <span>·</span>
             <span>📄 Stage 2: {pipeline.s2}</span>
             <span>·</span>
-            <span>🔍 Stage 3: {pipeline.s3}</span>
+            <span>🚀 Ready: {pipeline.ready}</span>
           </div>
         </div>
       </div>
