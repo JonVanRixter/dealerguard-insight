@@ -58,7 +58,7 @@ function computeCompletion(
   app: Partial<OnboardingApplication>
 ): CompletionStatus {
   const allChecks = Object.values(checks).every((c) => c.answered);
-  const allPolicies = policies.every((p) => p.dealerHasIt !== null);
+  const allPolicies = policies.every((p) => p.dealerHasIt !== null && p.notes.trim() !== "");
   const detailsComplete = !!(
     (app as any).dealerName && (app as any).companiesHouseNo && (app as any).tradingName &&
     (app as any).primaryContact?.name
@@ -157,7 +157,7 @@ export function useTcgOnboarding() {
     });
   }, []);
 
-  const setStage = useCallback((stage: 1 | 2 | 3) => {
+  const setStage = useCallback((stage: 1 | 2) => {
     updateCurrent({ stage, status: "In Progress" });
   }, [updateCurrent]);
 

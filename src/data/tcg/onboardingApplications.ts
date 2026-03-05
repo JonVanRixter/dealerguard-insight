@@ -71,14 +71,14 @@ export interface OnboardingApplication {
 // ── Pre-Screen Definitions ───────────────────────────────────
 
 export const PRE_SCREEN_DEFS = [
-  { key: "legalEntityStatus", id: "ps01", label: "Legal entity status — active/dissolved" },
-  { key: "tradingNameAlignment", id: "ps02", label: "Trading name alignment — FCA, ICO, website" },
-  { key: "directorsAndPSCs", id: "ps03", label: "Directors and PSCs — identities confirmed" },
-  { key: "fcaAuthorisation", id: "ps04", label: "FCA authorisation / AR status confirmed" },
-  { key: "sanctionsAndAml", id: "ps05", label: "Sanctions / AML / adverse media screening" },
-  { key: "creditAndFinancialStanding", id: "ps06", label: "Financial standing — credit and CCJs" },
-  { key: "websiteAndMarketingCheck", id: "ps07", label: "Website and financial promotions review" },
-  { key: "dndCheck", id: "ps08", label: "Do Not Deal — TCG platform and lender DND lists" },
+  { key: "legalEntityStatus", id: "ps01", label: "Legal entity status — active/dissolved", guidance: "Confirm the company is active on Companies House, incorporation date, and that no dissolution or winding-up notice has been filed." },
+  { key: "tradingNameAlignment", id: "ps02", label: "Trading name alignment — FCA, ICO, website", guidance: "Confirm the trading name used on the website and in promotional materials matches the FCA register and ICO registration." },
+  { key: "directorsAndPSCs", id: "ps03", label: "Directors and PSCs — identities confirmed", guidance: "List all current directors and PSC(s). Note any changes in the last 24 months. Confirm identities are consistent across Companies House." },
+  { key: "fcaAuthorisation", id: "ps04", label: "FCA authorisation / AR status confirmed", guidance: "Confirm FCA authorisation status (directly authorised or appointed representative). Note FCA reference number, AR principal if applicable, and relevant permissions." },
+  { key: "sanctionsAndAml", id: "ps05", label: "Sanctions / AML / adverse media screening", guidance: "Confirm no sanctions hits against the company, directors or PSCs. Confirm no adverse media. Note PEP status of directors." },
+  { key: "creditAndFinancialStanding", id: "ps06", label: "Financial standing — credit and CCJs", guidance: "Note CreditSafe or equivalent score. Confirm no CCJs on company record. Note most recent filed accounts and whether trading position appears solvent." },
+  { key: "websiteAndMarketingCheck", id: "ps07", label: "Website and financial promotions review", guidance: "Review website for FCA-compliant financial promotions, APR display, risk warnings, and privacy/cookie compliance." },
+  { key: "dndCheck", id: "ps08", label: "Do Not Deal — TCG platform and lender DND lists", guidance: "Check dealer against TCG platform DND list and the requesting lender's DND list. Note outcome." },
 ] as const;
 
 // ── Builders ─────────────────────────────────────────────────
@@ -296,9 +296,9 @@ export const seederApplications: OnboardingApplication[] = [
   // app003 — Complete and Ready to Transfer
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-11T14:00:00"));
-    const pols = quickPolicies(26, TG, "2026-02-25T16:00:00");
+    const pols = quickPolicies(22, TG, "2026-02-25T16:00:00");
     return {
-      id: "app003", appRef: "APP-003-2026", stage: 3, status: "Ready to Transfer" as OnboardingAppStatus,
+      id: "app003", appRef: "APP-003-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
       dealerName: "Highfield Motor Company", tradingName: "Highfield Motors",
       companiesHouseNo: "09451230", website: "https://www.highfieldmotors.co.uk",
       primaryContact: { name: "Richard Price", email: "r.price@highfieldmotors.co.uk", phone: "01633 882100" },
@@ -397,7 +397,7 @@ export const seederApplications: OnboardingApplication[] = [
     const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-06T10:00:00"));
     const pols = quickPolicies(22, AO, "2026-02-20T14:00:00", true);
     return {
-      id: "app007", appRef: "APP-007-2026", stage: 3, status: "Complete" as OnboardingAppStatus,
+      id: "app007", appRef: "APP-007-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
       dealerName: "Sterling Park Autos", tradingName: "Sterling Park",
       companiesHouseNo: "11234567", website: "https://www.sterlingparkautos.co.uk",
       primaryContact: { name: "Gareth Lloyd", email: "g.lloyd@sterlingpark.co.uk", phone: "029 2047 1100" },
@@ -497,9 +497,9 @@ export const seederApplications: OnboardingApplication[] = [
   // app011 — Complete
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-04T11:00:00"));
-    const pols = quickPolicies(26, TG, "2026-02-22T15:00:00");
+    const pols = quickPolicies(22, TG, "2026-02-22T15:00:00");
     return {
-      id: "app011", appRef: "APP-011-2026", stage: 3, status: "Complete" as OnboardingAppStatus,
+      id: "app011", appRef: "APP-011-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
       dealerName: "Crown Garage (Newport) Ltd", tradingName: "Crown Garage",
       companiesHouseNo: "07654321", website: "https://www.crowngarage.co.uk",
       primaryContact: { name: "Alun Davies", email: "a.davies@crowngarage.co.uk", phone: "01633 221100" },
@@ -651,9 +651,9 @@ export const seederApplications: OnboardingApplication[] = [
   // app017 — Complete
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-02T14:00:00"));
-    const pols = quickPolicies(26, TG, "2026-02-20T16:00:00");
+    const pols = quickPolicies(22, TG, "2026-02-20T16:00:00");
     return {
-      id: "app017", appRef: "APP-017-2026", stage: 3, status: "Complete" as OnboardingAppStatus,
+      id: "app017", appRef: "APP-017-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
       dealerName: "Pennfield Cars Ltd", tradingName: "Pennfield Cars",
       companiesHouseNo: "08901234", website: "https://www.pennfieldcars.co.uk",
       primaryContact: { name: "David Rees", email: "d.rees@pennfield.co.uk", phone: "01792 445500" },
@@ -829,9 +829,9 @@ export const seederApplications: OnboardingApplication[] = [
   // app024 — Complete, Ready to Transfer
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-05T11:00:00"));
-    const pols = quickPolicies(26, AO, "2026-02-24T16:00:00");
+    const pols = quickPolicies(22, AO, "2026-02-24T16:00:00");
     return {
-      id: "app024", appRef: "APP-024-2026", stage: 3, status: "Ready to Transfer" as OnboardingAppStatus,
+      id: "app024", appRef: "APP-024-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
       dealerName: "Elmfield Motor Company", tradingName: "Elmfield Motors",
       companiesHouseNo: "08567890", website: "https://www.elmfieldmotors.co.uk",
       primaryContact: { name: "Rachel Hughes", email: "r.hughes@elmfield.co.uk", phone: "01onal 443300" },

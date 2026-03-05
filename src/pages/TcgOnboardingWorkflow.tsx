@@ -3,13 +3,14 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTcgOnboarding } from "@/hooks/useTcgOnboarding";
 import { OnboardingStage1 } from "@/components/tcg-onboarding/OnboardingStage1";
 import { OnboardingStage2 } from "@/components/tcg-onboarding/OnboardingStage2";
-import { OnboardingStage3 } from "@/components/tcg-onboarding/OnboardingStage3";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TcgOnboardingWorkflow() {
   const { appId, stage } = useParams();
   const location = useLocation();
   const isNew = location.pathname.endsWith("/new");
   const navigate = useNavigate();
+  const { toast } = useToast();
   const {
     current,
     saving,
@@ -31,12 +32,22 @@ export default function TcgOnboardingWorkflow() {
     }
   }, [appId, isNew, current, startNew, loadApp]);
 
-  const currentStage = stage ? parseInt(stage.replace("stage-", "")) as 1 | 2 | 3 : 1;
+  const currentStage = stage ? parseInt(stage.replace("stage-", "")) as 1 | 2 : 1;
 
-  const handleNavigate = (s: 1 | 2 | 3) => {
+  const handleNavigate = (s: 1 | 2) => {
     if (!current) return;
     setStage(s);
     navigate(`/tcg/onboarding/${current.id}/stage-${s}`, { replace: true });
+  };
+
+  const handleMarkReady = () => {
+    if (!current) return;
+    markReadyToTransfer();
+    toast({
+      title: "Ready to Transfer",
+      description: `${current.tradingName || current.dealerName} has been marked as ready to transfer to the lender.`,
+    });
+    navigate("/tcg/onboarding");
   };
 
   if (!current) {
@@ -56,26 +67,15 @@ export default function TcgOnboardingWorkflow() {
     );
   }
 
-  if (currentStage === 2) {
-    return (
-      <OnboardingStage2
-        app={current}
-        onUpdate={updateCurrent}
-        onBack={() => handleNavigate(1)}
-        onContinue={() => handleNavigate(3)}
-        onNavigate={handleNavigate}
-        saving={saving}
-      />
-    );
-  }
-
   return (
-    <OnboardingStage3
+    <OnboardingStage2
       app={current}
       onUpdate={updateCurrent}
       onBack={() => handleNavigate(1)}
+      onContinue={() => {}}
       onNavigate={handleNavigate}
-      onMarkReady={markReadyToTransfer}
+      saving={saving}
+      onMarkReady={handleMarkReady}
     />
   );
 }
