@@ -994,14 +994,14 @@ export const seederApplications: OnboardingApplication[] = [
 // ── Stats helper ─────────────────────────────────────────────
 
 export function getOnboardingStats(apps: OnboardingApplication[]) {
-  const active = apps.filter((a) => a.status !== "Ready to Transfer" && a.status !== "Archived");
+  const active = apps.filter((a) => a.status !== "Complete" && a.status !== "Archived");
   const totalPolicies = apps.reduce((s, a) => s + a.policies.length, 0);
   const answeredPolicies = apps.reduce((s, a) => s + a.policies.filter((p) => p.dealerHasIt !== null).length, 0);
   return {
     total: apps.length,
     drafts: apps.filter((a) => a.status === "Draft").length,
     inProgress: apps.filter((a) => a.status === "In Progress").length,
-    readyToTransfer: apps.filter((a) => a.status === "Ready to Transfer").length,
+    complete: apps.filter((a) => a.status === "Complete").length,
     archived: apps.filter((a) => a.status === "Archived").length,
     avgPolicyCompletion: totalPolicies > 0 ? Math.round((answeredPolicies / totalPolicies) * 100) : 0,
     unassigned: apps.filter((a) => a.assignedTo === "Unassigned").length,
