@@ -66,6 +66,7 @@ export interface OnboardingApplication {
   platformDndClear: boolean;
   notes: string;
   history: HistoryEntry[];
+  archiveReason?: string;
 }
 
 // ── Pre-Screen Definitions ───────────────────────────────────
