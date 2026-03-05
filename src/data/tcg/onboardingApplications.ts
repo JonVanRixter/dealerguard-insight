@@ -891,7 +891,7 @@ export function getOnboardingStats(apps: OnboardingApplication[]) {
     total: apps.length,
     drafts: apps.filter((a) => a.status === "Draft").length,
     inProgress: apps.filter((a) => a.status === "In Progress").length,
-    complete: apps.filter((a) => a.status === "Complete").length,
+    
     readyToTransfer: apps.filter((a) => a.status === "Ready to Transfer").length,
     archived: apps.filter((a) => a.status === "Archived").length,
     avgPolicyCompletion: totalPolicies > 0 ? Math.round((answeredPolicies / totalPolicies) * 100) : 0,

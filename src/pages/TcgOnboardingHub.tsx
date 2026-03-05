@@ -303,7 +303,7 @@ export default function TcgOnboardingHub() {
                       <TableRow key={app.id}>
                         <TableCell className="font-mono text-sm">{app.appRef}</TableCell>
                         <TableCell className="font-medium">{app.dealerName}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{archivedApps.get(app.id) || "—"}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{archivedApps.get(app.id) || app.archiveReason || "—"}</TableCell>
                         <TableCell className="text-sm">{app.requestingLenderName}</TableCell>
                       </TableRow>
                     ))}

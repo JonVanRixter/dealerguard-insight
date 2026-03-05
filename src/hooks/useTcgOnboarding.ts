@@ -140,9 +140,7 @@ export function useTcgOnboarding() {
       const policies = partial.policies || next.policies;
       next.completionStatus = computeCompletion(checks, policies, next);
       // Auto-set status
-      if (next.completionStatus.onboardingComplete && next.status === "In Progress") {
-        next.status = "Complete";
-      }
+      // No auto-status change on completion — user must explicitly mark ready
       if (next.status === "Draft" && (next.dealerName || next.companiesHouseNo)) {
         next.status = "In Progress";
       }

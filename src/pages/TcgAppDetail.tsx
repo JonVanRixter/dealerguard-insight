@@ -249,7 +249,6 @@ export default function TcgAppDetail() {
               <Badge className={
                 app.status === "Draft" ? "bg-muted text-muted-foreground" :
                 app.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
-                app.status === "Complete" ? "bg-outcome-pass-bg text-outcome-pass-text" :
                 app.status === "Ready to Transfer" ? "bg-outcome-pass-bg text-outcome-pass-text" :
                 "bg-muted text-muted-foreground"
               }>{app.status}</Badge>
