@@ -365,14 +365,7 @@ export default function TcgOnboardingHub() {
                       <TableCell className="text-sm">{app.assignedTo}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{new Date(app.lastUpdated).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}</TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={e => { e.stopPropagation(); openApp(app); }}>Open</Button>
-                          {app.status === "Ready to Transfer" && (
-                            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={e => { e.stopPropagation(); setTransferApp(app); }}>
-                              <Send className="w-3 h-3" /> Transfer
-                            </Button>
-                          )}
-                        </div>
+                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={e => { e.stopPropagation(); openApp(app); }}>Open</Button>
                       </TableCell>
                     </TableRow>
                   ))}
