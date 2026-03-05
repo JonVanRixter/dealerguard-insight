@@ -397,7 +397,7 @@ export const seederApplications: OnboardingApplication[] = [
     const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-06T10:00:00"));
     const pols = quickPolicies(22, AO, "2026-02-20T14:00:00", true);
     return {
-      id: "app007", appRef: "APP-007-2026", stage: 3, status: "Complete" as OnboardingAppStatus,
+      id: "app007", appRef: "APP-007-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
       dealerName: "Sterling Park Autos", tradingName: "Sterling Park",
       companiesHouseNo: "11234567", website: "https://www.sterlingparkautos.co.uk",
       primaryContact: { name: "Gareth Lloyd", email: "g.lloyd@sterlingpark.co.uk", phone: "029 2047 1100" },
