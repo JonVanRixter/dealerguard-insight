@@ -192,22 +192,6 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
                               </RadioGroup>
                             </div>
 
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">Notes</Label>
-                              <Textarea
-                                rows={2}
-                                value={pol.notes}
-                                onChange={(e) => updatePolicy(pol.policyId, "notes", e.target.value)}
-                                placeholder="Record what was confirmed, who you spoke to..."
-                                className="text-sm"
-                              />
-                              {validationErrors[pol.policyId] && (
-                                <p className="text-xs text-destructive flex items-center gap-1">
-                                  <AlertTriangle className="w-3 h-3" /> {validationErrors[pol.policyId]}
-                                </p>
-                              )}
-                            </div>
-
                             {polAnswered && (
                               <p className="text-xs text-muted-foreground flex items-center gap-1">
                                 {pol.dealerHasIt ? (
