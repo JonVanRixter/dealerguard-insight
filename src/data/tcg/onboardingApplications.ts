@@ -521,7 +521,7 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app012 — Stage 1, In Progress (was Rejected — FCA lapsed, now just a finding)
+  // app012 — Archived (FCA authorisation lapsed)
   (() => {
     const checks = buildPreScreenChecks({
       legalEntityStatus: { finding: "Company active on Companies House.", by: TG, at: "2026-02-12T10:00:00" },
@@ -529,7 +529,7 @@ export const seederApplications: OnboardingApplication[] = [
     });
     const pols = quickPolicies(0, "", "", true);
     return {
-      id: "app012", appRef: "APP-012-2026", stage: 1, status: "In Progress" as OnboardingAppStatus,
+      id: "app012", appRef: "APP-012-2026", stage: 1, status: "Archived" as OnboardingAppStatus,
       dealerName: "Apex Road Autos", tradingName: "Apex Road",
       companiesHouseNo: "06543210", website: "https://www.apexroadautos.co.uk",
       primaryContact: { name: "Dean Walker", email: "d.walker@apexroad.co.uk", phone: "01onal 332200" },
@@ -540,11 +540,12 @@ export const seederApplications: OnboardingApplication[] = [
       preScreenChecks: checks, policies: pols,
       completionStatus: buildCompletion(checks, pols, true),
       dndClear: true, platformDndClear: true,
-      notes: "FCA authorisation lapsed — cannot proceed. Finding recorded for lender visibility.",
+      notes: "FCA authorisation lapsed — dealer unable to proceed.",
+      archiveReason: "FCA authorisation lapsed — dealer unable to proceed",
       history: [
         { date: "2026-02-10T09:00:00", action: "Application created", user: TG },
         { date: "2026-02-12T10:00:00", action: "FCA check — authorisation lapsed. Finding recorded.", user: TG },
-        { date: "2026-02-20T14:00:00", action: "Note: Lender informed of FCA status", user: TG },
+        { date: "2026-02-20T14:00:00", action: "Application archived — FCA authorisation lapsed", user: TG },
       ],
     };
   })(),
