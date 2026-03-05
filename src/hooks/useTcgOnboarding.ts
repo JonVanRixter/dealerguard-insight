@@ -7,10 +7,11 @@ import type {
   PreScreenCheck,
   OnboardingPolicy,
   CompletionStatus,
+  SectionProgress,
 } from "@/data/tcg/onboardingApplications";
 
 // Re-export types for consuming components
-export type { OnboardingApplication, OnboardingAppStatus, PreScreenCheck, OnboardingPolicy, CompletionStatus };
+export type { OnboardingApplication, OnboardingAppStatus, PreScreenCheck, OnboardingPolicy, CompletionStatus, SectionProgress };
 export { CHECK_DEFS };
 
 // ── Blank app builder ─────────────────────────────────────────
