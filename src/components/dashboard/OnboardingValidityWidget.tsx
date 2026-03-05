@@ -26,16 +26,15 @@ export function OnboardingValidityWidget() {
 
   const pipeline = useMemo(() => {
     const active = seederApplications.filter(a => a.status !== "Ready to Transfer" && a.status !== "Archived");
-    const ready = seederApplications.filter(a => a.status === "Ready to Transfer").length;
+    const readyCount = seederApplications.filter(a => a.status === "Ready to Transfer").length;
     const unassigned = seederApplications.filter(a => a.assignedTo === "Unassigned").length;
     const drafts = seederApplications.filter(a => a.status === "Draft").length;
     const s1 = seederApplications.filter(a => a.status === "In Progress" && a.stage === 1).length;
     const s2 = seederApplications.filter(a => a.status === "In Progress" && a.stage === 2).length;
-    const ready = seederApplications.filter(a => a.status === "Ready to Transfer").length;
     const avgDays = active.length > 0
       ? (active.reduce((s, a) => s + (Date.now() - new Date(a.initiatedDate).getTime()) / 86400000, 0) / active.length).toFixed(1)
       : "0";
-    return { active: active.length, complete, unassigned, avgDays, drafts, s1, s2, ready };
+    return { active: active.length, ready: readyCount, unassigned, avgDays, drafts, s1, s2 };
   }, []);
 
   return (
