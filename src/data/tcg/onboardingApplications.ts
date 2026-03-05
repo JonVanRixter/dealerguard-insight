@@ -239,7 +239,6 @@ function buildCompletion(
   detailsComplete: boolean,
   completedBy?: string,
   completedAt?: string,
-  readyToTransfer = false
 ): CompletionStatus {
   const allChecks = checks.every((c) => c.answered);
   const allPolicies = policies.every((p) => p.dealerHasIt !== null);
@@ -259,7 +258,6 @@ function buildCompletion(
     onboardingComplete: complete,
     completedBy: complete ? (completedBy || null) : null,
     completedAt: complete ? (completedAt || null) : null,
-    readyToTransfer,
   };
 }
 
