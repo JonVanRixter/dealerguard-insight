@@ -164,7 +164,6 @@ export default function Onboarding() {
                           {stageBar(app)}
                           <div className="flex items-center justify-between text-xs">
                             <span className={app.assignedTo === "Unassigned" ? "text-outcome-pending font-medium" : "text-muted-foreground"}>👤 {app.assignedTo}</span>
-                            {daysUntilTarget(app.targetCompletionDate)}
                           </div>
                         </CardContent>
                       </Card>
