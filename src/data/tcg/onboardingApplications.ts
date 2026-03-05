@@ -66,6 +66,7 @@ export interface OnboardingApplication {
   platformDndClear: boolean;
   notes: string;
   history: HistoryEntry[];
+  archiveReason?: string;
 }
 
 // ── Pre-Screen Definitions ───────────────────────────────────
@@ -392,12 +393,12 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app007 — Complete
+  // app007 — Ready to Transfer
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-06T10:00:00"));
     const pols = quickPolicies(22, AO, "2026-02-20T14:00:00", true);
     return {
-      id: "app007", appRef: "APP-007-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
+      id: "app007", appRef: "APP-007-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
       dealerName: "Sterling Park Autos", tradingName: "Sterling Park",
       companiesHouseNo: "11234567", website: "https://www.sterlingparkautos.co.uk",
       primaryContact: { name: "Gareth Lloyd", email: "g.lloyd@sterlingpark.co.uk", phone: "029 2047 1100" },
@@ -406,14 +407,14 @@ export const seederApplications: OnboardingApplication[] = [
       initiatedBy: AO, initiatedDate: "2026-02-05T08:00:00", assignedTo: AO,
       lastUpdated: "2026-03-01T09:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-05",
       preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true, AO, "2026-03-01T09:00:00"),
+      completionStatus: buildCompletion(checks, pols, true, AO, "2026-03-01T09:00:00", true),
       dndClear: true, platformDndClear: true,
-      notes: "Full pack received — all information gathered",
+      notes: "Full pack received — all information gathered. Marked ready to transfer.",
       history: [
         { date: "2026-02-05T08:00:00", action: "Application created", user: AO },
         { date: "2026-02-06T10:00:00", action: "All pre-screen checks completed", user: AO },
         { date: "2026-02-20T14:00:00", action: "All policies confirmed", user: AO },
-        { date: "2026-03-01T09:00:00", action: "Onboarding marked complete", user: AO },
+        { date: "2026-03-01T09:00:00", action: "Marked as ready to transfer", user: AO },
       ],
     };
   })(),
@@ -494,12 +495,12 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app011 — Complete
+  // app011 — Ready to Transfer
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-04T11:00:00"));
     const pols = quickPolicies(22, TG, "2026-02-22T15:00:00");
     return {
-      id: "app011", appRef: "APP-011-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
+      id: "app011", appRef: "APP-011-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
       dealerName: "Crown Garage (Newport) Ltd", tradingName: "Crown Garage",
       companiesHouseNo: "07654321", website: "https://www.crowngarage.co.uk",
       primaryContact: { name: "Alun Davies", email: "a.davies@crowngarage.co.uk", phone: "01633 221100" },
@@ -508,19 +509,19 @@ export const seederApplications: OnboardingApplication[] = [
       initiatedBy: TG, initiatedDate: "2026-02-03T09:00:00", assignedTo: TG,
       lastUpdated: "2026-03-02T16:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-05",
       preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true, TG, "2026-03-02T16:00:00"),
+      completionStatus: buildCompletion(checks, pols, true, TG, "2026-03-02T16:00:00", true),
       dndClear: true, platformDndClear: true,
-      notes: "All clear — onboarding complete",
+      notes: "All clear — marked ready to transfer",
       history: [
         { date: "2026-02-03T09:00:00", action: "Application created", user: TG },
         { date: "2026-02-04T11:00:00", action: "All pre-screen checks completed", user: TG },
         { date: "2026-02-22T15:00:00", action: "All policies confirmed", user: TG },
-        { date: "2026-03-02T16:00:00", action: "Onboarding marked complete", user: TG },
+        { date: "2026-03-02T16:00:00", action: "Marked as ready to transfer", user: TG },
       ],
     };
   })(),
 
-  // app012 — Stage 1, In Progress (was Rejected — FCA lapsed, now just a finding)
+  // app012 — Archived (FCA authorisation lapsed)
   (() => {
     const checks = buildPreScreenChecks({
       legalEntityStatus: { finding: "Company active on Companies House.", by: TG, at: "2026-02-12T10:00:00" },
@@ -528,7 +529,7 @@ export const seederApplications: OnboardingApplication[] = [
     });
     const pols = quickPolicies(0, "", "", true);
     return {
-      id: "app012", appRef: "APP-012-2026", stage: 1, status: "In Progress" as OnboardingAppStatus,
+      id: "app012", appRef: "APP-012-2026", stage: 1, status: "Archived" as OnboardingAppStatus,
       dealerName: "Apex Road Autos", tradingName: "Apex Road",
       companiesHouseNo: "06543210", website: "https://www.apexroadautos.co.uk",
       primaryContact: { name: "Dean Walker", email: "d.walker@apexroad.co.uk", phone: "01onal 332200" },
@@ -539,11 +540,12 @@ export const seederApplications: OnboardingApplication[] = [
       preScreenChecks: checks, policies: pols,
       completionStatus: buildCompletion(checks, pols, true),
       dndClear: true, platformDndClear: true,
-      notes: "FCA authorisation lapsed — cannot proceed. Finding recorded for lender visibility.",
+      notes: "FCA authorisation lapsed — dealer unable to proceed.",
+      archiveReason: "FCA authorisation lapsed — dealer unable to proceed",
       history: [
         { date: "2026-02-10T09:00:00", action: "Application created", user: TG },
         { date: "2026-02-12T10:00:00", action: "FCA check — authorisation lapsed. Finding recorded.", user: TG },
-        { date: "2026-02-20T14:00:00", action: "Note: Lender informed of FCA status", user: TG },
+        { date: "2026-02-20T14:00:00", action: "Application archived — FCA authorisation lapsed", user: TG },
       ],
     };
   })(),
@@ -648,12 +650,12 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app017 — Complete
+  // app017 — Ready to Transfer
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-02T14:00:00"));
     const pols = quickPolicies(22, TG, "2026-02-20T16:00:00");
     return {
-      id: "app017", appRef: "APP-017-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
+      id: "app017", appRef: "APP-017-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
       dealerName: "Pennfield Cars Ltd", tradingName: "Pennfield Cars",
       companiesHouseNo: "08901234", website: "https://www.pennfieldcars.co.uk",
       primaryContact: { name: "David Rees", email: "d.rees@pennfield.co.uk", phone: "01792 445500" },
@@ -662,14 +664,14 @@ export const seederApplications: OnboardingApplication[] = [
       initiatedBy: TG, initiatedDate: "2026-02-01T09:00:00", assignedTo: TG,
       lastUpdated: "2026-03-01T15:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-04",
       preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true, TG, "2026-03-01T15:00:00"),
+      completionStatus: buildCompletion(checks, pols, true, TG, "2026-03-01T15:00:00", true),
       dndClear: true, platformDndClear: true,
-      notes: "Insurance products confirmed — all information gathered",
+      notes: "Insurance products confirmed — all information gathered. Marked ready to transfer.",
       history: [
         { date: "2026-02-01T09:00:00", action: "Application created", user: TG },
         { date: "2026-02-02T14:00:00", action: "All pre-screen checks completed", user: TG },
         { date: "2026-02-20T16:00:00", action: "All policies confirmed", user: TG },
-        { date: "2026-03-01T15:00:00", action: "Onboarding marked complete", user: TG },
+        { date: "2026-03-01T15:00:00", action: "Marked as ready to transfer", user: TG },
       ],
     };
   })(),
@@ -770,7 +772,7 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app022 — Stage 1, In Progress (was Rejected — sanctions, now just a finding)
+  // app022 — Archived (Director sanctions match confirmed)
   (() => {
     const checks = buildPreScreenChecks({
       legalEntityStatus: { finding: "Company active.", by: AO, at: "2026-02-14T10:00:00" },
@@ -781,7 +783,7 @@ export const seederApplications: OnboardingApplication[] = [
     });
     const pols = quickPolicies(0, "", "", true);
     return {
-      id: "app022", appRef: "APP-022-2026", stage: 1, status: "In Progress" as OnboardingAppStatus,
+      id: "app022", appRef: "APP-022-2026", stage: 1, status: "Archived" as OnboardingAppStatus,
       dealerName: "Clearway Cars Ltd", tradingName: "Clearway Cars",
       companiesHouseNo: "09012345", website: "https://www.clearwaycars.co.uk",
       primaryContact: { name: "Brian Cole", email: "b.cole@clearway.co.uk", phone: "020 7946 8800" },
@@ -792,11 +794,12 @@ export const seederApplications: OnboardingApplication[] = [
       preScreenChecks: checks, policies: pols,
       completionStatus: buildCompletion(checks, pols, true),
       dndClear: false, platformDndClear: true,
-      notes: "Director sanctions flag confirmed — finding recorded for lender",
+      notes: "Director sanctions match confirmed — archived following DND check",
+      archiveReason: "Director sanctions match confirmed — archived following DND check",
       history: [
         { date: "2026-02-14T09:00:00", action: "Application created", user: AO },
         { date: "2026-02-16T10:00:00", action: "Sanctions flag confirmed on director — finding recorded", user: AO },
-        { date: "2026-02-22T11:00:00", action: "Lender notified of sanctions finding", user: AO },
+        { date: "2026-02-22T11:00:00", action: "Application archived — director sanctions match confirmed", user: AO },
       ],
     };
   })(),
@@ -881,15 +884,16 @@ export const seederApplications: OnboardingApplication[] = [
 // ── Stats helper ─────────────────────────────────────────────
 
 export function getOnboardingStats(apps: OnboardingApplication[]) {
-  const active = apps.filter((a) => a.status !== "Complete" && a.status !== "Ready to Transfer");
+  const active = apps.filter((a) => a.status !== "Ready to Transfer" && a.status !== "Archived");
   const totalPolicies = apps.reduce((s, a) => s + a.policies.length, 0);
-  const answeredPolicies = apps.reduce((s, a) => s + a.policies.filter((p) => p.dealerHasIt !== null).length, 0);
+  const answeredPolicies = apps.reduce((s, a) => s + a.policies.filter((p) => p.dealerHasIt !== null && p.notes.trim() !== "").length, 0);
   return {
     total: apps.length,
     drafts: apps.filter((a) => a.status === "Draft").length,
     inProgress: apps.filter((a) => a.status === "In Progress").length,
     complete: apps.filter((a) => a.status === "Complete").length,
     readyToTransfer: apps.filter((a) => a.status === "Ready to Transfer").length,
+    archived: apps.filter((a) => a.status === "Archived").length,
     avgPolicyCompletion: totalPolicies > 0 ? Math.round((answeredPolicies / totalPolicies) * 100) : 0,
     unassigned: apps.filter((a) => a.assignedTo === "Unassigned").length,
   };
