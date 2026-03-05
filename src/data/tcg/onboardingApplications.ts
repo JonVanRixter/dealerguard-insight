@@ -393,12 +393,12 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app007 — Complete
+  // app007 — Ready to Transfer
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-06T10:00:00"));
     const pols = quickPolicies(22, AO, "2026-02-20T14:00:00", true);
     return {
-      id: "app007", appRef: "APP-007-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
+      id: "app007", appRef: "APP-007-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
       dealerName: "Sterling Park Autos", tradingName: "Sterling Park",
       companiesHouseNo: "11234567", website: "https://www.sterlingparkautos.co.uk",
       primaryContact: { name: "Gareth Lloyd", email: "g.lloyd@sterlingpark.co.uk", phone: "029 2047 1100" },
@@ -407,14 +407,14 @@ export const seederApplications: OnboardingApplication[] = [
       initiatedBy: AO, initiatedDate: "2026-02-05T08:00:00", assignedTo: AO,
       lastUpdated: "2026-03-01T09:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-05",
       preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true, AO, "2026-03-01T09:00:00"),
+      completionStatus: buildCompletion(checks, pols, true, AO, "2026-03-01T09:00:00", true),
       dndClear: true, platformDndClear: true,
-      notes: "Full pack received — all information gathered",
+      notes: "Full pack received — all information gathered. Marked ready to transfer.",
       history: [
         { date: "2026-02-05T08:00:00", action: "Application created", user: AO },
         { date: "2026-02-06T10:00:00", action: "All pre-screen checks completed", user: AO },
         { date: "2026-02-20T14:00:00", action: "All policies confirmed", user: AO },
-        { date: "2026-03-01T09:00:00", action: "Onboarding marked complete", user: AO },
+        { date: "2026-03-01T09:00:00", action: "Marked as ready to transfer", user: AO },
       ],
     };
   })(),
