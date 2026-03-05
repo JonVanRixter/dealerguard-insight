@@ -163,6 +163,16 @@ export default function TcgAppDetail() {
     toast({ title: "Note added" });
   };
 
+  const handleArchive = () => {
+    if (!archiveReason.trim()) return;
+    updateApp({ status: "Archived" as any });
+    addHistory(`Application archived: ${archiveReason.trim()}`);
+    toast({ title: "Archived", description: `${app.dealerName} has been archived.` });
+    setShowArchiveModal(false);
+    setArchiveReason("");
+    setTimeout(() => navigate("/tcg/onboarding"), 1500);
+  };
+
   const handleCompleteStage1 = () => {
     updateApp({ stage: 2, status: "In Progress" });
     addHistory("Pre-screen checks completed — proceeding to Policies");
