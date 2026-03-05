@@ -156,6 +156,15 @@ export function useTcgOnboarding() {
       if (next.status === "Draft" && (next.dealerName || next.companiesHouseNo)) {
         next.status = "In Progress";
       }
+      // Auto-complete when all checks and policies are done
+      if (next.completionStatus.onboardingComplete && next.status !== "Complete" && next.status !== "Archived") {
+        next.status = "Complete";
+        next.completionStatus = {
+          ...next.completionStatus,
+          completedBy: "Tom Griffiths",
+          completedAt: new Date().toISOString(),
+        };
+      }
       // Debounced persist
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
