@@ -640,7 +640,7 @@ export default function PreOnboarding() {
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {tcg.applications.filter((a) => a.status !== "Ready to Transfer").map((app) => (
+                                {tcg.applications.filter((a) => a.status !== "Complete").map((app) => (
                                   <TableRow key={app.id}>
                                     <TableCell className="font-mono text-sm">{app.appRef}</TableCell>
                                     <TableCell>{app.dealerName || "—"}</TableCell>
