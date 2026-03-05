@@ -18,7 +18,6 @@ export default function TcgOnboardingWorkflow() {
     loadApp,
     updateCurrent,
     setStage,
-    markReadyToTransfer,
     checkDuplicate,
   } = useTcgOnboarding();
 
