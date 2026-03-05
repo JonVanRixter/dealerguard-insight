@@ -30,11 +30,11 @@ function daysUntilTarget(target: string) {
 }
 
 function preScreenIcon(app: OnboardingApplication) {
-  const checks = Object.values(app.preScreenChecks);
-  const answered = checks.filter(c => c.answered).length;
+  const answered = app.checks.filter(c => c.answered).length;
+  const total = app.checks.length;
   if (answered === 0) return null;
-  if (answered === checks.length) return <Badge className="bg-outcome-pass-bg text-outcome-pass-text text-[10px]">✓ {answered}/{checks.length}</Badge>;
-  return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-[10px]">{answered}/{checks.length}</Badge>;
+  if (answered === total) return <Badge className="bg-outcome-pass-bg text-outcome-pass-text text-[10px]">✓ {answered}/{total}</Badge>;
+  return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-[10px]">{answered}/{total}</Badge>;
 }
 
 function statusBadge(status: OnboardingAppStatus) {
