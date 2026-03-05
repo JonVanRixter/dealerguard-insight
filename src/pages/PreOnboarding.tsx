@@ -422,14 +422,13 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
 /* ------------------------------------------------------------------ */
 /*  TCG Hub helpers                                                    */
 /* ------------------------------------------------------------------ */
-function tcgStatusPill(status: AppStatus) {
-  const colorClass = status === "draft" ? "bg-muted text-muted-foreground" :
-    status === "in_progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
-    status === "pending_approval" ? "bg-outcome-pending-bg text-outcome-pending-text" :
-    status === "approved" ? "bg-outcome-pass-bg text-outcome-pass-text" :
-    "bg-outcome-fail-bg text-outcome-fail-text";
-  const labels: Record<AppStatus, string> = { draft: "Draft", in_progress: "In Progress", pending_approval: "Pending Approval", approved: "Approved", rejected: "Rejected" };
-  return <Badge className={colorClass}>{labels[status]}</Badge>;
+function tcgStatusPill(status: OnboardingAppStatus) {
+  const colorClass = status === "Draft" ? "bg-muted text-muted-foreground" :
+    status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
+    status === "Complete" ? "bg-outcome-pass-bg text-outcome-pass-text" :
+    status === "Ready to Transfer" ? "bg-primary/20 text-primary" :
+    "bg-muted text-muted-foreground";
+  return <Badge className={colorClass}>{status}</Badge>;
 }
 
 function daysRemainingBadge(validUntil: string | null) {
