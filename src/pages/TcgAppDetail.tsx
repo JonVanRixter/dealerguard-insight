@@ -407,7 +407,7 @@ export default function TcgAppDetail() {
                               <div className="flex items-center gap-2 flex-wrap">
                                 <CheckIdBadge id={check.checkId} />
                                 <p className="text-sm font-medium">{check.label}</p>
-                                <RiskBadge rating={check.riskRating} />
+                                
                               </div>
                               <div className="bg-muted/50 rounded-md p-3">
                                 <p className="text-xs font-medium text-muted-foreground mb-1">Objective:</p>

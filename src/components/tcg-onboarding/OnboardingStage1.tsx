@@ -114,7 +114,7 @@ function CheckCard({
         <div className="p-4 space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
             <CheckIdBadge id={check.checkId} />
-            <RiskBadge rating={check.riskRating} />
+            
           </div>
 
           <p className="text-sm font-medium">{check.label}</p>
