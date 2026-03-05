@@ -495,12 +495,12 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app011 — Complete
+  // app011 — Ready to Transfer
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-04T11:00:00"));
     const pols = quickPolicies(22, TG, "2026-02-22T15:00:00");
     return {
-      id: "app011", appRef: "APP-011-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
+      id: "app011", appRef: "APP-011-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
       dealerName: "Crown Garage (Newport) Ltd", tradingName: "Crown Garage",
       companiesHouseNo: "07654321", website: "https://www.crowngarage.co.uk",
       primaryContact: { name: "Alun Davies", email: "a.davies@crowngarage.co.uk", phone: "01633 221100" },
@@ -509,14 +509,14 @@ export const seederApplications: OnboardingApplication[] = [
       initiatedBy: TG, initiatedDate: "2026-02-03T09:00:00", assignedTo: TG,
       lastUpdated: "2026-03-02T16:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-05",
       preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true, TG, "2026-03-02T16:00:00"),
+      completionStatus: buildCompletion(checks, pols, true, TG, "2026-03-02T16:00:00", true),
       dndClear: true, platformDndClear: true,
-      notes: "All clear — onboarding complete",
+      notes: "All clear — marked ready to transfer",
       history: [
         { date: "2026-02-03T09:00:00", action: "Application created", user: TG },
         { date: "2026-02-04T11:00:00", action: "All pre-screen checks completed", user: TG },
         { date: "2026-02-22T15:00:00", action: "All policies confirmed", user: TG },
-        { date: "2026-03-02T16:00:00", action: "Onboarding marked complete", user: TG },
+        { date: "2026-03-02T16:00:00", action: "Marked as ready to transfer", user: TG },
       ],
     };
   })(),
