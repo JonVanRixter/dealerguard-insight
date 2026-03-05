@@ -17,7 +17,7 @@ import { CreditSafeSearch } from "@/components/onboarding/CreditSafeSearch";
 import { FcaRegisterCard } from "@/components/dealer/FcaRegisterCard";
 import { DealerEnrichment } from "@/components/onboarding/DealerEnrichment";
 import { useOnboardingPersistence, type SegData } from "@/hooks/useOnboardingPersistence";
-import { useTcgOnboarding, type TcgOnboardingApp, type AppStatus } from "@/hooks/useTcgOnboarding";
+import { useTcgOnboarding, type OnboardingApplication, type OnboardingAppStatus } from "@/hooks/useTcgOnboarding";
 import { getLenderName } from "@/data/tcg/lenders";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
