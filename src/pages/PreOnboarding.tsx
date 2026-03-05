@@ -425,8 +425,8 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
 function tcgStatusPill(status: OnboardingAppStatus) {
   const colorClass = status === "Draft" ? "bg-muted text-muted-foreground" :
     status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
-    status === "Complete" ? "bg-outcome-pass-bg text-outcome-pass-text" :
     status === "Ready to Transfer" ? "bg-primary/20 text-primary" :
+    status === "Archived" ? "bg-muted text-muted-foreground/60" :
     "bg-muted text-muted-foreground";
   return <Badge className={colorClass}>{status}</Badge>;
 }
