@@ -157,7 +157,7 @@ export function useTcgOnboarding() {
     });
   }, []);
 
-  const setStage = useCallback((stage: 1 | 2 | 3) => {
+  const setStage = useCallback((stage: 1 | 2) => {
     updateCurrent({ stage, status: "In Progress" });
   }, [updateCurrent]);
 

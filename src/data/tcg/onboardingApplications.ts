@@ -296,7 +296,7 @@ export const seederApplications: OnboardingApplication[] = [
   // app003 — Complete and Ready to Transfer
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-11T14:00:00"));
-    const pols = quickPolicies(26, TG, "2026-02-25T16:00:00");
+    const pols = quickPolicies(22, TG, "2026-02-25T16:00:00");
     return {
       id: "app003", appRef: "APP-003-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
       dealerName: "Highfield Motor Company", tradingName: "Highfield Motors",
