@@ -473,10 +473,39 @@ export default function TcgAppDetail() {
                   </Button>
                 )}
               </div>
+
+              <div className="border-t pt-3">
+                <Button variant="outline" size="sm" className="w-full gap-1 text-xs text-muted-foreground hover:text-destructive" onClick={() => setShowArchiveModal(true)}>
+                  <Archive className="w-3 h-3" /> Archive Application
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Archive modal */}
+      <Dialog open={showArchiveModal} onOpenChange={open => { if (!open) { setShowArchiveModal(false); setArchiveReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Archive Application</DialogTitle>
+            <DialogDescription>
+              This application will be removed from the pipeline board. Please provide a reason for archiving.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+              <p className="text-sm font-semibold">{app.dealerName}</p>
+              <p className="text-xs text-muted-foreground">{app.appRef}</p>
+            </div>
+            <Textarea placeholder="Reason for archiving (required)..." value={archiveReason} onChange={e => setArchiveReason(e.target.value)} className="min-h-[80px]" />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setShowArchiveModal(false); setArchiveReason(""); }}>Cancel</Button>
+              <Button variant="destructive" onClick={handleArchive} disabled={!archiveReason.trim()} className="gap-1"><Archive className="w-4 h-4" /> Archive</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
