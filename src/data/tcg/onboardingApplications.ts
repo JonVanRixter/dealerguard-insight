@@ -301,35 +301,24 @@ const S7 = ["s7_c1", "s7_c2", "s7_c3", "s7_c4"];
 const S8 = ["s8_c1"];
 
 export const seederApplications: OnboardingApplication[] = [
-  // app001 — Stage 2, In Progress, 26/29 checks, 18/26 policies
+  // app001 — Stage 1, In Progress, S1 fully done (5/5), S2 partial (2/4), S3-S8 unanswered = 7/29
   (() => {
-    const checks = buildChecks({
-      ...allChecksAnswered(TG, "2026-02-18T10:15:00", {
-        s1_c1: "Company confirmed active on Companies House. Incorporated 14 Mar 2018. 2 directors, 1 PSC on record.",
-        s1_c2: "Trading name 'Fordham Motors' consistent across FCA register, ICO and website homepage.",
-        s1_c3: "Lee Fordham (Director / PSC) and Rachel Fordham (Director) identified. No undisclosed changes in last 24 months.",
-        s1_c4: "No sanctions hits. No adverse media identified. PEP check clear for both directors.",
-        s2_c1: "Confirmed directly authorised under FCA ref 812344. Permissions include credit broking and insurance distribution.",
-        s5_c5: "Bank detail controls in place. Payout mismatch detection confirmed via lender platform.",
-      }),
-      // Remove 3 unanswered
-      ...(() => { const r: Record<string, FindingEntry> = {}; delete r.s6_c2; delete r.s7_c3; delete r.s8_c1; return r; })(),
-    });
-    // Actually need to remove 3 checks. Let me do it properly:
-    const answers = allChecksAnswered(TG, "2026-02-18T10:15:00", {
-      s1_c1: "Company confirmed active on Companies House. Incorporated 14 Mar 2018. 2 directors, 1 PSC on record.",
-      s1_c2: "Trading name 'Fordham Motors' consistent across FCA register, ICO and website homepage.",
-      s1_c3: "Lee Fordham (Director / PSC) and Rachel Fordham (Director) identified. No undisclosed changes in last 24 months.",
-      s1_c4: "No sanctions hits. No adverse media identified. PEP check clear for both directors.",
-      s2_c1: "Confirmed directly authorised under FCA ref 812344. Permissions include credit broking and insurance distribution.",
-    });
-    delete answers.s6_c2;
-    delete answers.s7_c3;
-    delete answers.s8_c1;
-    const chks = buildChecks(answers);
-    const pols = quickPolicies(18, TG, "2026-02-20T11:00:00");
+    const chks = buildChecks(partialChecks(
+      [...S1, "s2_c1", "s2_c2"],
+      TG, "2026-02-18T10:15:00",
+      {
+        s1_c1: "Company confirmed active on Companies House. Incorporated 14 Mar 2018. No dissolution notices. Filing history up to date.",
+        s1_c2: "Trading name 'Fordham Motors' consistent across FCA register (ref 812344), ICO registration (ZA458923) and website homepage.",
+        s1_c3: "Lee Fordham (Director / PSC since incorporation) and Rachel Fordham (Director since 2019). No changes in last 24 months. No PSC warnings.",
+        s1_c4: "No sanctions hits on OFSI or EU consolidated list. No adverse media identified via Experian AML screening. PEP check clear for Lee Fordham and Rachel Fordham. Checked 18 Feb 2026.",
+        s1_c5: "Self-declaration form received from Lee Fordham dated 15 Feb 2026. No criminal or regulatory sanctions disclosed. Cross-referenced with FCA final notices — none found.",
+        s2_c1: "Confirmed directly authorised under FCA ref 812344. Permissions include credit broking (consumer hire, hire purchase). Not an AR. Consumer credit permissions active since 2019.",
+        s2_c2: "SAF training completed by Lee Fordham (Jan 2026) and Rachel Fordham (Jan 2026). Lender-specific competence for Apex Motor Finance confirmed via certificate on file. No outstanding training requirements.",
+      }
+    ));
+    const pols = quickPolicies(0, TG, "2026-02-20T11:00:00"); // no policies started yet
     return {
-      id: "app001", appRef: "APP-001-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
+      id: "app001", appRef: "APP-001-2026", stage: 1, status: "In Progress" as OnboardingAppStatus,
       dealerName: "Fordham Motor Group Ltd", tradingName: "Fordham Motors",
       companiesHouseNo: "07391024", website: "https://www.fordhammotors.co.uk",
       primaryContact: { name: "Lee Fordham", email: "l.fordham@fordhammotors.co.uk", phone: "01443 882200" },
@@ -340,12 +329,12 @@ export const seederApplications: OnboardingApplication[] = [
       checks: chks, policies: pols,
       completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
-      notes: "26/29 checks done. Social media, root cause analysis and conduct oversight checks outstanding.",
+      notes: "Corporate Governance section complete. Permissions in progress — SMF and cross-reference checks outstanding.",
       history: [
         { date: "2026-02-18T09:00:00", action: "Application created", user: TG },
-        { date: "2026-02-18T10:50:00", action: "26 of 29 checks completed — 3 outstanding", user: TG },
-        { date: "2026-02-20T14:00:00", action: "Stage 2 started — policy framework in progress", user: TG },
-        { date: "2026-02-24T14:30:00", action: "Note added: Dealer chased re outstanding policies", user: TG },
+        { date: "2026-02-18T10:50:00", action: "Section 1 (Corporate Governance) — all 5 checks completed", user: TG },
+        { date: "2026-02-18T11:20:00", action: "Section 2 — FCA authorisation and competence checks completed (2/4)", user: TG },
+        { date: "2026-02-24T14:30:00", action: "Note added: Awaiting SMF allocation details from dealer", user: TG },
       ],
     };
   })(),
@@ -375,9 +364,39 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app003 — Ready to Transfer
+  // app003 — Ready to Transfer, all 29 checks with realistic findings
   (() => {
-    const chks = buildChecks(allChecksAnswered(TG, "2026-02-11T14:00:00"));
+    const chks = buildChecks(allChecksAnswered(TG, "2026-02-11T14:00:00", {
+      s1_c1: "Company active on Companies House. Incorporated 22 Jun 2015. Filing history current. No dissolution or striking-off notices.",
+      s1_c2: "Trading as 'Highfield Motors' — confirmed consistent across FCA register (ref 798211), ICO registration (ZA512834) and website.",
+      s1_c3: "Richard Price (Director/PSC since incorporation), Sarah Price (Director since 2017). No governance changes in 24 months.",
+      s1_c4: "No sanctions matches on OFSI, EU or UN lists. No adverse media via Experian AML. PEP clear for both directors. Screened 11 Feb 2026.",
+      s1_c5: "Self-declaration received from Richard Price (10 Feb 2026). No criminal or regulatory sanctions disclosed. Cross-checked FCA final notices — nil.",
+      s2_c1: "Directly authorised under FCA ref 798211. Permissions: credit broking (HP, PCP, personal loan). Consumer credit active since 2016. Not an AR.",
+      s2_c2: "SAF training completed by Richard Price (Dec 2025) and Sarah Price (Dec 2025). Apex-specific competence module completed Jan 2026. Evidence on file.",
+      s2_c3: "Richard Price allocated as SMF holder for compliance oversight. Scope covers all consumer credit activity. Last reviewed Nov 2025.",
+      s2_c4: "Director names, trading name 'Highfield Motors' and registered address match across Companies House, FCA register and dealer website. No discrepancies.",
+      s3_c1: "Pre-contract disclosures provided via standardised pack before agreement. Includes SECCI, privacy notice and right to withdraw. Process confirmed by DP.",
+      s3_c2: "Affordability checks conducted per Apex policy using income verification and ONS data. Process confirmed. Sample checked — compliant.",
+      s4_c1: "APR benchmarked quarterly against aggregated market data from iVendi platform. Current median APR 8.9% vs benchmark 9.2%. Within tolerance.",
+      s4_c2: "Product range (HP, PCP) designed for target market — used car buyers £8k–£25k. No evidence of unsuitable product recommendations.",
+      s4_c3: "Customers receive written summary of key terms at point of sale. Staff trained on plain-language explanations. Mystery shop confirmed understanding.",
+      s4_c4: "Post-sale support via phone (Mon–Sat 9–5), email (24h response SLA) and in-person. No complaints about accessibility in last 12 months.",
+      s4_c5: "Vulnerability identification process uses TEXAS model at application. Staff trained annually. 3 vulnerability cases recorded in last 6 months — all handled appropriately.",
+      s5_c1: "KYC/IDV completed for all applicants via Experian Identity Check. Process automated through lender platform. Pass rate 94%.",
+      s5_c2: "Sanctions and PEP screening run automatically at application via Experian AML module. No hits in last 12 months.",
+      s5_c3: "Device fingerprinting and IP geolocation monitoring active via iVendi platform. Anomaly alerts reviewed daily by operations team.",
+      s5_c4: "Velocity monitoring in place — flags >2 applications from same device/email in 24h period. 2 flags in last quarter, both resolved as legitimate.",
+      s5_c5: "Bank detail mismatch detection active via lender platform. Payout destination verified against applicant bank details. No mismatches in Q4.",
+      s5_c6: "OCR validation on uploaded documents vs keyed application data. Cloning fingerprint detection active. No fraudulent applications identified.",
+      s6_c1: "Website reviewed 11 Feb. Representative APR displayed correctly (9.9% APR). Risk warnings present. Privacy policy dated Jan 2026. Cookie consent via OneTrust — compliant.",
+      s6_c2: "Social media reviewed (Facebook, Instagram). No financial promotion posts identified. Dealer confirmed social media policy prohibits finance advertising without compliance review.",
+      s7_c1: "Customer comms via email and phone. All calls recorded and retained 12 months. Email correspondence retained in CRM. No use of WhatsApp or SMS for regulated comms.",
+      s7_c2: "12 complaints received in last 12 months (0.8% of applications). Benchmarked against 1.2% sector average. Google reviews 4.4/5 (186 reviews). Sentiment positive.",
+      s7_c3: "Root cause analysis conducted quarterly. Last review identified documentation delays as primary theme. Remediation: new digital document upload flow implemented Jan 2026.",
+      s7_c4: "TCG complaints questionnaire completed 8 Feb 2026. No material findings. Minor recommendation: formalise escalation timeline documentation.",
+      s8_c1: "Arrears referral patterns reviewed. 2.1% early arrears rate (30+ days) vs 2.8% portfolio average. No concerning dealer-level trends. Forbearance referral process documented.",
+    }));
     const pols = quickPolicies(22, TG, "2026-02-25T16:00:00");
     return {
       id: "app003", appRef: "APP-003-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
