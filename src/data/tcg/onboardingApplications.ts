@@ -829,9 +829,9 @@ export const seederApplications: OnboardingApplication[] = [
   // app024 — Complete, Ready to Transfer
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-05T11:00:00"));
-    const pols = quickPolicies(26, AO, "2026-02-24T16:00:00");
+    const pols = quickPolicies(22, AO, "2026-02-24T16:00:00");
     return {
-      id: "app024", appRef: "APP-024-2026", stage: 3, status: "Ready to Transfer" as OnboardingAppStatus,
+      id: "app024", appRef: "APP-024-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
       dealerName: "Elmfield Motor Company", tradingName: "Elmfield Motors",
       companiesHouseNo: "08567890", website: "https://www.elmfieldmotors.co.uk",
       primaryContact: { name: "Rachel Hughes", email: "r.hughes@elmfield.co.uk", phone: "01onal 443300" },
