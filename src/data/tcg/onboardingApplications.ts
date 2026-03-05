@@ -29,7 +29,15 @@ export interface OnboardingPolicy {
   answeredAt: string | null;
 }
 
+export interface SectionProgress {
+  answered: number;
+  total: number;
+}
+
 export interface CompletionStatus {
+  checksAnswered: number;
+  checksTotal: number;
+  sectionProgress: Record<string, SectionProgress>;
   allPreScreenChecksAnswered: boolean;
   allPoliciesAnswered: boolean;
   dealerDetailsComplete: boolean;
