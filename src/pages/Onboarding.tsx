@@ -118,7 +118,6 @@ export default function Onboarding() {
               <SelectItem value="Draft">Draft</SelectItem>
               <SelectItem value="In Progress">In Progress</SelectItem>
               <SelectItem value="Complete">Complete</SelectItem>
-              <SelectItem value="Ready to Transfer">Ready to Transfer</SelectItem>
             </SelectContent>
           </Select>
           <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
