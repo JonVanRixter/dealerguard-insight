@@ -134,7 +134,7 @@ function buildCompletion(
   readyToTransfer = false
 ): CompletionStatus {
   const allChecks = Object.values(checks).every((c) => c.answered);
-  const allPolicies = policies.every((p) => p.dealerHasIt !== null);
+  const allPolicies = policies.every((p) => p.dealerHasIt !== null && p.notes.trim() !== "");
   const complete = allChecks && allPolicies && detailsComplete;
   return {
     allPreScreenChecksAnswered: allChecks,
