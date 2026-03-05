@@ -999,7 +999,7 @@ export const seederApplications: OnboardingApplication[] = [
 export function getOnboardingStats(apps: OnboardingApplication[]) {
   const active = apps.filter((a) => a.status !== "Ready to Transfer" && a.status !== "Archived");
   const totalPolicies = apps.reduce((s, a) => s + a.policies.length, 0);
-  const answeredPolicies = apps.reduce((s, a) => s + a.policies.filter((p) => p.dealerHasIt !== null && p.notes.trim() !== "").length, 0);
+  const answeredPolicies = apps.reduce((s, a) => s + a.policies.filter((p) => p.dealerHasIt !== null).length, 0);
   return {
     total: apps.length,
     drafts: apps.filter((a) => a.status === "Draft").length,
