@@ -487,14 +487,11 @@ export default function TcgAppDetail() {
                             <TableRow key={pol.policyId}>
                               <TableCell className="text-sm font-medium">{pol.name}</TableCell>
                               <TableCell>
-                                <RadioGroup value={pol.dealerHasIt === null ? "" : pol.dealerHasIt ? "yes" : "no"} onValueChange={v => updatePolicy(pol.policyId, "dealerHasIt", v === "yes")} className="flex gap-2">
+                                <RadioGroup value={pol.dealerHasIt === null ? "" : pol.dealerHasIt === "na" ? "na" : pol.dealerHasIt ? "yes" : "no"} onValueChange={v => updatePolicy(pol.policyId, "dealerHasIt", v)} className="flex gap-2">
                                   <div className="flex items-center gap-1"><RadioGroupItem value="yes" id={`q-${pol.policyId}-y`} /><Label htmlFor={`q-${pol.policyId}-y`} className="text-xs">Y</Label></div>
                                   <div className="flex items-center gap-1"><RadioGroupItem value="no" id={`q-${pol.policyId}-n`} /><Label htmlFor={`q-${pol.policyId}-n`} className="text-xs">N</Label></div>
+                                  <div className="flex items-center gap-1"><RadioGroupItem value="na" id={`q-${pol.policyId}-na`} /><Label htmlFor={`q-${pol.policyId}-na`} className="text-xs">N/A</Label></div>
                                 </RadioGroup>
-                              </TableCell>
-                              <TableCell>
-                                <Input className="h-7 text-xs" value={pol.notes} onChange={e => updatePolicy(pol.policyId, "notes", e.target.value)} placeholder="Notes..." />
-                                {policyValidationErrors[pol.policyId] && <p className="text-[10px] text-destructive mt-0.5">{policyValidationErrors[pol.policyId]}</p>}
                               </TableCell>
                               <TableCell className="text-center">
                                 {polAnswered ? <CheckCircle2 className="w-4 h-4 text-outcome-pass mx-auto" /> : <span className="text-xs text-muted-foreground">☐</span>}
