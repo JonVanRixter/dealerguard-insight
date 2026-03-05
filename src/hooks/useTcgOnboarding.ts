@@ -60,8 +60,8 @@ function computeCompletion(
   const allChecks = Object.values(checks).every((c) => c.answered);
   const allPolicies = policies.every((p) => p.dealerHasIt !== null);
   const detailsComplete = !!(
-    app.dealerName && app.companiesHouseNo && app.tradingName &&
-    app.primaryContactName || app.primaryContact?.name
+    (app as any).dealerName && (app as any).companiesHouseNo && (app as any).tradingName &&
+    (app as any).primaryContact?.name
   );
   const complete = allChecks && allPolicies && detailsComplete;
   return {

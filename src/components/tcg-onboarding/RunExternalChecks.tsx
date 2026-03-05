@@ -6,27 +6,20 @@ import { CompaniesHousePanel } from "./CompaniesHousePanel";
 import { FcaRegisterPanel } from "./FcaRegisterPanel";
 import { CreditSafePanel } from "./CreditSafePanel";
 import externalChecksData from "@/data/tcg/externalChecks.json";
-import type { TcgOnboardingApp, PreScreenResult } from "@/hooks/useTcgOnboarding";
+import type { OnboardingApplication } from "@/hooks/useTcgOnboarding";
 
 type CheckStep = "idle" | "ch" | "fca" | "cs" | "done";
 
 interface Props {
   companiesHouseNumber: string;
-  app: TcgOnboardingApp;
-  onUpdate: (partial: Partial<TcgOnboardingApp>) => void;
+  app: OnboardingApplication;
+  onUpdate: (partial: Partial<OnboardingApplication>) => void;
 }
 
 function findCheckData(chNumber: string) {
-  // Match by company number in the simulated data
   return (externalChecksData as any[]).find(
     (d) => d.companiesHouse?.simulatedData?.companyNumber === chNumber
   );
-}
-
-function mapResult(result: string): PreScreenResult {
-  if (result === "Pass") return "pass";
-  if (result === "Fail") return "fail";
-  return "refer";
 }
 
 export function RunExternalChecks({ companiesHouseNumber, app, onUpdate }: Props) {
@@ -46,47 +39,55 @@ export function RunExternalChecks({ companiesHouseNumber, app, onUpdate }: Props
     }
     setCheckData(data);
 
-    // Step 1: Companies House
     setStep("ch");
     await new Promise((r) => setTimeout(r, 800));
     setChDone(true);
 
-    // Step 2: FCA
     setStep("fca");
     await new Promise((r) => setTimeout(r, 1200));
     setFcaDone(true);
 
-    // Step 3: CreditSafe
     setStep("cs");
     await new Promise((r) => setTimeout(r, 1500));
     setCsDone(true);
 
     setStep("done");
 
-    // Auto-populate pre-screen checks
+    // Auto-populate pre-screen checks with findings
     const ch = data.companiesHouse.simulatedData;
     const fca = data.fcaRegister.simulatedData;
     const cs = data.creditSafe.simulatedData;
+    const now = new Date().toISOString();
 
-    // Derive AML result from sanctions screening
-    const allSanctionsClear = cs.directorSanctionsScreening.every(
-      (d: any) => d.sanctionsResult === "Clear" && d.pepResult === "No PEP" && (d.adverseMediaResult === "None found" || d.adverseMediaResult === "None")
-    );
-
-    const updatedChecks = app.preScreenChecks.map((check) => {
-      switch (check.id) {
-        case "ch":
-          return { ...check, result: mapResult(ch.overallResult), notes: check.notes || "Auto-filled from simulated check", source: "api" as const };
-        case "fca":
-          return { ...check, result: mapResult(fca.overallResult), notes: check.notes || "Auto-filled from simulated check", source: "api" as const };
-        case "fin":
-          return { ...check, result: mapResult(cs.overallResult), notes: check.notes || "Auto-filled from simulated check", source: "api" as const };
-        case "aml":
-          return { ...check, result: (allSanctionsClear ? "pass" : "refer") as PreScreenResult, notes: check.notes || "Auto-filled from simulated check", source: "api" as const };
-        default:
-          return check;
-      }
-    });
+    const updatedChecks = { ...app.preScreenChecks };
+    
+    if (updatedChecks.legalEntityStatus) {
+      updatedChecks.legalEntityStatus = {
+        ...updatedChecks.legalEntityStatus,
+        answered: true,
+        finding: `Company ${ch.companyStatus}. Incorporated ${ch.incorporationDate}. ${ch.directors?.length || 0} directors on record.`,
+        answeredBy: "System (API)",
+        answeredAt: now,
+      };
+    }
+    if (updatedChecks.fcaAuthorisation) {
+      updatedChecks.fcaAuthorisation = {
+        ...updatedChecks.fcaAuthorisation,
+        answered: true,
+        finding: `FCA status: ${fca.overallResult}. ${fca.permissions?.join(", ") || "Permissions checked."}`,
+        answeredBy: "System (API)",
+        answeredAt: now,
+      };
+    }
+    if (updatedChecks.creditAndFinancialStanding) {
+      updatedChecks.creditAndFinancialStanding = {
+        ...updatedChecks.creditAndFinancialStanding,
+        answered: true,
+        finding: `CreditSafe score: ${cs.creditScore || "N/A"}. ${cs.ccjCount || 0} CCJs. Overall: ${cs.overallResult}.`,
+        answeredBy: "System (API)",
+        answeredAt: now,
+      };
+    }
 
     onUpdate({ preScreenChecks: updatedChecks });
   }, [companiesHouseNumber, app.preScreenChecks, onUpdate]);
@@ -97,17 +98,13 @@ export function RunExternalChecks({ companiesHouseNumber, app, onUpdate }: Props
     const addressParts = ch.registeredAddress.split(",").map((s: string) => s.trim());
 
     onUpdate({
-      companyName: ch.companyName,
-      addressStreet: addressParts[0] || "",
-      addressTown: addressParts[1] || "",
-      addressPostcode: addressParts[addressParts.length - 1] || "",
-      fieldSources: {
-        companyName: "api",
-        companiesHouseNumber: "api",
-        addressStreet: "api",
-        addressTown: "api",
-        addressPostcode: "api",
-      } as any,
+      dealerName: ch.companyName,
+      registeredAddress: {
+        street: addressParts[0] || "",
+        town: addressParts[1] || "",
+        county: "",
+        postcode: addressParts[addressParts.length - 1] || "",
+      },
     });
 
     toast({ title: "Form pre-filled", description: "Company details populated from Companies House data." });
@@ -119,31 +116,16 @@ export function RunExternalChecks({ companiesHouseNumber, app, onUpdate }: Props
 
   const stepLabel = (label: string, running: boolean, done: boolean) => (
     <div className="flex items-center gap-2 text-sm h-7">
-      {done ? (
-        <CheckCircle2 className="w-4 h-4 text-outcome-pass-text" />
-      ) : running ? (
-        <Loader2 className="w-4 h-4 animate-spin text-primary" />
-      ) : (
-        <span className="w-4 h-4" />
-      )}
-      <span className={done ? "text-outcome-pass-text" : running ? "text-foreground" : "text-muted-foreground"}>
-        {label}
-      </span>
-      {done && <span className="text-xs text-outcome-pass-text">✅ Complete</span>}
+      {done ? <CheckCircle2 className="w-4 h-4 text-outcome-pass-text" /> : running ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <span className="w-4 h-4" />}
+      <span className={done ? "text-outcome-pass-text" : running ? "text-foreground" : "text-muted-foreground"}>{label}</span>
     </div>
   );
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Button
-          onClick={runChecks}
-          disabled={!canRun || (step !== "idle" && step !== "done")}
-          variant="outline"
-          className="gap-2"
-        >
-          <Search className="w-4 h-4" />
-          🔍 Run External Checks (Simulated)
+        <Button onClick={runChecks} disabled={!canRun || (step !== "idle" && step !== "done")} variant="outline" className="gap-2">
+          <Search className="w-4 h-4" /> 🔍 Run External Checks (Simulated)
         </Button>
         {!canRun && <span className="text-xs text-muted-foreground">Enter a CH number above to activate</span>}
       </div>
@@ -158,26 +140,15 @@ export function RunExternalChecks({ companiesHouseNumber, app, onUpdate }: Props
 
       {step === "done" && checkData && (
         <div className="space-y-4">
-          <CompaniesHousePanel
-            data={checkData.companiesHouse.simulatedData}
-            onPrefill={handlePrefill}
-          />
+          <CompaniesHousePanel data={checkData.companiesHouse.simulatedData} onPrefill={handlePrefill} />
           <FcaRegisterPanel data={checkData.fcaRegister.simulatedData} />
           <CreditSafePanel
             data={checkData.creditSafe.simulatedData}
             onAddToReviewQueue={
-              checkData.creditSafe.simulatedData.flags.length > 0 ||
-              checkData.fcaRegister.simulatedData.flags.length > 0
-                ? handleAddToReviewQueue
-                : undefined
+              checkData.creditSafe.simulatedData.flags.length > 0 || checkData.fcaRegister.simulatedData.flags.length > 0
+                ? handleAddToReviewQueue : undefined
             }
           />
-
-          {/* Auto-fill label for pre-screen checks */}
-          <div className="bg-muted/30 border rounded-lg p-3 text-xs text-muted-foreground">
-            ℹ️ Pre-screen checks have been auto-populated from simulated data. Review and confirm each result below.
-            The "Website & Initial Trading Check" remains manual.
-          </div>
         </div>
       )}
     </div>

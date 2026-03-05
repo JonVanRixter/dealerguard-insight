@@ -17,8 +17,7 @@ export default function TcgOnboardingWorkflow() {
     loadApp,
     updateCurrent,
     setStage,
-    approve,
-    reject,
+    markReadyToTransfer,
     checkDuplicate,
   } = useTcgOnboarding();
 
@@ -76,8 +75,7 @@ export default function TcgOnboardingWorkflow() {
       onUpdate={updateCurrent}
       onBack={() => handleNavigate(1)}
       onNavigate={handleNavigate}
-      onApprove={approve}
-      onReject={reject}
+      onMarkReady={markReadyToTransfer}
     />
   );
 }
