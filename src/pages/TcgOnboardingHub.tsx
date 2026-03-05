@@ -345,30 +345,6 @@ export default function TcgOnboardingHub() {
         )}
       </div>
 
-      {/* Transfer confirmation modal */}
-      <Dialog open={!!transferApp} onOpenChange={open => !open && setTransferApp(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Transfer</DialogTitle>
-            <DialogDescription>
-              Confirm this dealer's onboarding record is complete and ready for the lender to proceed. This will move the dealer to the active dealer directory.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 pt-2">
-            {transferApp && (
-              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                <p className="text-sm font-semibold">{transferApp.dealerName}</p>
-                <p className="text-xs text-muted-foreground">{transferApp.appRef} · {transferApp.requestingLenderName}</p>
-              </div>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setTransferApp(null)}>Cancel</Button>
-              <Button onClick={handleTransferConfirm} className="gap-1"><Send className="w-4 h-4" /> Confirm Transfer</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Archive modal */}
       <Dialog open={!!archiveApp} onOpenChange={open => { if (!open) { setArchiveApp(null); setArchiveReason(""); } }}>
         <DialogContent>
