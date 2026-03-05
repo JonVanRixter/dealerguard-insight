@@ -650,12 +650,12 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app017 — Complete
+  // app017 — Ready to Transfer
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-02T14:00:00"));
     const pols = quickPolicies(22, TG, "2026-02-20T16:00:00");
     return {
-      id: "app017", appRef: "APP-017-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
+      id: "app017", appRef: "APP-017-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
       dealerName: "Pennfield Cars Ltd", tradingName: "Pennfield Cars",
       companiesHouseNo: "08901234", website: "https://www.pennfieldcars.co.uk",
       primaryContact: { name: "David Rees", email: "d.rees@pennfield.co.uk", phone: "01792 445500" },
@@ -664,14 +664,14 @@ export const seederApplications: OnboardingApplication[] = [
       initiatedBy: TG, initiatedDate: "2026-02-01T09:00:00", assignedTo: TG,
       lastUpdated: "2026-03-01T15:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-04",
       preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true, TG, "2026-03-01T15:00:00"),
+      completionStatus: buildCompletion(checks, pols, true, TG, "2026-03-01T15:00:00", true),
       dndClear: true, platformDndClear: true,
-      notes: "Insurance products confirmed — all information gathered",
+      notes: "Insurance products confirmed — all information gathered. Marked ready to transfer.",
       history: [
         { date: "2026-02-01T09:00:00", action: "Application created", user: TG },
         { date: "2026-02-02T14:00:00", action: "All pre-screen checks completed", user: TG },
         { date: "2026-02-20T16:00:00", action: "All policies confirmed", user: TG },
-        { date: "2026-03-01T15:00:00", action: "Onboarding marked complete", user: TG },
+        { date: "2026-03-01T15:00:00", action: "Marked as ready to transfer", user: TG },
       ],
     };
   })(),
