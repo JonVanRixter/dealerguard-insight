@@ -190,7 +190,7 @@ export default function TcgOnboardingHub() {
     return {
       drafts: active.filter(a => a.status === "Draft"),
       preScreen: active.filter(a => a.status === "In Progress" && !checksAllAnswered(a)),
-      policies: active.filter(a => (a.status === "In Progress" && checksAllAnswered(a)) || a.status === "Complete"),
+      policies: active.filter(a => a.status === "In Progress" && checksAllAnswered(a)),
       ready: active.filter(a => a.status === "Ready to Transfer"),
     };
   }, [filtered]);
