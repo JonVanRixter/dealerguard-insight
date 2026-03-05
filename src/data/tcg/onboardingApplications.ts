@@ -2,7 +2,7 @@ import { masterPolicyList } from "./dealerPolicies";
 
 // ── Types ────────────────────────────────────────────────────
 
-export type OnboardingAppStatus = "Draft" | "In Progress" | "Ready to Transfer" | "Archived";
+export type OnboardingAppStatus = "Draft" | "In Progress" | "Complete" | "Archived";
 export type RiskRating = "High" | "Medium";
 
 export interface PreScreenCheck {
