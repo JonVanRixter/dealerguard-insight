@@ -41,16 +41,6 @@ export default function TcgOnboardingWorkflow() {
     navigate(`/tcg/onboarding/${current.id}/stage-${s}`, { replace: true });
   };
 
-  const handleMarkReady = () => {
-    if (!current) return;
-    markReadyToTransfer();
-    toast({
-      title: "Ready to Transfer",
-      description: `${current.tradingName || current.dealerName} has been marked as ready to transfer to the lender.`,
-    });
-    navigate("/tcg/onboarding");
-  };
-
   if (!current) {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
   }
