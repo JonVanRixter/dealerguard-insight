@@ -83,6 +83,8 @@ export default function TcgAppDetail() {
   const [saving, setSaving] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [showAllHistory, setShowAllHistory] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [archiveReason, setArchiveReason] = useState("");
 
   useEffect(() => {
     if (seedApp) {
