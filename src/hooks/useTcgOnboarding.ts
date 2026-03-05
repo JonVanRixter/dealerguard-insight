@@ -85,7 +85,6 @@ function computeCompletion(
     onboardingComplete: complete,
     completedBy: null,
     completedAt: null,
-    readyToTransfer: false,
   };
 }
 
