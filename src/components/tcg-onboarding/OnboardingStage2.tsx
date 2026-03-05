@@ -181,19 +181,14 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
 
                             <div className="space-y-2">
                               <Label className="text-xs text-muted-foreground">Does the dealer hold this policy?</Label>
-                              <RadioGroup
-                                value={pol.dealerHasIt === null ? "" : pol.dealerHasIt ? "yes" : "no"}
-                                onValueChange={(v) => updatePolicy(pol.policyId, "dealerHasIt", v === "yes")}
+                            <RadioGroup
+                                value={pol.dealerHasIt === null ? "" : pol.dealerHasIt === "na" ? "na" : pol.dealerHasIt ? "yes" : "no"}
+                                onValueChange={(v) => updatePolicy(pol.policyId, "dealerHasIt", v as any)}
                                 className="flex gap-4"
                               >
-                                <div className="flex items-center gap-1.5">
-                                  <RadioGroupItem value="yes" id={`${pol.policyId}-yes`} />
-                                  <Label htmlFor={`${pol.policyId}-yes`} className="text-sm">Yes</Label>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                  <RadioGroupItem value="no" id={`${pol.policyId}-no`} />
-                                  <Label htmlFor={`${pol.policyId}-no`} className="text-sm">No</Label>
-                                </div>
+                                <div className="flex items-center gap-1.5"><RadioGroupItem value="yes" id={`${pol.policyId}-yes`} /><Label htmlFor={`${pol.policyId}-yes`} className="text-sm">Yes</Label></div>
+                                <div className="flex items-center gap-1.5"><RadioGroupItem value="no" id={`${pol.policyId}-no`} /><Label htmlFor={`${pol.policyId}-no`} className="text-sm">No</Label></div>
+                                <div className="flex items-center gap-1.5"><RadioGroupItem value="na" id={`${pol.policyId}-na`} /><Label htmlFor={`${pol.policyId}-na`} className="text-sm">N/A</Label></div>
                               </RadioGroup>
                             </div>
 
