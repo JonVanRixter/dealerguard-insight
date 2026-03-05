@@ -82,25 +82,6 @@ function AppCard({ app, onClick }: { app: OnboardingApplication; onClick: () => 
   );
 }
 
-/* ── Ready to Transfer card (green top border + transfer button) ── */
-function ReadyCard({ app, onClick, onTransfer }: { app: OnboardingApplication; onClick: () => void; onTransfer: () => void }) {
-  return (
-    <Card className="cursor-pointer hover:shadow-md transition-shadow border-t-4 border-t-[hsl(var(--outcome-pass))]" onClick={onClick}>
-      <CardContent className="p-3 space-y-2">
-        <p className="text-sm font-semibold leading-tight">{app.dealerName}</p>
-        <p className="text-[11px] text-muted-foreground">{app.appRef} · {app.requestingLenderName.split(" ").slice(0, 2).join(" ")}</p>
-        <Badge className="bg-outcome-pass-bg text-outcome-pass-text text-[10px]">✅ All checks complete</Badge>
-        <div className="flex items-center justify-between text-[11px]">
-          <span className="text-muted-foreground">👤 {app.assignedTo}</span>
-        </div>
-        <Button size="sm" className="w-full gap-1 text-xs mt-1" onClick={e => { e.stopPropagation(); onTransfer(); }}>
-          <Send className="w-3 h-3" /> Mark as Transferred →
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
 /* ── Main page ──────────────────────────────────────────────── */
 export default function TcgOnboardingHub() {
   const navigate = useNavigate();
