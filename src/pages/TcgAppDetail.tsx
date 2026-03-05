@@ -219,17 +219,6 @@ export default function TcgAppDetail() {
   // Completion
   const detailsComplete = !!(app.dealerName && app.companiesHouseNo && app.tradingName && app.primaryContact.name);
   const onboardingComplete = allChecksAnswered && allPoliciesDone && detailsComplete;
-  const canMarkReady = onboardingComplete && app.status !== "Ready to Transfer";
-
-  const handleMarkReady = () => {
-    updateApp({
-      status: "Ready to Transfer",
-      completionStatus: { ...app.completionStatus, readyToTransfer: true, completedBy: "Tom Griffiths", completedAt: new Date().toISOString(), onboardingComplete: true },
-    });
-    addHistory("Marked as ready to transfer");
-    toast({ title: "✅ Ready to Transfer", description: `${app.dealerName} has been marked as ready to transfer.` });
-    setTimeout(() => navigate("/tcg/onboarding"), 1500);
-  };
 
   const handleAddNote = () => {
     if (!noteText.trim()) return;
