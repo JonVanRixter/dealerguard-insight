@@ -21,13 +21,6 @@ import {
   type OnboardingApplication, type OnboardingAppStatus,
 } from "@/data/tcg/onboardingApplications";
 
-function daysUntilTarget(target: string) {
-  const days = Math.ceil((new Date(target).getTime() - Date.now()) / 86400000);
-  if (days < 0) return <span className="text-outcome-fail text-xs font-semibold">⏰ {Math.abs(days)}d overdue</span>;
-  if (days <= 3) return <span className="text-outcome-fail text-xs font-semibold">🔴 {days}d</span>;
-  if (days <= 7) return <span className="text-outcome-pending text-xs font-semibold">🟡 {days}d</span>;
-  return <span className="text-muted-foreground text-xs">{days}d</span>;
-}
 
 function preScreenIcon(app: OnboardingApplication) {
   const answered = app.checks.filter(c => c.answered).length;
@@ -66,7 +59,7 @@ function AppCard({ app, onClick }: { app: OnboardingApplication; onClick: () => 
         )}
         <div className="flex items-center justify-between text-[11px]">
           <span className={app.assignedTo === "Unassigned" ? "text-outcome-pending font-medium" : "text-muted-foreground"}>👤 {app.assignedTo}</span>
-          <span>🗓 {daysUntilTarget(app.targetCompletionDate)}</span>
+          
         </div>
         <div className="flex flex-wrap gap-1">
           {preScreenIcon(app)}

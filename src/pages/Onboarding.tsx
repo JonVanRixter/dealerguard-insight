@@ -38,13 +38,6 @@ function preScreenSummary(app: OnboardingApplication) {
   return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs">{answered}/{total}</Badge>;
 }
 
-function daysUntilTarget(target: string) {
-  const days = Math.ceil((new Date(target).getTime() - Date.now()) / 86400000);
-  if (days < 0) return <span className="text-outcome-fail text-xs font-medium">⏰ {Math.abs(days)}d overdue</span>;
-  if (days <= 3) return <span className="text-outcome-fail text-xs font-medium">🔴 {days}d</span>;
-  if (days <= 7) return <span className="text-outcome-pending text-xs font-medium">🟡 {days}d</span>;
-  return <span className="text-muted-foreground text-xs">{days}d</span>;
-}
 
 function stageBar(app: OnboardingApplication) {
   const answered = app.policies.filter(p => p.dealerHasIt !== null).length;
@@ -171,7 +164,6 @@ export default function Onboarding() {
                           {stageBar(app)}
                           <div className="flex items-center justify-between text-xs">
                             <span className={app.assignedTo === "Unassigned" ? "text-outcome-pending font-medium" : "text-muted-foreground"}>👤 {app.assignedTo}</span>
-                            {daysUntilTarget(app.targetCompletionDate)}
                           </div>
                         </CardContent>
                       </Card>
@@ -196,7 +188,7 @@ export default function Onboarding() {
                       <TableHead>Pre-Screen</TableHead>
                       <TableHead>Policies</TableHead>
                       <TableHead>Assigned</TableHead>
-                      <TableHead>Target</TableHead>
+                      
                       <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -220,7 +212,7 @@ export default function Onboarding() {
                             </div>
                           </TableCell>
                           <TableCell className="text-sm">{app.assignedTo}</TableCell>
-                          <TableCell>{daysUntilTarget(app.targetCompletionDate)}</TableCell>
+                          
                           <TableCell>
                             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={e => { e.stopPropagation(); openApp(app); }}>Open</Button>
                           </TableCell>
