@@ -44,7 +44,6 @@ export interface CompletionStatus {
   onboardingComplete: boolean;
   completedBy: string | null;
   completedAt: string | null;
-  readyToTransfer: boolean;
 }
 
 export interface HistoryEntry {
