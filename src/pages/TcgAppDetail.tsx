@@ -549,12 +549,11 @@ export default function TcgAppDetail() {
                 </CardContent>
               </Card>
 
-              {onboardingComplete && app.status !== "Ready to Transfer" && (
-                <div className="flex items-center justify-between p-4 rounded-lg border border-outcome-pass/30 bg-outcome-pass-bg/30">
+              {onboardingComplete && (
+                <div className="flex items-center p-4 rounded-lg border border-outcome-pass/30 bg-outcome-pass-bg/30">
                   <p className="text-sm font-medium text-outcome-pass-text flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4" /> All policies answered · Both sections complete
+                    <CheckCircle2 className="w-4 h-4" /> All policies answered · Onboarding complete — added to dealer portfolio
                   </p>
-                  <Button onClick={handleMarkReady} className="gap-2"><Send className="w-4 h-4" /> Mark as Ready to Transfer</Button>
                 </div>
               )}
             </div>
