@@ -180,24 +180,6 @@ export function useTcgOnboarding() {
     updateCurrent({ stage, status: "In Progress" });
   }, [updateCurrent]);
 
-  const markReadyToTransfer = useCallback(() => {
-    setCurrent((prev) => {
-      if (!prev || !prev.completionStatus.onboardingComplete) return prev;
-      const next: OnboardingApplication = {
-        ...prev,
-        status: "Ready to Transfer",
-        completionStatus: {
-          ...prev.completionStatus,
-          readyToTransfer: true,
-          completedBy: "Tom Griffiths",
-          completedAt: new Date().toISOString(),
-        },
-      };
-      setApplications((apps) => apps.map((a) => (a.id === next.id ? next : a)));
-      return next;
-    });
-  }, []);
-
   const checkDuplicate = useCallback((chNumber: string): string | null => {
     if (!chNumber || chNumber.length < 4) return null;
     return null;
