@@ -209,7 +209,7 @@ export default function TcgAppDetail() {
     ? app.policies.filter(p => p.category !== "Insurance (if applicable)")
     : app.policies;
 
-  const isPolicyAnswered = (p: typeof visiblePolicies[0]) => p.dealerHasIt !== null && p.notes.trim() !== "";
+  const isPolicyAnswered = (p: typeof visiblePolicies[0]) => p.dealerHasIt !== null;
   const answeredPolicies = visiblePolicies.filter(isPolicyAnswered).length;
   const policiesTotal = visiblePolicies.length;
   const policyPct = policiesTotal > 0 ? Math.round((answeredPolicies / policiesTotal) * 100) : 0;
