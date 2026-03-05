@@ -23,7 +23,7 @@ export interface OnboardingPolicy {
   policyId: string;
   name: string;
   category: string;
-  dealerHasIt: boolean | null;
+  dealerHasIt: boolean | "na" | null;
   notes: string;
   answeredBy: string | null;
   answeredAt: string | null;
