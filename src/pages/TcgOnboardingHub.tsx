@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Plus, Search, LayoutGrid, List, ArrowRight, ArrowUpDown, ArrowUp, ArrowDown, Users, Archive, ChevronDown, Send,
+  Plus, Search, LayoutGrid, List, ArrowRight, ArrowUpDown, ArrowUp, ArrowDown, Users, Archive, ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTcgOnboarding } from "@/hooks/useTcgOnboarding";
