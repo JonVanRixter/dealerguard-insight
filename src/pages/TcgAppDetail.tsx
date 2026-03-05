@@ -130,6 +130,24 @@ export default function TcgAppDetail() {
     });
   }, []);
 
+  // Group checks by section — must be called before early return to satisfy Rules of Hooks
+  const checkSections = useMemo(() => {
+    if (!app) return [];
+    const map = new Map<string, PreScreenCheck[]>();
+    for (const check of app.checks) {
+      const existing = map.get(check.sectionId) || [];
+      existing.push(check);
+      map.set(check.sectionId, existing);
+    }
+    return Array.from(map.entries()).map(([sectionId, checks]) => ({
+      sectionId,
+      sectionName: checks[0].sectionName,
+      checks,
+      answered: checks.filter(c => c.answered).length,
+      total: checks.length,
+    }));
+  }, [app?.checks]);
+
   if (!app) {
     return (
       <DashboardLayout>
@@ -145,23 +163,6 @@ export default function TcgAppDetail() {
   const answeredChecks = app.checks.filter(c => c.answered).length;
   const totalChecks = app.checks.length;
   const allChecksAnswered = answeredChecks === totalChecks;
-
-  // Group checks by section
-  const checkSections = useMemo(() => {
-    const map = new Map<string, PreScreenCheck[]>();
-    for (const check of app.checks) {
-      const existing = map.get(check.sectionId) || [];
-      existing.push(check);
-      map.set(check.sectionId, existing);
-    }
-    return Array.from(map.entries()).map(([sectionId, checks]) => ({
-      sectionId,
-      sectionName: checks[0].sectionName,
-      checks,
-      answered: checks.filter(c => c.answered).length,
-      total: checks.length,
-    }));
-  }, [app.checks]);
 
   const updateCheck = (checkId: string, field: string, value: any) => {
     const updated = app.checks.map(c => {
