@@ -939,12 +939,12 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app024 — Ready to Transfer
+  // app024 — Complete
   (() => {
     const chks = buildChecks(allChecksAnswered(AO, "2026-02-05T11:00:00"));
     const pols = quickPolicies(22, AO, "2026-02-24T16:00:00");
     return {
-      id: "app024", appRef: "APP-024-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
+      id: "app024", appRef: "APP-024-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
       dealerName: "Elmfield Motor Company", tradingName: "Elmfield Motors",
       companiesHouseNo: "08567890", website: "https://www.elmfieldmotors.co.uk",
       primaryContact: { name: "Rachel Hughes", email: "r.hughes@elmfield.co.uk", phone: "01onal 443300" },
@@ -953,14 +953,14 @@ export const seederApplications: OnboardingApplication[] = [
       initiatedBy: AO, initiatedDate: "2026-02-04T09:00:00", assignedTo: AO,
       lastUpdated: "2026-03-02T14:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-05",
       checks: chks, policies: pols,
-      completionStatus: buildCompletion(chks, pols, true, AO, "2026-03-02T14:00:00", true),
+      completionStatus: buildCompletion(chks, pols, true, AO, "2026-03-02T14:00:00"),
       dndClear: true, platformDndClear: true,
-      notes: "All sections complete. Marked ready to transfer.",
+      notes: "All sections complete. Onboarding complete.",
       history: [
         { date: "2026-02-04T09:00:00", action: "Application created", user: AO },
         { date: "2026-02-05T11:00:00", action: "All 29 checks completed", user: AO },
         { date: "2026-02-24T16:00:00", action: "All policies confirmed", user: AO },
-        { date: "2026-03-02T14:00:00", action: "Marked as ready to transfer", user: AO },
+        { date: "2026-03-02T14:00:00", action: "Onboarding complete — added to dealer portfolio", user: AO },
       ],
     };
   })(),
