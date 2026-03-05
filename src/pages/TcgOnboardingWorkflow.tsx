@@ -66,7 +66,6 @@ export default function TcgOnboardingWorkflow() {
       onContinue={() => {}}
       onNavigate={handleNavigate}
       saving={saving}
-      onMarkReady={handleMarkReady}
     />
   );
 }

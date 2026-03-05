@@ -193,7 +193,6 @@ export function useTcgOnboarding() {
     loadApp,
     updateCurrent,
     setStage,
-    markReadyToTransfer,
     checkDuplicate,
     setCurrent,
   };
