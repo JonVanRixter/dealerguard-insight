@@ -614,7 +614,12 @@ export default function TcgAppDetail() {
                 <div className="text-xs space-y-0.5">
                   <p>Checks: {answeredChecks}/{totalChecks} answered</p>
                   <p>Policies: {answeredPolicies}/{policiesTotal} answered</p>
-                  <p>DND: {app.dndClear ? "✅ Checked" : "🔴 Flagged"}</p>
+                  <p>DND: {(() => {
+                    const s1c4 = app.checks.find(c => c.checkId === "s1_c4");
+                    const s5c2 = app.checks.find(c => c.checkId === "s5_c2");
+                    const bothDone = s1c4?.answered && s5c2?.answered;
+                    return bothDone ? "✅ Checked" : "○ Not yet checked";
+                  })()}</p>
                 </div>
               </div>
 
