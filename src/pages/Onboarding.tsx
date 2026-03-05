@@ -151,7 +151,6 @@ export default function Onboarding() {
               { label: "⚙️ Stage 1 — Pre-Screen", apps: byStage.stage1 },
               { label: "📄 Stage 2 — Policies", apps: byStage.stage2 },
               { label: "✅ Complete", apps: byStage.complete },
-              { label: "🚀 Ready to Transfer", apps: byStage.ready },
             ].map(group => group.apps.length > 0 && (
               <Collapsible key={group.label} defaultOpen>
                 <CollapsibleTrigger className="flex items-center gap-2 mb-2 group w-full text-left">

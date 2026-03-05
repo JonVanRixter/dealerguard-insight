@@ -95,7 +95,7 @@ function StageStepper({ current, onClick, preScreenDone, policiesDone }: {
       ))}
       {bothComplete && (
         <span className="text-sm font-medium text-outcome-pass-text flex items-center gap-1.5 ml-2">
-          🟢 All checks complete
+          🟢 Complete — added to Dealer Portfolio
         </span>
       )}
     </div>
