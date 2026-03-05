@@ -681,7 +681,7 @@ export default function PreOnboarding() {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {tcg.getApprovedDealers().map((d) => (
+                              {tcg.applications.filter(a => a.status === "Ready to Transfer").map((d) => (
                                 <TableRow key={d.id}>
                                   <TableCell className="font-medium">{d.name}</TableCell>
                                   <TableCell>
