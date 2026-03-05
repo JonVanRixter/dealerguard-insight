@@ -224,6 +224,16 @@ function buildPolicies(
     });
 }
 
+function buildSectionProgress(checks: PreScreenCheck[]): Record<string, SectionProgress> {
+  const map: Record<string, SectionProgress> = {};
+  for (const c of checks) {
+    if (!map[c.sectionId]) map[c.sectionId] = { answered: 0, total: 0 };
+    map[c.sectionId].total++;
+    if (c.answered) map[c.sectionId].answered++;
+  }
+  return map;
+}
+
 function buildCompletion(
   checks: PreScreenCheck[],
   policies: OnboardingPolicy[],
@@ -234,8 +244,16 @@ function buildCompletion(
 ): CompletionStatus {
   const allChecks = checks.every((c) => c.answered);
   const allPolicies = policies.every((p) => p.dealerHasIt !== null && p.notes.trim() !== "");
+  const answeredCount = checks.filter((c) => c.answered).length;
   const complete = allChecks && allPolicies && detailsComplete;
+  const sectionProgress = buildSectionProgress(checks);
+  // Add policies as s9_policies
+  const policyAnswered = policies.filter((p) => p.dealerHasIt !== null && p.notes.trim() !== "").length;
+  sectionProgress["s9_policies"] = { answered: policyAnswered, total: policies.length };
   return {
+    checksAnswered: answeredCount,
+    checksTotal: checks.length,
+    sectionProgress,
     allPreScreenChecksAnswered: allChecks,
     allPoliciesAnswered: allPolicies,
     dealerDetailsComplete: detailsComplete,
