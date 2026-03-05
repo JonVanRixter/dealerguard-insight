@@ -65,7 +65,7 @@ function computeCompletion(
   app: Partial<OnboardingApplication>
 ): CompletionStatus {
   const allChecks = checks.every((c) => c.answered);
-  const allPolicies = policies.every((p) => p.dealerHasIt !== null && p.notes.trim() !== "");
+  const allPolicies = policies.every((p) => p.dealerHasIt !== null);
   const answeredCount = checks.filter((c) => c.answered).length;
   const detailsComplete = !!(
     (app as any).dealerName && (app as any).companiesHouseNo && (app as any).tradingName &&
