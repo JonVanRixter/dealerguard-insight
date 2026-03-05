@@ -1,40 +1,46 @@
 
 
-## Plan: Surface Policy Documents on TCG Dealer Profile + Lender Documents Tab
+## Plan: Replace "Ready to Transfer" with "Complete" Auto-Transition
 
-### What this achieves
-The TCG dealer profile will display a dedicated **Documents** tab showing all 26 policy documents from the onboarding audit -- clearly indicating which documents were uploaded and which are missing. The Lender Profile's Documents tab will be upgraded to show the same policy document data (filtered to that lender's dealers), following the `lenderReportSurface.json` rules: lenders see policy name, existence status, last updated date, and whether a document is available -- but not the actual files. This creates the foundation for a future "Request Document" flow between the Lender Portal and Klassify Pro.
+When all 32 checks + all 22 policies are answered, the application automatically moves to "Complete" status — no manual transfer step needed. Complete applications represent dealers ready for the portfolio.
 
 ### Changes
 
-**1. Add "Documents" tab to TCG Dealer Detail (`src/pages/TcgDealerDetail.tsx`)**
-- Add a 4th tab: `Documents` (with `FileText` icon) alongside Overview, Policies, External Checks.
-- Create a new component `src/components/tcg-dealer/DealerDocumentsTab.tsx` that:
-  - Takes the `DealerPolicyRecord` (or null) as a prop.
-  - Groups policies by category (same grouping as PolicyTab).
-  - Each row shows: policy name, existence status (Yes/No pill), document status (Uploaded with filename + view icon, or "Not uploaded" with amber warning), last updated date.
-  - Summary strip at top: X documents uploaded, Y missing, Z policies not in place.
-  - For dealers without a policy record, show an empty state: "No onboarding documents recorded for this dealer."
-  - Clean card-based layout with collapsible category groups matching the existing PolicyTab aesthetic.
+**1. Data model (`src/data/tcg/onboardingApplications.ts`)**
+- Change `OnboardingAppStatus` type: replace `"Ready to Transfer"` with `"Complete"`
+- Remove `readyToTransfer` from `CompletionStatus` interface
+- Update `buildCompletion` to drop the `readyToTransfer` parameter
+- Update APP-003 and APP-007 seeder data: status → `"Complete"`, history entries updated
 
-**2. Upgrade Lender Profile Documents Tab (`src/pages/LenderProfile.tsx`)**
-- Replace the current placeholder documents table (lines 482-538) with a proper policy-document view.
-- For each dealer under this lender, look up `getPolicyRecord(dealerId)`.
-- Display a per-dealer accordion/card showing:
-  - Dealer name as header with summary counts (e.g., "14/22 documents available").
-  - Inside: policy rows with columns: Policy Name, Exists, Document Available (Yes/No -- not the file), Last Updated.
-  - Where no document exists: show "No document" in muted text.
-  - Where no policy record exists for a dealer: show "Onboarding documents pending" message.
-- Add a read-only tooltip note: "To request a copy of a policy document, contact TCG directly."
-- Maintain the existing `Lock` read-only badge in the tab header.
+**2. Hook (`src/hooks/useTcgOnboarding.ts`)**
+- Remove `markReadyToTransfer` function entirely
+- In `updateCurrent`: after recomputing completion, auto-set `status = "Complete"` when `onboardingComplete` is true
+- Remove `readyToTransfer` from completion computation
 
-**3. Data flow**
-- Both views consume `getPolicyRecord()` from `src/data/tcg/dealerPolicies.ts` -- no new data files needed.
-- For dealers that don't have explicit policy records (d012-d038 and generated dealers), the components will show an appropriate "No documents recorded" state.
+**3. App Detail (`src/pages/TcgAppDetail.tsx`)**
+- Remove `handleMarkReady`, `canMarkReady`, and the "Mark as Ready to Transfer" button from header
+- Remove the bottom "Mark as Ready to Transfer" banner in policies stage
+- Remove the "Already marked ready" badge
+- Update status badge colors: replace `"Ready to Transfer"` references with `"Complete"`
+- When all checks + policies are answered, auto-update status to "Complete" and show a success banner (read-only, no action button)
+- Update the stage stepper "both complete" message to say "Complete — added to Dealer Portfolio"
 
-### Technical details
+**4. Onboarding Hub (`src/pages/TcgOnboardingHub.tsx`)**
+- Rename 4th board column: `"✅ Ready to Transfer"` → `"✅ Complete"`
+- Update column filter: `ready: active.filter(a => a.status === "Complete")`
+- Replace `ReadyCard` component: remove "Mark as Transferred" button, show a simple complete card
+- Remove transfer confirmation dialog and all `transferApp`/`transferredIds` state
+- Update KPI card: "Ready to Transfer" → "Complete"
+- Update `statusBadge` mapping
+- Remove `Send` icon import if no longer used
+- In list view, remove the Transfer button for complete apps
 
-- `DealerDocumentsTab` component: ~120 lines, reuses `ExistsPill`-style badges, `Collapsible` groups, same grid layout as PolicyTab but read-only (no edit buttons).
-- Lender Profile Documents tab: refactor inline JSX (lines 482-538) to iterate over `lenderDealers`, calling `getPolicyRecord()` per dealer, rendering collapsible dealer sections.
-- No database changes required -- all data comes from the existing mock policy framework.
+**5. Workflow page (`src/pages/TcgOnboardingWorkflow.tsx`)**
+- Remove `markReadyToTransfer` usage and `handleMarkReady`
+- Remove the toast about "Ready to Transfer"
+
+**6. Other references**
+- `src/pages/PreOnboarding.tsx`: Update status color mapping and filters from `"Ready to Transfer"` to `"Complete"`
+- `src/components/dashboard/OnboardingValidityWidget.tsx`: Update status filter references
+- `src/components/tcg-onboarding/StageIndicator.tsx`: Update the "ready to transfer" message to "Complete"
 
