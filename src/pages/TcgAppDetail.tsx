@@ -209,7 +209,7 @@ export default function TcgAppDetail() {
     ? app.policies.filter(p => p.category !== "Insurance (if applicable)")
     : app.policies;
 
-  const isPolicyAnswered = (p: typeof visiblePolicies[0]) => p.dealerHasIt !== null && p.notes.trim() !== "";
+  const isPolicyAnswered = (p: typeof visiblePolicies[0]) => p.dealerHasIt !== null;
   const answeredPolicies = visiblePolicies.filter(isPolicyAnswered).length;
   const policiesTotal = visiblePolicies.length;
   const policyPct = policiesTotal > 0 ? Math.round((answeredPolicies / policiesTotal) * 100) : 0;
@@ -252,17 +252,11 @@ export default function TcgAppDetail() {
     const next = [...app.policies];
     const idx = next.findIndex(p => p.policyId === polId);
     if (idx === -1) return;
-    next[idx] = { ...next[idx], [field]: value, answeredBy: "Tom Griffiths", answeredAt: new Date().toISOString() };
+    const val = field === "dealerHasIt"
+      ? value === "yes" ? true : value === "no" ? false : "na"
+      : value;
+    next[idx] = { ...next[idx], [field]: val, answeredBy: "Tom Griffiths", answeredAt: new Date().toISOString() };
     updateApp({ policies: next });
-    if (field === "notes" && (value as string).trim()) {
-      setPolicyValidationErrors(prev => { const n = { ...prev }; delete n[polId]; return n; });
-    }
-    if (field === "dealerHasIt") {
-      const pol = next[idx];
-      if (!pol.notes.trim()) {
-        setPolicyValidationErrors(prev => ({ ...prev, [polId]: "Please add a note before this policy is marked as answered." }));
-      }
-    }
   };
 
   return (
@@ -481,8 +475,7 @@ export default function TcgAppDetail() {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[280px]">Policy Name</TableHead>
-                          <TableHead className="w-[100px]">Holds Policy</TableHead>
-                          <TableHead>Notes</TableHead>
+                          <TableHead className="w-[140px]">Holds Policy</TableHead>
                           <TableHead className="w-[80px]">Answered</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -493,14 +486,11 @@ export default function TcgAppDetail() {
                             <TableRow key={pol.policyId}>
                               <TableCell className="text-sm font-medium">{pol.name}</TableCell>
                               <TableCell>
-                                <RadioGroup value={pol.dealerHasIt === null ? "" : pol.dealerHasIt ? "yes" : "no"} onValueChange={v => updatePolicy(pol.policyId, "dealerHasIt", v === "yes")} className="flex gap-2">
+                                <RadioGroup value={pol.dealerHasIt === null ? "" : pol.dealerHasIt === "na" ? "na" : pol.dealerHasIt ? "yes" : "no"} onValueChange={v => updatePolicy(pol.policyId, "dealerHasIt", v)} className="flex gap-2">
                                   <div className="flex items-center gap-1"><RadioGroupItem value="yes" id={`q-${pol.policyId}-y`} /><Label htmlFor={`q-${pol.policyId}-y`} className="text-xs">Y</Label></div>
                                   <div className="flex items-center gap-1"><RadioGroupItem value="no" id={`q-${pol.policyId}-n`} /><Label htmlFor={`q-${pol.policyId}-n`} className="text-xs">N</Label></div>
+                                  <div className="flex items-center gap-1"><RadioGroupItem value="na" id={`q-${pol.policyId}-na`} /><Label htmlFor={`q-${pol.policyId}-na`} className="text-xs">N/A</Label></div>
                                 </RadioGroup>
-                              </TableCell>
-                              <TableCell>
-                                <Input className="h-7 text-xs" value={pol.notes} onChange={e => updatePolicy(pol.policyId, "notes", e.target.value)} placeholder="Notes..." />
-                                {policyValidationErrors[pol.policyId] && <p className="text-[10px] text-destructive mt-0.5">{policyValidationErrors[pol.policyId]}</p>}
                               </TableCell>
                               <TableCell className="text-center">
                                 {polAnswered ? <CheckCircle2 className="w-4 h-4 text-outcome-pass mx-auto" /> : <span className="text-xs text-muted-foreground">☐</span>}
@@ -534,10 +524,10 @@ export default function TcgAppDetail() {
                           {catPolicies.map(pol => {
                             const polAnswered = isPolicyAnswered(pol);
                             const borderColor = polAnswered
-                              ? pol.dealerHasIt ? "border-l-4 border-l-outcome-pass" : "border-l-4 border-l-outcome-pending"
+                              ? pol.dealerHasIt === true ? "border-l-4 border-l-outcome-pass" : pol.dealerHasIt === false ? "border-l-4 border-l-outcome-pending" : "border-l-4 border-l-muted-foreground"
                               : "border-l-4 border-l-muted-foreground/30";
                             const bgColor = polAnswered
-                              ? pol.dealerHasIt ? "bg-[hsl(140,50%,97%)]" : "bg-[hsl(45,90%,97%)]"
+                              ? pol.dealerHasIt === true ? "bg-[hsl(140,50%,97%)]" : pol.dealerHasIt === false ? "bg-[hsl(45,90%,97%)]" : ""
                               : "";
                             return (
                               <Card key={pol.policyId} className={`ml-4 ${borderColor} ${bgColor}`}>
@@ -548,18 +538,15 @@ export default function TcgAppDetail() {
                                   </div>
                                   <div className="flex items-center gap-3">
                                     <Label className="text-xs text-muted-foreground">Dealer holds this?</Label>
-                                    <RadioGroup value={pol.dealerHasIt === null ? "" : pol.dealerHasIt ? "yes" : "no"} onValueChange={v => updatePolicy(pol.policyId, "dealerHasIt", v === "yes")} className="flex gap-3">
+                                    <RadioGroup value={pol.dealerHasIt === null ? "" : pol.dealerHasIt === "na" ? "na" : pol.dealerHasIt ? "yes" : "no"} onValueChange={v => updatePolicy(pol.policyId, "dealerHasIt", v)} className="flex gap-3">
                                       <div className="flex items-center gap-1"><RadioGroupItem value="yes" id={`${pol.policyId}-yes`} /><Label htmlFor={`${pol.policyId}-yes`} className="text-xs">Yes</Label></div>
                                       <div className="flex items-center gap-1"><RadioGroupItem value="no" id={`${pol.policyId}-no`} /><Label htmlFor={`${pol.policyId}-no`} className="text-xs">No</Label></div>
+                                      <div className="flex items-center gap-1"><RadioGroupItem value="na" id={`${pol.policyId}-na`} /><Label htmlFor={`${pol.policyId}-na`} className="text-xs">N/A</Label></div>
                                     </RadioGroup>
-                                  </div>
-                                  <div>
-                                    <Input className="h-7 text-xs" value={pol.notes} onChange={e => updatePolicy(pol.policyId, "notes", e.target.value)} placeholder="Notes..." />
-                                    {policyValidationErrors[pol.policyId] && <p className="text-[10px] text-destructive mt-0.5">{policyValidationErrors[pol.policyId]}</p>}
                                   </div>
                                   {polAnswered && (
                                     <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                      {pol.dealerHasIt ? <CheckCircle2 className="w-3 h-3 text-outcome-pass" /> : <AlertTriangle className="w-3 h-3 text-outcome-pending" />}
+                                      {pol.dealerHasIt === true ? <CheckCircle2 className="w-3 h-3 text-outcome-pass" /> : pol.dealerHasIt === false ? <AlertTriangle className="w-3 h-3 text-outcome-pending" /> : null}
                                       Answered by {pol.answeredBy} · {pol.answeredAt ? new Date(pol.answeredAt).toLocaleDateString("en-GB") : ""}
                                     </p>
                                   )}

@@ -23,7 +23,7 @@ export interface OnboardingPolicy {
   policyId: string;
   name: string;
   category: string;
-  dealerHasIt: boolean | null;
+  dealerHasIt: boolean | "na" | null;
   notes: string;
   answeredBy: string | null;
   answeredAt: string | null;
@@ -243,12 +243,12 @@ function buildCompletion(
   readyToTransfer = false
 ): CompletionStatus {
   const allChecks = checks.every((c) => c.answered);
-  const allPolicies = policies.every((p) => p.dealerHasIt !== null && p.notes.trim() !== "");
+  const allPolicies = policies.every((p) => p.dealerHasIt !== null);
   const answeredCount = checks.filter((c) => c.answered).length;
   const complete = allChecks && allPolicies && detailsComplete;
   const sectionProgress = buildSectionProgress(checks);
   // Add policies as s9_policies
-  const policyAnswered = policies.filter((p) => p.dealerHasIt !== null && p.notes.trim() !== "").length;
+  const policyAnswered = policies.filter((p) => p.dealerHasIt !== null).length;
   sectionProgress["s9_policies"] = { answered: policyAnswered, total: policies.length };
   return {
     checksAnswered: answeredCount,
@@ -999,7 +999,7 @@ export const seederApplications: OnboardingApplication[] = [
 export function getOnboardingStats(apps: OnboardingApplication[]) {
   const active = apps.filter((a) => a.status !== "Ready to Transfer" && a.status !== "Archived");
   const totalPolicies = apps.reduce((s, a) => s + a.policies.length, 0);
-  const answeredPolicies = apps.reduce((s, a) => s + a.policies.filter((p) => p.dealerHasIt !== null && p.notes.trim() !== "").length, 0);
+  const answeredPolicies = apps.reduce((s, a) => s + a.policies.filter((p) => p.dealerHasIt !== null).length, 0);
   return {
     total: apps.length,
     drafts: apps.filter((a) => a.status === "Draft").length,

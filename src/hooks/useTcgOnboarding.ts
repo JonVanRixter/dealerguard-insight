@@ -65,7 +65,7 @@ function computeCompletion(
   app: Partial<OnboardingApplication>
 ): CompletionStatus {
   const allChecks = checks.every((c) => c.answered);
-  const allPolicies = policies.every((p) => p.dealerHasIt !== null && p.notes.trim() !== "");
+  const allPolicies = policies.every((p) => p.dealerHasIt !== null);
   const answeredCount = checks.filter((c) => c.answered).length;
   const detailsComplete = !!(
     (app as any).dealerName && (app as any).companiesHouseNo && (app as any).tradingName &&
@@ -73,7 +73,7 @@ function computeCompletion(
   );
   const complete = allChecks && allPolicies && detailsComplete;
   const sectionProgress = computeSectionProgress(checks);
-  const policyAnswered = policies.filter((p) => p.dealerHasIt !== null && p.notes.trim() !== "").length;
+  const policyAnswered = policies.filter((p) => p.dealerHasIt !== null).length;
   sectionProgress["s9_policies"] = { answered: policyAnswered, total: policies.length };
   return {
     checksAnswered: answeredCount,

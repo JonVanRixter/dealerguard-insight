@@ -51,7 +51,7 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
     return groups;
   }, [visiblePolicies]);
 
-  const isAnswered = (pol: OnboardingPolicy) => pol.dealerHasIt !== null && pol.notes.trim() !== "";
+  const isAnswered = (pol: OnboardingPolicy) => pol.dealerHasIt !== null;
   const answered = visiblePolicies.filter(isAnswered).length;
   const total = visiblePolicies.length;
   const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
@@ -63,27 +63,17 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
   const updatePolicy = (polId: string, field: keyof OnboardingPolicy, value: unknown) => {
     const updated = policies.map((p) => {
       if (p.policyId !== polId) return p;
-      const next = {
+      const val = field === "dealerHasIt"
+        ? value === "yes" ? true : value === "no" ? false : "na"
+        : value;
+      return {
         ...p,
-        [field]: value,
+        [field]: val,
         answeredBy: "Tom Griffiths",
         answeredAt: new Date().toISOString(),
       };
-      return next;
     });
     onUpdate({ policies: updated });
-
-    // Clear validation when notes added
-    if (field === "notes" && (value as string).trim()) {
-      setValidationErrors(prev => { const n = { ...prev }; delete n[polId]; return n; });
-    }
-    // Show validation if Y/N set but no notes
-    if (field === "dealerHasIt") {
-      const pol = policies.find(p => p.policyId === polId);
-      if (pol && !pol.notes.trim()) {
-        setValidationErrors(prev => ({ ...prev, [polId]: "Please add a note before this policy is marked as answered." }));
-      }
-    }
   };
 
   return (
@@ -118,10 +108,9 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[300px]">Policy Name</TableHead>
-                    <TableHead className="w-[100px]">Holds Policy</TableHead>
-                    <TableHead>Notes</TableHead>
-                    <TableHead className="w-[80px]">Answered</TableHead>
+                     <TableHead className="w-[300px]">Policy Name</TableHead>
+                     <TableHead className="w-[140px]">Holds Policy</TableHead>
+                     <TableHead className="w-[80px]">Answered</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -132,37 +121,17 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
                         <TableCell className="text-sm font-medium">{pol.name}</TableCell>
                         <TableCell>
                           <RadioGroup
-                            value={pol.dealerHasIt === null ? "" : pol.dealerHasIt ? "yes" : "no"}
-                            onValueChange={(v) => updatePolicy(pol.policyId, "dealerHasIt", v === "yes")}
+                            value={pol.dealerHasIt === null ? "" : pol.dealerHasIt === "na" ? "na" : pol.dealerHasIt ? "yes" : "no"}
+                            onValueChange={(v) => updatePolicy(pol.policyId, "dealerHasIt", v as any)}
                             className="flex gap-2"
                           >
-                            <div className="flex items-center gap-1">
-                              <RadioGroupItem value="yes" id={`q-${pol.policyId}-y`} />
-                              <Label htmlFor={`q-${pol.policyId}-y`} className="text-xs">Y</Label>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <RadioGroupItem value="no" id={`q-${pol.policyId}-n`} />
-                              <Label htmlFor={`q-${pol.policyId}-n`} className="text-xs">N</Label>
-                            </div>
+                            <div className="flex items-center gap-1"><RadioGroupItem value="yes" id={`q-${pol.policyId}-y`} /><Label htmlFor={`q-${pol.policyId}-y`} className="text-xs">Y</Label></div>
+                            <div className="flex items-center gap-1"><RadioGroupItem value="no" id={`q-${pol.policyId}-n`} /><Label htmlFor={`q-${pol.policyId}-n`} className="text-xs">N</Label></div>
+                            <div className="flex items-center gap-1"><RadioGroupItem value="na" id={`q-${pol.policyId}-na`} /><Label htmlFor={`q-${pol.policyId}-na`} className="text-xs">N/A</Label></div>
                           </RadioGroup>
                         </TableCell>
-                        <TableCell>
-                          <Input
-                            className="h-7 text-xs"
-                            value={pol.notes}
-                            onChange={(e) => updatePolicy(pol.policyId, "notes", e.target.value)}
-                            placeholder="Notes..."
-                          />
-                          {validationErrors[pol.policyId] && (
-                            <p className="text-[10px] text-destructive mt-0.5">{validationErrors[pol.policyId]}</p>
-                          )}
-                        </TableCell>
                         <TableCell className="text-center">
-                          {polAnswered ? (
-                            <CheckCircle2 className="w-4 h-4 text-outcome-pass mx-auto" />
-                          ) : (
-                            <span className="text-xs text-muted-foreground">☐</span>
-                          )}
+                          {polAnswered ? <CheckCircle2 className="w-4 h-4 text-outcome-pass mx-auto" /> : <span className="text-xs text-muted-foreground">☐</span>}
                         </TableCell>
                       </TableRow>
                     );
@@ -212,36 +181,15 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
 
                             <div className="space-y-2">
                               <Label className="text-xs text-muted-foreground">Does the dealer hold this policy?</Label>
-                              <RadioGroup
-                                value={pol.dealerHasIt === null ? "" : pol.dealerHasIt ? "yes" : "no"}
-                                onValueChange={(v) => updatePolicy(pol.policyId, "dealerHasIt", v === "yes")}
+                            <RadioGroup
+                                value={pol.dealerHasIt === null ? "" : pol.dealerHasIt === "na" ? "na" : pol.dealerHasIt ? "yes" : "no"}
+                                onValueChange={(v) => updatePolicy(pol.policyId, "dealerHasIt", v as any)}
                                 className="flex gap-4"
                               >
-                                <div className="flex items-center gap-1.5">
-                                  <RadioGroupItem value="yes" id={`${pol.policyId}-yes`} />
-                                  <Label htmlFor={`${pol.policyId}-yes`} className="text-sm">Yes</Label>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                  <RadioGroupItem value="no" id={`${pol.policyId}-no`} />
-                                  <Label htmlFor={`${pol.policyId}-no`} className="text-sm">No</Label>
-                                </div>
+                                <div className="flex items-center gap-1.5"><RadioGroupItem value="yes" id={`${pol.policyId}-yes`} /><Label htmlFor={`${pol.policyId}-yes`} className="text-sm">Yes</Label></div>
+                                <div className="flex items-center gap-1.5"><RadioGroupItem value="no" id={`${pol.policyId}-no`} /><Label htmlFor={`${pol.policyId}-no`} className="text-sm">No</Label></div>
+                                <div className="flex items-center gap-1.5"><RadioGroupItem value="na" id={`${pol.policyId}-na`} /><Label htmlFor={`${pol.policyId}-na`} className="text-sm">N/A</Label></div>
                               </RadioGroup>
-                            </div>
-
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">Notes</Label>
-                              <Textarea
-                                rows={2}
-                                value={pol.notes}
-                                onChange={(e) => updatePolicy(pol.policyId, "notes", e.target.value)}
-                                placeholder="Record what was confirmed, who you spoke to..."
-                                className="text-sm"
-                              />
-                              {validationErrors[pol.policyId] && (
-                                <p className="text-xs text-destructive flex items-center gap-1">
-                                  <AlertTriangle className="w-3 h-3" /> {validationErrors[pol.policyId]}
-                                </p>
-                              )}
                             </div>
 
                             {polAnswered && (
