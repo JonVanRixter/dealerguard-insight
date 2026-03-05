@@ -63,27 +63,17 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
   const updatePolicy = (polId: string, field: keyof OnboardingPolicy, value: unknown) => {
     const updated = policies.map((p) => {
       if (p.policyId !== polId) return p;
-      const next = {
+      const val = field === "dealerHasIt"
+        ? value === "yes" ? true : value === "no" ? false : "na"
+        : value;
+      return {
         ...p,
-        [field]: value,
+        [field]: val,
         answeredBy: "Tom Griffiths",
         answeredAt: new Date().toISOString(),
       };
-      return next;
     });
     onUpdate({ policies: updated });
-
-    // Clear validation when notes added
-    if (field === "notes" && (value as string).trim()) {
-      setValidationErrors(prev => { const n = { ...prev }; delete n[polId]; return n; });
-    }
-    // Show validation if Y/N set but no notes
-    if (field === "dealerHasIt") {
-      const pol = policies.find(p => p.policyId === polId);
-      if (pol && !pol.notes.trim()) {
-        setValidationErrors(prev => ({ ...prev, [polId]: "Please add a note before this policy is marked as answered." }));
-      }
-    }
   };
 
   return (
