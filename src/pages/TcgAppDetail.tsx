@@ -285,22 +285,9 @@ export default function TcgAppDetail() {
               <Badge className={
                 app.status === "Draft" ? "bg-muted text-muted-foreground" :
                 app.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
-                app.status === "Ready to Transfer" ? "bg-outcome-pass-bg text-outcome-pass-text" :
+                app.status === "Complete" ? "bg-outcome-pass-bg text-outcome-pass-text" :
                 "bg-muted text-muted-foreground"
               }>{app.status}</Badge>
-              {saving && <span className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Saving...</span>}
-            </div>
-
-            {/* Action buttons in header */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {canMarkReady && (
-                <Button onClick={handleMarkReady} className="gap-2">
-                  <Send className="w-4 h-4" /> Mark as Ready to Transfer
-                </Button>
-              )}
-              {app.status === "Ready to Transfer" && (
-                <Badge className="bg-outcome-pass-bg text-outcome-pass-text py-1.5 px-3">✅ Already marked ready to transfer</Badge>
-              )}
               <Button variant="outline" size="sm" className="gap-1" onClick={() => { if (noteText.trim()) handleAddNote(); else document.getElementById("note-input")?.focus(); }}>
                 <Plus className="w-3 h-3" /> Add Note
               </Button>
