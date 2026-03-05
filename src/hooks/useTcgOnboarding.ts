@@ -1,102 +1,18 @@
 import { useState, useCallback, useRef } from "react";
-import { tcgDealers, type TcgDealer } from "@/data/tcg/dealers";
 import { masterPolicyList } from "@/data/tcg/dealerPolicies";
+import { PRE_SCREEN_DEFS } from "@/data/tcg/onboardingApplications";
+import type {
+  OnboardingApplication,
+  OnboardingAppStatus,
+  PreScreenCheck,
+  OnboardingPolicy,
+  CompletionStatus,
+} from "@/data/tcg/onboardingApplications";
 
-// ── Types ──────────────────────────────────────────────────
+// Re-export types for consuming components
+export type { OnboardingApplication, OnboardingAppStatus, PreScreenCheck, OnboardingPolicy, CompletionStatus };
 
-export type PreScreenResult = "pass" | "fail" | "refer" | null;
-export type FieldSource = "api" | "manual" | "pending_automation";
-
-export interface PreScreenCheck {
-  id: string;
-  label: string;
-  description: string;
-  result: PreScreenResult;
-  notes: string;
-  source: FieldSource;
-}
-
-export interface PolicyEntry {
-  id: string;
-  name: string;
-  category: string;
-  exists: "yes" | "no" | "na" | null;
-  documentUploaded: boolean;
-  fileName: string | null;
-  lastUpdated: string | null;
-  dateUnknown: boolean;
-  notes: string;
-  source: FieldSource;
-}
-
-export type AppStatus = "draft" | "in_progress" | "pending_approval" | "approved" | "rejected";
-
-export const TRACKABLE_FIELDS = [
-  "companyName", "companiesHouseNumber", "tradingName", "websiteUrl",
-  "primaryContactName", "primaryContactEmail", "primaryContactPhone",
-  "addressStreet", "addressTown", "addressCounty", "addressPostcode",
-] as const;
-
-export type TrackableField = typeof TRACKABLE_FIELDS[number];
-
-export interface TcgOnboardingApp {
-  id: string;
-  appRef: string;
-  companyName: string;
-  companiesHouseNumber: string;
-  tradingName: string;
-  websiteUrl: string;
-  primaryContactName: string;
-  primaryContactEmail: string;
-  primaryContactPhone: string;
-  addressStreet: string;
-  addressTown: string;
-  addressCounty: string;
-  addressPostcode: string;
-  distributeInsurance: boolean | null;
-  preScreenChecks: PreScreenCheck[];
-  policies: PolicyEntry[];
-  fieldSources: Record<TrackableField, FieldSource>;
-  status: AppStatus;
-  currentStage: 1 | 2 | 3;
-  startedBy: string;
-  startedDate: string;
-  validityDays: number;
-  approvedDate: string | null;
-  approvedBy: string | null;
-  rejectionReason: string | null;
-  duplicateWarning: string | null;
-  dndWarning: string | null;
-}
-
-const defaultPreScreenChecks: PreScreenCheck[] = [
-  { id: "ch", label: "Companies House Status", description: "Company active, directors listed, PSCs disclosed", result: null, notes: "", source: "pending_automation" },
-  { id: "fca", label: "FCA Authorisation", description: "Authorised, permissions correct, not lapsed", result: null, notes: "", source: "pending_automation" },
-  { id: "fin", label: "Initial Financial Standing", description: "Credit score (manual entry), CCJs, accounts filed", result: null, notes: "", source: "pending_automation" },
-  { id: "aml", label: "Sanctions & AML Initial Screen", description: "Sanctions clear, no PEPs, adverse media check", result: null, notes: "", source: "pending_automation" },
-  { id: "web", label: "Website & Initial Trading Check", description: "Active website, APR visible, risk warnings present", result: null, notes: "", source: "pending_automation" },
-];
-
-function defaultFieldSources(): Record<TrackableField, FieldSource> {
-  const sources = {} as Record<TrackableField, FieldSource>;
-  for (const f of TRACKABLE_FIELDS) sources[f] = "pending_automation";
-  return sources;
-}
-
-function buildEmptyPolicies(): PolicyEntry[] {
-  return masterPolicyList.map((p) => ({
-    id: p.id,
-    name: p.name,
-    category: p.category,
-    exists: null,
-    documentUploaded: false,
-    fileName: null,
-    lastUpdated: null,
-    dateUnknown: false,
-    notes: "",
-    source: "pending_automation",
-  }));
-}
+// ── Blank app builder ─────────────────────────────────────────
 
 let appCounter = 100;
 
@@ -109,43 +25,94 @@ function genId(): string {
   return `tcg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function createBlankApp(): TcgOnboardingApp {
+function buildEmptyPreScreenChecks(): Record<string, PreScreenCheck> {
+  const checks: Record<string, PreScreenCheck> = {};
+  for (const def of PRE_SCREEN_DEFS) {
+    checks[def.key] = {
+      checkId: def.id,
+      label: def.label,
+      answered: false,
+      finding: "",
+      answeredBy: null,
+      answeredAt: null,
+    };
+  }
+  return checks;
+}
+
+function buildEmptyPolicies(): OnboardingPolicy[] {
+  return masterPolicyList.map((p) => ({
+    policyId: p.id,
+    name: p.name,
+    category: p.category,
+    dealerHasIt: null,
+    notes: "",
+    answeredBy: null,
+    answeredAt: null,
+  }));
+}
+
+function computeCompletion(
+  checks: Record<string, PreScreenCheck>,
+  policies: OnboardingPolicy[],
+  app: Partial<OnboardingApplication>
+): CompletionStatus {
+  const allChecks = Object.values(checks).every((c) => c.answered);
+  const allPolicies = policies.every((p) => p.dealerHasIt !== null);
+  const detailsComplete = !!(
+    (app as any).dealerName && (app as any).companiesHouseNo && (app as any).tradingName &&
+    (app as any).primaryContact?.name
+  );
+  const complete = allChecks && allPolicies && detailsComplete;
+  return {
+    allPreScreenChecksAnswered: allChecks,
+    allPoliciesAnswered: allPolicies,
+    dealerDetailsComplete: detailsComplete,
+    onboardingComplete: complete,
+    completedBy: null,
+    completedAt: null,
+    readyToTransfer: false,
+  };
+}
+
+function createBlankApp(): OnboardingApplication {
+  const checks = buildEmptyPreScreenChecks();
+  const policies = buildEmptyPolicies();
   return {
     id: genId(),
     appRef: genAppRef(),
-    companyName: "",
-    companiesHouseNumber: "",
+    stage: 1,
+    status: "Draft",
+    dealerName: "",
     tradingName: "",
-    websiteUrl: "",
-    primaryContactName: "",
-    primaryContactEmail: "",
-    primaryContactPhone: "",
-    addressStreet: "",
-    addressTown: "",
-    addressCounty: "",
-    addressPostcode: "",
+    companiesHouseNo: "",
+    website: "",
+    primaryContact: { name: "", email: "", phone: "" },
+    registeredAddress: { street: "", town: "", county: "", postcode: "" },
     distributeInsurance: null,
-    preScreenChecks: defaultPreScreenChecks.map((c) => ({ ...c })),
-    policies: buildEmptyPolicies(),
-    fieldSources: defaultFieldSources(),
-    status: "draft",
-    currentStage: 1,
-    startedBy: "Tom Griffiths",
-    startedDate: new Date().toISOString().slice(0, 10),
-    validityDays: 92,
-    approvedDate: null,
-    approvedBy: null,
-    rejectionReason: null,
-    duplicateWarning: null,
-    dndWarning: null,
+    requestingLender: "",
+    requestingLenderName: "",
+    initiatedBy: "Tom Griffiths",
+    initiatedDate: new Date().toISOString().slice(0, 10),
+    assignedTo: "Tom Griffiths",
+    lastUpdated: new Date().toISOString(),
+    lastUpdatedBy: "Tom Griffiths",
+    targetCompletionDate: new Date(Date.now() + 17 * 86400000).toISOString().slice(0, 10),
+    preScreenChecks: checks,
+    policies,
+    completionStatus: computeCompletion(checks, policies, {}),
+    dndClear: true,
+    platformDndClear: true,
+    notes: "",
+    history: [{ date: new Date().toISOString(), action: "Application created", user: "Tom Griffiths" }],
   };
 }
 
 // ── Hook ───────────────────────────────────────────────────
 
 export function useTcgOnboarding() {
-  const [applications, setApplications] = useState<TcgOnboardingApp[]>([]);
-  const [current, setCurrent] = useState<TcgOnboardingApp | null>(null);
+  const [applications, setApplications] = useState<OnboardingApplication[]>([]);
+  const [current, setCurrent] = useState<OnboardingApplication | null>(null);
   const [saving, setSaving] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -164,18 +131,22 @@ export function useTcgOnboarding() {
     });
   }, []);
 
-  const updateCurrent = useCallback((partial: Partial<TcgOnboardingApp>) => {
+  const updateCurrent = useCallback((partial: Partial<OnboardingApplication>) => {
     setCurrent((prev) => {
       if (!prev) return prev;
-      // Auto-set field sources to "manual" when a tracked field changes from empty
-      const updatedSources = { ...prev.fieldSources, ...(partial.fieldSources || {}) };
-      for (const key of TRACKABLE_FIELDS) {
-        if (key in partial && !prev[key] && (partial as any)[key] && updatedSources[key] === "pending_automation") {
-          updatedSources[key] = "manual";
-        }
+      const next = { ...prev, ...partial };
+      // Recompute completion status
+      const checks = partial.preScreenChecks || next.preScreenChecks;
+      const policies = partial.policies || next.policies;
+      next.completionStatus = computeCompletion(checks, policies, next);
+      // Auto-set status
+      if (next.completionStatus.onboardingComplete && next.status === "In Progress") {
+        next.status = "Complete";
       }
-      const next = { ...prev, ...partial, fieldSources: updatedSources };
-      // debounced persist
+      if (next.status === "Draft" && (next.dealerName || next.companiesHouseNo)) {
+        next.status = "In Progress";
+      }
+      // Debounced persist
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
         setApplications((apps) => apps.map((a) => (a.id === next.id ? next : a)));
@@ -187,61 +158,32 @@ export function useTcgOnboarding() {
   }, []);
 
   const setStage = useCallback((stage: 1 | 2 | 3) => {
-    updateCurrent({ currentStage: stage, status: "in_progress" });
+    updateCurrent({ stage, status: "In Progress" });
   }, [updateCurrent]);
 
-  const approve = useCallback((validityDays: number) => {
-    const today = new Date().toISOString().slice(0, 10);
-    const validUntil = new Date(Date.now() + validityDays * 86400000).toISOString().slice(0, 10);
+  const markReadyToTransfer = useCallback(() => {
     setCurrent((prev) => {
-      if (!prev) return prev;
-      const approved: TcgOnboardingApp = {
+      if (!prev || !prev.completionStatus.onboardingComplete) return prev;
+      const next: OnboardingApplication = {
         ...prev,
-        status: "approved",
-        approvedDate: today,
-        approvedBy: "Tom Griffiths",
-        validityDays,
+        status: "Ready to Transfer",
+        completionStatus: {
+          ...prev.completionStatus,
+          readyToTransfer: true,
+          completedBy: "Tom Griffiths",
+          completedAt: new Date().toISOString(),
+        },
       };
-      setApplications((apps) => apps.map((a) => (a.id === approved.id ? approved : a)));
-      return approved;
+      setApplications((apps) => apps.map((a) => (a.id === next.id ? next : a)));
+      return next;
     });
   }, []);
 
-  const reject = useCallback((reason: string) => {
-    setCurrent((prev) => {
-      if (!prev) return prev;
-      const rejected: TcgOnboardingApp = {
-        ...prev,
-        status: "rejected",
-        rejectionReason: reason,
-      };
-      setApplications((apps) => apps.map((a) => (a.id === rejected.id ? rejected : a)));
-      return rejected;
-    });
-  }, []);
-
-  // Check for duplicate CH number against existing dealers
+  // Check for duplicate CH number
   const checkDuplicate = useCallback((chNumber: string): string | null => {
     if (!chNumber || chNumber.length < 4) return null;
-    const match = tcgDealers.find((d) => d.companiesHouseNumber === chNumber);
-    if (match) {
-      return `This dealer (${match.name}) already has an active onboarding record valid until ${match.onboarding.validUntil}. A new record is not required until renewal.`;
-    }
+    // Could check against existing dealers here
     return null;
-  }, []);
-
-  // Get approved dealers from tcgDealers (existing) + approved applications
-  const getApprovedDealers = useCallback(() => {
-    return tcgDealers.map((d) => ({
-      id: d.id,
-      name: d.name,
-      tradingName: d.tradingName,
-      lendersUsing: d.onboarding.lendersUsing,
-      validFrom: d.onboarding.validFrom,
-      validUntil: d.onboarding.validUntil,
-      renewalDue: d.onboarding.renewalDue,
-      status: d.onboarding.status,
-    }));
   }, []);
 
   return {
@@ -252,13 +194,10 @@ export function useTcgOnboarding() {
     loadApp,
     updateCurrent,
     setStage,
-    approve,
-    reject,
+    markReadyToTransfer,
     checkDuplicate,
-    getApprovedDealers,
     setCurrent,
   };
 }
 
-// Export the master list for the policy framework stage
 export { masterPolicyList } from "@/data/tcg/dealerPolicies";
