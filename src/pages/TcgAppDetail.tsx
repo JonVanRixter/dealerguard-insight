@@ -23,7 +23,7 @@ import {
 } from "@/data/tcg/onboardingApplications";
 import {
   ArrowLeft, CheckCircle2, AlertTriangle, Pencil, Loader2,
-  ChevronDown, Plus, Building2, Shield, Send, Archive,
+  ChevronDown, Plus, Building2, Shield, Archive,
 } from "lucide-react";
 
 /* ── Check ID badge ────────────────────────────────────────── */
