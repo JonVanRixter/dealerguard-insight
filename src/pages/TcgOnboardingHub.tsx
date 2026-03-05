@@ -171,7 +171,7 @@ export default function TcgOnboardingHub() {
     };
   }, [filtered]);
 
-  const activeApps = allApps.filter(a => a.status !== "Archived" && !transferredIds.has(a.id));
+  const activeApps = allApps.filter(a => a.status !== "Archived");
   const activeCount = activeApps.filter(a => a.status !== "Complete").length;
   const completeCount = activeApps.filter(a => a.status === "Complete").length;
   const unassigned = activeApps.filter(a => a.assignedTo === "Unassigned").length;
