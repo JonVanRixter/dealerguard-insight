@@ -17,7 +17,7 @@ import { CreditSafeSearch } from "@/components/onboarding/CreditSafeSearch";
 import { FcaRegisterCard } from "@/components/dealer/FcaRegisterCard";
 import { DealerEnrichment } from "@/components/onboarding/DealerEnrichment";
 import { useOnboardingPersistence, type SegData } from "@/hooks/useOnboardingPersistence";
-import { useTcgOnboarding, type TcgOnboardingApp, type AppStatus } from "@/hooks/useTcgOnboarding";
+import { useTcgOnboarding, type OnboardingApplication, type OnboardingAppStatus } from "@/hooks/useTcgOnboarding";
 import { getLenderName } from "@/data/tcg/lenders";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -422,14 +422,13 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
 /* ------------------------------------------------------------------ */
 /*  TCG Hub helpers                                                    */
 /* ------------------------------------------------------------------ */
-function tcgStatusPill(status: AppStatus) {
-  const colorClass = status === "draft" ? "bg-muted text-muted-foreground" :
-    status === "in_progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
-    status === "pending_approval" ? "bg-outcome-pending-bg text-outcome-pending-text" :
-    status === "approved" ? "bg-outcome-pass-bg text-outcome-pass-text" :
-    "bg-outcome-fail-bg text-outcome-fail-text";
-  const labels: Record<AppStatus, string> = { draft: "Draft", in_progress: "In Progress", pending_approval: "Pending Approval", approved: "Approved", rejected: "Rejected" };
-  return <Badge className={colorClass}>{labels[status]}</Badge>;
+function tcgStatusPill(status: OnboardingAppStatus) {
+  const colorClass = status === "Draft" ? "bg-muted text-muted-foreground" :
+    status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
+    status === "Complete" ? "bg-outcome-pass-bg text-outcome-pass-text" :
+    status === "Ready to Transfer" ? "bg-primary/20 text-primary" :
+    "bg-muted text-muted-foreground";
+  return <Badge className={colorClass}>{status}</Badge>;
 }
 
 function daysRemainingBadge(validUntil: string | null) {
@@ -641,20 +640,20 @@ export default function PreOnboarding() {
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {tcg.applications.filter((a) => a.status !== "approved").map((app) => (
+                                {tcg.applications.filter((a) => a.status !== "Ready to Transfer").map((app) => (
                                   <TableRow key={app.id}>
                                     <TableCell className="font-mono text-sm">{app.appRef}</TableCell>
-                                    <TableCell>{app.companyName || "—"}</TableCell>
-                                    <TableCell className="font-mono">{app.companiesHouseNumber || "—"}</TableCell>
-                                    <TableCell>{app.startedBy}</TableCell>
-                                    <TableCell><span className="text-sm text-muted-foreground">{app.currentStage}/3 stages</span></TableCell>
+                                    <TableCell>{app.dealerName || "—"}</TableCell>
+                                    <TableCell className="font-mono">{app.companiesHouseNo || "—"}</TableCell>
+                                    <TableCell>{app.initiatedBy}</TableCell>
+                                    <TableCell><span className="text-sm text-muted-foreground">Stage {app.stage}/3</span></TableCell>
                                     <TableCell>{tcgStatusPill(app.status)}</TableCell>
                                     <TableCell>
                                       <Button variant="outline" size="sm" onClick={() => {
                                         tcg.loadApp(app.id);
-                                        navigate(`/tcg/onboarding/${app.id}/stage-${app.currentStage}`);
+                                        navigate(`/tcg/onboarding/${app.id}`);
                                       }}>
-                                        {app.status === "draft" ? "Continue" : "View"}
+                                        {app.status === "Draft" ? "Continue" : "View"}
                                       </Button>
                                     </TableCell>
                                   </TableRow>
@@ -673,42 +672,23 @@ export default function PreOnboarding() {
                             <TableHeader>
                               <TableRow>
                                 <TableHead>Dealer</TableHead>
-                                <TableHead>Lenders Using</TableHead>
-                                <TableHead>Valid From</TableHead>
-                                <TableHead>Valid Until</TableHead>
-                                <TableHead>Days Remaining</TableHead>
-                                <TableHead>Renewal Due</TableHead>
+                                <TableHead>Ref</TableHead>
+                                <TableHead>Lender</TableHead>
+                                <TableHead>Completed</TableHead>
+                                <TableHead>Status</TableHead>
                                 <TableHead>Actions</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {tcg.getApprovedDealers().map((d) => (
+                              {tcg.applications.filter(a => a.status === "Ready to Transfer" || a.status === "Complete").map((d) => (
                                 <TableRow key={d.id}>
-                                  <TableCell className="font-medium">{d.name}</TableCell>
+                                  <TableCell className="font-medium">{d.dealerName}</TableCell>
+                                  <TableCell className="font-mono text-sm">{d.appRef}</TableCell>
+                                  <TableCell>{d.requestingLenderName || "—"}</TableCell>
+                                  <TableCell className="text-sm text-muted-foreground">{d.completionStatus.completedAt ? new Date(d.completionStatus.completedAt).toLocaleDateString("en-GB") : "—"}</TableCell>
+                                  <TableCell>{tcgStatusPill(d.status)}</TableCell>
                                   <TableCell>
-                                    <div className="flex flex-wrap gap-1">
-                                      {d.lendersUsing.map((lid) => (
-                                        <Badge key={lid} variant="secondary" className="text-xs">{getLenderName(lid)}</Badge>
-                                      ))}
-                                    </div>
-                                  </TableCell>
-                                  <TableCell>{d.validFrom || "—"}</TableCell>
-                                  <TableCell>{d.validUntil || "—"}</TableCell>
-                                  <TableCell>{daysRemainingBadge(d.validUntil)}</TableCell>
-                                  <TableCell>
-                                    {d.renewalDue ? (
-                                      <Badge className="bg-outcome-pending-bg text-outcome-pending-text">⚠️ Yes</Badge>
-                                    ) : (
-                                      <span className="text-outcome-pass-text">✅ No</span>
-                                    )}
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex gap-2">
-                                      <Button variant="outline" size="sm" className="gap-1"><Eye className="w-3 h-3" /> View</Button>
-                                      {d.renewalDue && (
-                                        <Button variant="outline" size="sm" className="gap-1"><RefreshCw className="w-3 h-3" /> Renew</Button>
-                                      )}
-                                    </div>
+                                    <Button variant="outline" size="sm" className="gap-1" onClick={() => { tcg.loadApp(d.id); navigate(`/tcg/onboarding/${d.id}`); }}><Eye className="w-3 h-3" /> View</Button>
                                   </TableCell>
                                 </TableRow>
                               ))}
