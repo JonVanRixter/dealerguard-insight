@@ -212,7 +212,7 @@ export default function Onboarding() {
                             </div>
                           </TableCell>
                           <TableCell className="text-sm">{app.assignedTo}</TableCell>
-                          <TableCell>{daysUntilTarget(app.targetCompletionDate)}</TableCell>
+                          
                           <TableCell>
                             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={e => { e.stopPropagation(); openApp(app); }}>Open</Button>
                           </TableCell>

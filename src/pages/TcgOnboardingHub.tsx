@@ -59,7 +59,7 @@ function AppCard({ app, onClick }: { app: OnboardingApplication; onClick: () => 
         )}
         <div className="flex items-center justify-between text-[11px]">
           <span className={app.assignedTo === "Unassigned" ? "text-outcome-pending font-medium" : "text-muted-foreground"}>👤 {app.assignedTo}</span>
-          <span>🗓 {daysUntilTarget(app.targetCompletionDate)}</span>
+          
         </div>
         <div className="flex flex-wrap gap-1">
           {preScreenIcon(app)}
