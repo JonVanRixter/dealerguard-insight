@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AlertTriangle, ArrowRight, CheckCircle2, ChevronDown, Pencil } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, ChevronDown, Pencil, Settings } from "lucide-react";
 import { StageIndicator } from "@/components/tcg-onboarding/StageIndicator";
 import type { OnboardingApplication, PreScreenCheck } from "@/hooks/useTcgOnboarding";
 
@@ -23,10 +23,136 @@ interface Stage1Props {
   checkDuplicate: (ch: string) => string | null;
 }
 
+/* ── Sub-components ─────────────────────────────────────────── */
+
 function RiskBadge({ rating }: { rating: "High" | "Medium" }) {
   if (rating === "High") return <Badge className="bg-destructive/10 text-destructive text-[10px] font-medium">🔴 High</Badge>;
   return <Badge className="bg-outcome-pending-bg text-outcome-pending-text text-[10px] font-medium">🟡 Medium</Badge>;
 }
+
+function SectionStatusIcon({ answered, total }: { answered: number; total: number }) {
+  if (answered === total) return <CheckCircle2 className="w-4 h-4 text-outcome-pass" />;
+  if (answered > 0) return <Settings className="w-4 h-4 text-muted-foreground animate-spin" style={{ animationDuration: "3s" }} />;
+  return <span className="w-4 h-4 rounded-full border-2 border-muted-foreground/40 inline-block" />;
+}
+
+interface SectionGroup {
+  sectionId: string;
+  sectionName: string;
+  checks: PreScreenCheck[];
+  answered: number;
+  total: number;
+}
+
+/* ── Check Card (collapsed / expanded) ──────────────────────── */
+
+function CheckCard({
+  check,
+  isExpanded,
+  validationError,
+  onToggleExpand,
+  onUpdateCheck,
+}: {
+  check: PreScreenCheck;
+  isExpanded: boolean;
+  validationError?: string;
+  onToggleExpand: (id: string, open: boolean) => void;
+  onUpdateCheck: (checkId: string, field: "answered" | "finding", value: any) => void;
+}) {
+  const isAnswered = check.answered;
+  const showFull = !isAnswered || isExpanded;
+
+  const borderColor = isAnswered
+    ? "border-l-outcome-pass"
+    : check.riskRating === "High"
+      ? "border-l-destructive/60"
+      : "border-l-outcome-pending/60";
+
+  return (
+    <div className={`rounded-lg border transition-colors border-l-4 ${borderColor} border-t border-r border-b`}>
+      {/* Compact answered state */}
+      {isAnswered && !isExpanded && (
+        <div className="p-4 flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
+            <CheckCircle2 className="w-5 h-5 text-outcome-pass shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono text-xs text-muted-foreground">{check.checkId}</span>
+                <p className="text-sm font-medium">{check.label}</p>
+                <RiskBadge rating={check.riskRating} />
+              </div>
+              <p className="text-sm text-muted-foreground mt-1 truncate">"{check.finding}"</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Answered by {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : ""}{" "}
+                {check.answeredAt ? new Date(check.answeredAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : ""}
+              </p>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" className="gap-1 text-xs shrink-0" onClick={() => onToggleExpand(check.checkId, true)}>
+            <Pencil className="w-3 h-3" /> Edit
+          </Button>
+        </div>
+      )}
+
+      {/* Full expanded state */}
+      {showFull && (
+        <div className="p-4 space-y-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-mono text-xs text-muted-foreground">{check.checkId}</span>
+            <RiskBadge rating={check.riskRating} />
+          </div>
+
+          <p className="text-sm font-medium">{check.label}</p>
+
+          <div className="bg-muted/50 rounded-md p-3">
+            <p className="text-xs font-medium text-muted-foreground mb-1">What to check:</p>
+            <p className="text-xs text-muted-foreground">{check.objective}</p>
+            <p className="text-[10px] text-muted-foreground/60 mt-1">Frequency: {check.frequency}</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Finding / Notes</Label>
+            <Textarea
+              rows={3}
+              value={check.finding}
+              onChange={(e) => onUpdateCheck(check.checkId, "finding", e.target.value)}
+              placeholder="Record what you found — who you spoke to, what was confirmed, any issues..."
+            />
+            {validationError && (
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" /> {validationError}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id={`mark-${check.checkId}`}
+                checked={check.answered}
+                onCheckedChange={(checked) => onUpdateCheck(check.checkId, "answered", !!checked)}
+              />
+              <Label htmlFor={`mark-${check.checkId}`} className="text-sm cursor-pointer">Mark as answered</Label>
+            </div>
+            {check.answeredBy && (
+              <span className="text-xs text-muted-foreground">
+                Answered by: {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB") : "—"}
+              </span>
+            )}
+          </div>
+
+          {isAnswered && isExpanded && (
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => onToggleExpand(check.checkId, false)}>
+              Collapse
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Main Component ─────────────────────────────────────────── */
 
 export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving, checkDuplicate }: Stage1Props) {
   const [duplicateMsg, setDuplicateMsg] = useState<string | null>(null);
@@ -44,7 +170,7 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
   };
 
   // Group checks by section
-  const sections = useMemo(() => {
+  const sections: SectionGroup[] = useMemo(() => {
     const map = new Map<string, PreScreenCheck[]>();
     for (const check of app.checks) {
       const existing = map.get(check.sectionId) || [];
@@ -59,6 +185,14 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
       total: checks.length,
     }));
   }, [app.checks]);
+
+  // Find first unanswered section for smart collapse
+  const firstUnansweredSectionId = useMemo(() => {
+    for (const s of sections) {
+      if (s.answered < s.total) return s.sectionId;
+    }
+    return null;
+  }, [sections]);
 
   const totalChecks = app.checks.length;
   const answeredChecks = app.checks.filter(c => c.answered).length;
@@ -78,12 +212,7 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
           return c;
         }
         setValidationErrors(prev => { const n = { ...prev }; delete n[checkId]; return n; });
-        return {
-          ...c,
-          answered: true,
-          answeredBy: "Tom Griffiths",
-          answeredAt: new Date().toISOString(),
-        };
+        return { ...c, answered: true, answeredBy: "Tom Griffiths", answeredAt: new Date().toISOString() };
       } else if (field === "answered" && value === false) {
         return { ...c, answered: false, answeredBy: null, answeredAt: null };
       } else {
@@ -97,17 +226,40 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
     onUpdate({ checks: updated });
   };
 
+  const handleToggleExpand = (id: string, open: boolean) => {
+    setExpandedAnswered(prev => {
+      if (open) return { ...prev, [id]: true };
+      const n = { ...prev }; delete n[id]; return n;
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6">
         <StageIndicator current={1} onNavigate={onNavigate} allPreScreenDone={allPreScreenDone} allPoliciesDone={allPoliciesDone} />
 
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Dealer Details & Compliance Checks</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Pre-Screen Checks</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {totalChecks} checks across {sections.length} sections. Complete every check by recording what you found.
+            </p>
+          </div>
           <span className="text-sm text-muted-foreground">
             {saving ? "💾 Saving..." : "✅ Saved"}
           </span>
         </div>
+
+        {/* Overall progress bar */}
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium shrink-0">Overall progress:</span>
+              <Progress value={checkPct} className="flex-1" />
+              <span className="text-sm font-medium shrink-0">{answeredChecks} of {totalChecks} answered</span>
+            </div>
+          </CardContent>
+        </Card>
 
         {duplicateMsg && (
           <div className="bg-outcome-pending-bg border border-outcome-pending rounded-lg p-4 flex items-start gap-3">
@@ -116,7 +268,7 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
           </div>
         )}
 
-        {/* Section A — Basic Dealer Info */}
+        {/* Basic Dealer Info */}
         <Card>
           <CardHeader><CardTitle>Basic Dealer Information</CardTitle></CardHeader>
           <CardContent className="space-y-4">
@@ -190,130 +342,64 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
           </CardContent>
         </Card>
 
-        {/* Section B — Compliance Checks grouped by section */}
-        {sections.map((section) => (
-          <Collapsible key={section.sectionId} defaultOpen>
-            <Card>
-              <CollapsibleTrigger className="w-full">
-                <CardHeader className="flex flex-row items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <ChevronDown className="w-4 h-4 transition-transform group-data-[state=closed]:-rotate-90" />
-                    {section.sectionName}
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-[10px]">
+        {/* Section-grouped compliance checks */}
+        {sections.map((section) => {
+          const isComplete = section.answered === section.total;
+          const isInProgress = section.answered > 0 && !isComplete;
+          const defaultOpen = section.sectionId === firstUnansweredSectionId;
+
+          return (
+            <Collapsible key={section.sectionId} defaultOpen={defaultOpen}>
+              <Card className={isComplete ? "border-outcome-pass/30" : ""}>
+                <CollapsibleTrigger className="w-full group">
+                  <CardHeader className={`flex flex-row items-center justify-between cursor-pointer transition-colors ${
+                    isComplete ? "bg-outcome-pass-bg/40 hover:bg-outcome-pass-bg/60" : "hover:bg-muted/30"
+                  }`}>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <ChevronDown className="w-4 h-4 transition-transform group-data-[state=closed]:-rotate-90" />
+                      <SectionStatusIcon answered={section.answered} total={section.total} />
+                      {section.sectionName}
+                    </CardTitle>
+                    <Badge
+                      variant="secondary"
+                      className={`text-[10px] ${
+                        isComplete
+                          ? "bg-outcome-pass-bg text-outcome-pass-text"
+                          : isInProgress
+                            ? "bg-muted text-foreground"
+                            : "bg-muted text-muted-foreground"
+                      }`}
+                    >
                       {section.answered}/{section.total} answered
                     </Badge>
-                    {section.answered === section.total && (
-                      <CheckCircle2 className="w-4 h-4 text-outcome-pass" />
-                    )}
-                  </div>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="pt-0 space-y-3">
-                  {section.checks.map((check) => {
-                    const isAnswered = check.answered;
-                    const isExpanded = expandedAnswered[check.checkId];
-                    const showFull = !isAnswered || isExpanded;
-
-                    return (
-                      <div
-                        key={check.checkId}
-                        className={`rounded-lg border transition-colors ${
-                          isAnswered
-                            ? "border-l-4 border-l-outcome-pass border-t border-r border-b"
-                            : "border-l-4 border-l-muted-foreground/30 border-t border-r border-b"
-                        }`}
-                      >
-                        {/* Compact answered state */}
-                        {isAnswered && !isExpanded && (
-                          <div className="p-4 flex items-start justify-between gap-3">
-                            <div className="flex items-start gap-3 min-w-0 flex-1">
-                              <CheckCircle2 className="w-5 h-5 text-outcome-pass shrink-0 mt-0.5" />
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-mono text-xs text-muted-foreground">{check.checkId}</span>
-                                  <p className="text-sm font-medium">{check.label}</p>
-                                  <RiskBadge rating={check.riskRating} />
-                                </div>
-                                <p className="text-sm text-muted-foreground mt-1 truncate">
-                                  "{check.finding}"
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Answered by {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : ""} {check.answeredAt ? new Date(check.answeredAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : ""}
-                                </p>
-                              </div>
-                            </div>
-                            <Button variant="ghost" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setExpandedAnswered(prev => ({ ...prev, [check.checkId]: true }))}>
-                              <Pencil className="w-3 h-3" /> Edit
-                            </Button>
-                          </div>
-                        )}
-
-                        {/* Full expanded state */}
-                        {showFull && (
-                          <div className="p-4 space-y-3">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-mono text-xs text-muted-foreground">{check.checkId}</span>
-                              <p className="text-sm font-medium">{check.label}</p>
-                              <RiskBadge rating={check.riskRating} />
-                            </div>
-
-                            <div className="bg-muted/50 rounded-md p-3">
-                              <p className="text-xs font-medium text-muted-foreground mb-1">Objective — what to check:</p>
-                              <p className="text-xs text-muted-foreground">{check.objective}</p>
-                              <p className="text-[10px] text-muted-foreground/60 mt-1">Frequency: {check.frequency}</p>
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label className="text-xs font-medium">Finding / Notes</Label>
-                              <Textarea
-                                rows={3}
-                                value={check.finding}
-                                onChange={(e) => updateCheck(check.checkId, "finding", e.target.value)}
-                                placeholder="Record what you found — who you spoke to, what was confirmed, any issues..."
-                              />
-                              {validationErrors[check.checkId] && (
-                                <p className="text-xs text-destructive flex items-center gap-1">
-                                  <AlertTriangle className="w-3 h-3" /> {validationErrors[check.checkId]}
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                              <div className="flex items-center gap-2">
-                                <Checkbox
-                                  id={`mark-${check.checkId}`}
-                                  checked={check.answered}
-                                  onCheckedChange={(checked) => updateCheck(check.checkId, "answered", !!checked)}
-                                />
-                                <Label htmlFor={`mark-${check.checkId}`} className="text-sm cursor-pointer">Mark as answered</Label>
-                              </div>
-                              {check.answeredBy && (
-                                <span className="text-xs text-muted-foreground">
-                                  Answered by: {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB") : "—"}
-                                </span>
-                              )}
-                            </div>
-
-                            {isAnswered && isExpanded && (
-                              <Button variant="ghost" size="sm" className="text-xs" onClick={() => setExpandedAnswered(prev => { const n = { ...prev }; delete n[check.checkId]; return n; })}>
-                                Collapse
-                              </Button>
-                            )}
-                          </div>
-                        )}
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0 space-y-3">
+                    {isComplete && (
+                      <div className="bg-outcome-pass-bg/30 border border-outcome-pass/20 rounded-md p-3 text-sm text-outcome-pass-text flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4" />
+                        {section.sectionName} — all {section.total} checks answered
                       </div>
-                    );
-                  })}
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-        ))}
+                    )}
+                    {section.checks.map((check) => (
+                      <CheckCard
+                        key={check.checkId}
+                        check={check}
+                        isExpanded={!!expandedAnswered[check.checkId]}
+                        validationError={validationErrors[check.checkId]}
+                        onToggleExpand={handleToggleExpand}
+                        onUpdateCheck={updateCheck}
+                      />
+                    ))}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          );
+        })}
 
-        {/* Completion indicator */}
+        {/* Sticky completion bar */}
         <Card className="sticky bottom-4 z-10 shadow-lg">
           <CardContent className="py-4">
             <div className="flex items-center gap-4">
