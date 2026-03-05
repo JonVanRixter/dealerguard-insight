@@ -228,7 +228,7 @@ export default function TcgOnboardingHub() {
     { key: "drafts", title: "📋 Draft", subtitle: "Not started", apps: columns.drafts, bg: "bg-muted/40 border-muted-foreground/20" },
     { key: "preScreen", title: "⚙️ Pre-Screen", subtitle: "Checks & Details", apps: columns.preScreen, bg: "bg-blue-50/60 dark:bg-blue-950/30 border-blue-300/40 dark:border-blue-700/40" },
     { key: "policies", title: "📄 Policies", subtitle: "Framework", apps: columns.policies, bg: "bg-[hsl(270_60%_97%)] dark:bg-[hsl(270_30%_12%)] border-[hsl(270_50%_80%)]/40 dark:border-[hsl(270_40%_30%)]/40" },
-    { key: "ready", title: "✅ Ready to Transfer", subtitle: "All checks complete", apps: columns.ready, bg: "bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300/40 dark:border-emerald-700/40" },
+    { key: "complete", title: "✅ Complete", subtitle: "Added to dealer portfolio", apps: columns.complete, bg: "bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300/40 dark:border-emerald-700/40" },
   ];
 
   return (
