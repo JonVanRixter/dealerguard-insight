@@ -179,13 +179,6 @@ export default function TcgOnboardingHub() {
 
   const openApp = (app: OnboardingApplication) => navigate(`/tcg/onboarding/${app.id}`);
 
-  const handleTransferConfirm = () => {
-    if (!transferApp) return;
-    setTransferredIds(prev => new Set(prev).add(transferApp.id));
-    toast({ title: "✅ Transferred", description: `${transferApp.dealerName} onboarding record is complete and has been added to the dealer directory.` });
-    setTransferApp(null);
-  };
-
   const handleArchiveConfirm = () => {
     if (!archiveApp || !archiveReason.trim()) return;
     setArchivedApps(prev => new Map(prev).set(archiveApp.id, archiveReason.trim()));
