@@ -263,6 +263,21 @@ export default function TcgAppDetail() {
               <p className="text-sm text-muted-foreground">{app.appRef} · {app.requestingLenderName} · Initiated: {new Date(app.initiatedDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</p>
             </div>
             <StageStepper current={activeStage} onClick={s => { if (s === 2 && !allChecksAnswered) return; setActiveStage(s); }} preScreenDone={allChecksAnswered && detailsComplete} policiesDone={allPoliciesDone} />
+
+            {/* Header progress indicator */}
+            <div className="flex items-center gap-6 flex-wrap">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs text-muted-foreground shrink-0">Pre-Screen:</span>
+                <Progress value={totalChecks > 0 ? Math.round((answeredChecks / totalChecks) * 100) : 0} className="h-2 w-32" />
+                <span className="text-xs font-medium shrink-0">{answeredChecks}/{totalChecks} checks</span>
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs text-muted-foreground shrink-0">Policies:</span>
+                <Progress value={policyPct} className="h-2 w-32" />
+                <span className="text-xs font-medium shrink-0">{answeredPolicies}/{policiesTotal} answered</span>
+              </div>
+            </div>
+
             <div className="flex items-center gap-4 text-sm flex-wrap">
               <span>Assigned: <span className="font-medium">{app.assignedTo}</span></span>
               <span>Target: {new Date(app.targetCompletionDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}</span>
