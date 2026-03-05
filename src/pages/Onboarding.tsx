@@ -155,27 +155,33 @@ export default function Onboarding() {
               { label: "✅ Complete", apps: byStage.complete },
               { label: "🚀 Ready to Transfer", apps: byStage.ready },
             ].map(group => group.apps.length > 0 && (
-              <div key={group.label}>
-                <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">{group.label} <Badge variant="secondary">{group.apps.length}</Badge></h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {group.apps.map(app => (
-                    <Card key={app.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => openApp(app)}>
-                      <CardContent className="p-4 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <p className="font-semibold text-sm">{app.dealerName}</p>
-                          {statusBadge(app.status)}
-                        </div>
-                        <p className="text-xs text-muted-foreground">{app.appRef} · {app.requestingLenderName.split(" ").slice(0, 2).join(" ")}</p>
-                        {stageBar(app)}
-                        <div className="flex items-center justify-between text-xs">
-                          <span className={app.assignedTo === "Unassigned" ? "text-outcome-pending font-medium" : "text-muted-foreground"}>👤 {app.assignedTo}</span>
-                          {daysUntilTarget(app.targetCompletionDate)}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+              <Collapsible key={group.label} defaultOpen>
+                <CollapsibleTrigger className="flex items-center gap-2 mb-2 group w-full text-left">
+                  <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
+                  <h3 className="text-sm font-semibold">{group.label}</h3>
+                  <Badge variant="secondary">{group.apps.length}</Badge>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {group.apps.map(app => (
+                      <Card key={app.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => openApp(app)}>
+                        <CardContent className="p-4 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p className="font-semibold text-sm">{app.dealerName}</p>
+                            {statusBadge(app.status)}
+                          </div>
+                          <p className="text-xs text-muted-foreground">{app.appRef} · {app.requestingLenderName.split(" ").slice(0, 2).join(" ")}</p>
+                          {stageBar(app)}
+                          <div className="flex items-center justify-between text-xs">
+                            <span className={app.assignedTo === "Unassigned" ? "text-outcome-pending font-medium" : "text-muted-foreground"}>👤 {app.assignedTo}</span>
+                            {daysUntilTarget(app.targetCompletionDate)}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             ))}
           </TabsContent>
 
