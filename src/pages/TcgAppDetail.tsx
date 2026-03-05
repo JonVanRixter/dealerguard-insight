@@ -263,6 +263,21 @@ export default function TcgAppDetail() {
               <p className="text-sm text-muted-foreground">{app.appRef} · {app.requestingLenderName} · Initiated: {new Date(app.initiatedDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</p>
             </div>
             <StageStepper current={activeStage} onClick={s => { if (s === 2 && !allChecksAnswered) return; setActiveStage(s); }} preScreenDone={allChecksAnswered && detailsComplete} policiesDone={allPoliciesDone} />
+
+            {/* Header progress indicator */}
+            <div className="flex items-center gap-6 flex-wrap">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs text-muted-foreground shrink-0">Pre-Screen:</span>
+                <Progress value={totalChecks > 0 ? Math.round((answeredChecks / totalChecks) * 100) : 0} className="h-2 w-32" />
+                <span className="text-xs font-medium shrink-0">{answeredChecks}/{totalChecks} checks</span>
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs text-muted-foreground shrink-0">Policies:</span>
+                <Progress value={policyPct} className="h-2 w-32" />
+                <span className="text-xs font-medium shrink-0">{answeredPolicies}/{policiesTotal} answered</span>
+              </div>
+            </div>
+
             <div className="flex items-center gap-4 text-sm flex-wrap">
               <span>Assigned: <span className="font-medium">{app.assignedTo}</span></span>
               <span>Target: {new Date(app.targetCompletionDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}</span>
@@ -599,7 +614,12 @@ export default function TcgAppDetail() {
                 <div className="text-xs space-y-0.5">
                   <p>Checks: {answeredChecks}/{totalChecks} answered</p>
                   <p>Policies: {answeredPolicies}/{policiesTotal} answered</p>
-                  <p>DND: {app.dndClear ? "✅ Checked" : "🔴 Flagged"}</p>
+                  <p>DND: {(() => {
+                    const s1c4 = app.checks.find(c => c.checkId === "s1_c4");
+                    const s5c2 = app.checks.find(c => c.checkId === "s5_c2");
+                    const bothDone = s1c4?.answered && s5c2?.answered;
+                    return bothDone ? "✅ Checked" : "○ Not yet checked";
+                  })()}</p>
                 </div>
               </div>
 
