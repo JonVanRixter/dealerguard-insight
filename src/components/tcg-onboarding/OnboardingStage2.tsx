@@ -51,7 +51,7 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
     return groups;
   }, [visiblePolicies]);
 
-  const isAnswered = (pol: OnboardingPolicy) => pol.dealerHasIt !== null && pol.notes.trim() !== "";
+  const isAnswered = (pol: OnboardingPolicy) => pol.dealerHasIt !== null;
   const answered = visiblePolicies.filter(isAnswered).length;
   const total = visiblePolicies.length;
   const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
