@@ -640,20 +640,20 @@ export default function PreOnboarding() {
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {tcg.applications.filter((a) => a.status !== "approved").map((app) => (
+                                {tcg.applications.filter((a) => a.status !== "Ready to Transfer").map((app) => (
                                   <TableRow key={app.id}>
                                     <TableCell className="font-mono text-sm">{app.appRef}</TableCell>
-                                    <TableCell>{app.companyName || "—"}</TableCell>
-                                    <TableCell className="font-mono">{app.companiesHouseNumber || "—"}</TableCell>
-                                    <TableCell>{app.startedBy}</TableCell>
-                                    <TableCell><span className="text-sm text-muted-foreground">{app.currentStage}/3 stages</span></TableCell>
+                                    <TableCell>{app.dealerName || "—"}</TableCell>
+                                    <TableCell className="font-mono">{app.companiesHouseNo || "—"}</TableCell>
+                                    <TableCell>{app.initiatedBy}</TableCell>
+                                    <TableCell><span className="text-sm text-muted-foreground">Stage {app.stage}/3</span></TableCell>
                                     <TableCell>{tcgStatusPill(app.status)}</TableCell>
                                     <TableCell>
                                       <Button variant="outline" size="sm" onClick={() => {
                                         tcg.loadApp(app.id);
-                                        navigate(`/tcg/onboarding/${app.id}/stage-${app.currentStage}`);
+                                        navigate(`/tcg/onboarding/${app.id}`);
                                       }}>
-                                        {app.status === "draft" ? "Continue" : "View"}
+                                        {app.status === "Draft" ? "Continue" : "View"}
                                       </Button>
                                     </TableCell>
                                   </TableRow>
