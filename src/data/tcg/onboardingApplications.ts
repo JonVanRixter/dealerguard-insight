@@ -248,7 +248,7 @@ function buildCompletion(
   const complete = allChecks && allPolicies && detailsComplete;
   const sectionProgress = buildSectionProgress(checks);
   // Add policies as s9_policies
-  const policyAnswered = policies.filter((p) => p.dealerHasIt !== null && p.notes.trim() !== "").length;
+  const policyAnswered = policies.filter((p) => p.dealerHasIt !== null).length;
   sectionProgress["s9_policies"] = { answered: policyAnswered, total: policies.length };
   return {
     checksAnswered: answeredCount,
