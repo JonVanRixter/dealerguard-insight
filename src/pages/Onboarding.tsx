@@ -31,11 +31,11 @@ function statusBadge(status: OnboardingAppStatus) {
 }
 
 function preScreenSummary(app: OnboardingApplication) {
-  const checks = Object.values(app.preScreenChecks);
-  const answered = checks.filter(c => c.answered).length;
+  const answered = app.checks.filter(c => c.answered).length;
+  const total = app.checks.length;
   if (answered === 0) return <span className="text-muted-foreground text-xs">Not started</span>;
-  if (answered === checks.length) return <Badge className="bg-outcome-pass-bg text-outcome-pass-text text-xs">✓ All answered</Badge>;
-  return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs">{answered}/{checks.length}</Badge>;
+  if (answered === total) return <Badge className="bg-outcome-pass-bg text-outcome-pass-text text-xs">✓ All answered</Badge>;
+  return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs">{answered}/{total}</Badge>;
 }
 
 function daysUntilTarget(target: string) {

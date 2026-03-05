@@ -59,38 +59,21 @@ export function RunExternalChecks({ companiesHouseNumber, app, onUpdate }: Props
     const cs = data.creditSafe.simulatedData;
     const now = new Date().toISOString();
 
-    const updatedChecks = { ...app.preScreenChecks };
-    
-    if (updatedChecks.legalEntityStatus) {
-      updatedChecks.legalEntityStatus = {
-        ...updatedChecks.legalEntityStatus,
-        answered: true,
-        finding: `Company ${ch.companyStatus}. Incorporated ${ch.incorporationDate}. ${ch.directors?.length || 0} directors on record.`,
-        answeredBy: "System (API)",
-        answeredAt: now,
-      };
-    }
-    if (updatedChecks.fcaAuthorisation) {
-      updatedChecks.fcaAuthorisation = {
-        ...updatedChecks.fcaAuthorisation,
-        answered: true,
-        finding: `FCA status: ${fca.overallResult}. ${fca.permissions?.join(", ") || "Permissions checked."}`,
-        answeredBy: "System (API)",
-        answeredAt: now,
-      };
-    }
-    if (updatedChecks.creditAndFinancialStanding) {
-      updatedChecks.creditAndFinancialStanding = {
-        ...updatedChecks.creditAndFinancialStanding,
-        answered: true,
-        finding: `CreditSafe score: ${cs.creditScore || "N/A"}. ${cs.ccjCount || 0} CCJs. Overall: ${cs.overallResult}.`,
-        answeredBy: "System (API)",
-        answeredAt: now,
-      };
-    }
+    const updatedChecks = app.checks.map(c => {
+      if (c.checkId === "s1_c1") {
+        return { ...c, answered: true, finding: `Company ${ch.companyStatus}. Incorporated ${ch.incorporationDate}. ${ch.directors?.length || 0} directors on record.`, answeredBy: "System (API)", answeredAt: now };
+      }
+      if (c.checkId === "s2_c1") {
+        return { ...c, answered: true, finding: `FCA status: ${fca.overallResult}. ${fca.permissions?.join(", ") || "Permissions checked."}`, answeredBy: "System (API)", answeredAt: now };
+      }
+      if (c.checkId === "s1_c4") {
+        return { ...c, answered: true, finding: `CreditSafe score: ${cs.creditScore || "N/A"}. ${cs.ccjCount || 0} CCJs. Overall: ${cs.overallResult}.`, answeredBy: "System (API)", answeredAt: now };
+      }
+      return c;
+    });
 
-    onUpdate({ preScreenChecks: updatedChecks });
-  }, [companiesHouseNumber, app.preScreenChecks, onUpdate]);
+    onUpdate({ checks: updatedChecks });
+  }, [companiesHouseNumber, app.checks, onUpdate]);
 
   const handlePrefill = useCallback(() => {
     if (!checkData) return;

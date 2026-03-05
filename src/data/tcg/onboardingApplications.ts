@@ -3,10 +3,16 @@ import { masterPolicyList } from "./dealerPolicies";
 // ── Types ────────────────────────────────────────────────────
 
 export type OnboardingAppStatus = "Draft" | "In Progress" | "Ready to Transfer" | "Archived";
+export type RiskRating = "High" | "Medium";
 
 export interface PreScreenCheck {
   checkId: string;
+  sectionId: string;
+  sectionName: string;
   label: string;
+  objective: string;
+  riskRating: RiskRating;
+  frequency: string;
   answered: boolean;
   finding: string;
   answeredBy: string | null;
@@ -17,7 +23,7 @@ export interface OnboardingPolicy {
   policyId: string;
   name: string;
   category: string;
-  dealerHasIt: boolean | null; // null = unanswered
+  dealerHasIt: boolean | null;
   notes: string;
   answeredBy: string | null;
   answeredAt: string | null;
@@ -59,7 +65,7 @@ export interface OnboardingApplication {
   lastUpdated: string;
   lastUpdatedBy: string;
   targetCompletionDate: string;
-  preScreenChecks: Record<string, PreScreenCheck>;
+  checks: PreScreenCheck[];
   policies: OnboardingPolicy[];
   completionStatus: CompletionStatus;
   dndClear: boolean;
@@ -69,39 +75,128 @@ export interface OnboardingApplication {
   archiveReason?: string;
 }
 
-// ── Pre-Screen Definitions ───────────────────────────────────
+// ── Check Definitions (29 checks across 8 sections) ─────────
 
-export const PRE_SCREEN_DEFS = [
-  { key: "legalEntityStatus", id: "ps01", label: "Legal entity status — active/dissolved", guidance: "Confirm the company is active on Companies House, incorporation date, and that no dissolution or winding-up notice has been filed." },
-  { key: "tradingNameAlignment", id: "ps02", label: "Trading name alignment — FCA, ICO, website", guidance: "Confirm the trading name used on the website and in promotional materials matches the FCA register and ICO registration." },
-  { key: "directorsAndPSCs", id: "ps03", label: "Directors and PSCs — identities confirmed", guidance: "List all current directors and PSC(s). Note any changes in the last 24 months. Confirm identities are consistent across Companies House." },
-  { key: "fcaAuthorisation", id: "ps04", label: "FCA authorisation / AR status confirmed", guidance: "Confirm FCA authorisation status (directly authorised or appointed representative). Note FCA reference number, AR principal if applicable, and relevant permissions." },
-  { key: "sanctionsAndAml", id: "ps05", label: "Sanctions / AML / adverse media screening", guidance: "Confirm no sanctions hits against the company, directors or PSCs. Confirm no adverse media. Note PEP status of directors." },
-  { key: "creditAndFinancialStanding", id: "ps06", label: "Financial standing — credit and CCJs", guidance: "Note CreditSafe or equivalent score. Confirm no CCJs on company record. Note most recent filed accounts and whether trading position appears solvent." },
-  { key: "websiteAndMarketingCheck", id: "ps07", label: "Website and financial promotions review", guidance: "Review website for FCA-compliant financial promotions, APR display, risk warnings, and privacy/cookie compliance." },
-  { key: "dndCheck", id: "ps08", label: "Do Not Deal — TCG platform and lender DND lists", guidance: "Check dealer against TCG platform DND list and the requesting lender's DND list. Note outcome." },
-] as const;
+export const CHECK_DEFS: Omit<PreScreenCheck, "answered" | "finding" | "answeredBy" | "answeredAt">[] = [
+  // Section 1: Corporate Governance
+  { checkId: "s1_c1", sectionId: "s1", sectionName: "Corporate Governance", label: "Verify legal entity status (active/dissolved)", objective: "Confirm the entity is up to date, valid and operational", riskRating: "Medium", frequency: "Quarterly + Alert" },
+  { checkId: "s1_c2", sectionId: "s1", sectionName: "Corporate Governance", label: "Verify entity/trading names alignment (FCA, ICO, website)", objective: "Confirm consistency of trading identity across FCA register, ICO registration and website", riskRating: "Medium", frequency: "Quarterly + Alert" },
+  { checkId: "s1_c3", sectionId: "s1", sectionName: "Corporate Governance", label: "Directors / PSCs list + 24-month change history", objective: "Confirm governance structure stability. List all current directors and PSCs. Note any changes in the last 24 months.", riskRating: "Medium", frequency: "Quarterly + Alert" },
+  { checkId: "s1_c4", sectionId: "s1", sectionName: "Corporate Governance", label: "Adverse media / sanctions / PEP screening (directors & controllers)", objective: "Identify potential compliance risks. Confirm no sanctions hits, no adverse media. Note PEP status of all directors and controllers.", riskRating: "High", frequency: "Continuous / Quarterly Review" },
+  { checkId: "s1_c5", sectionId: "s1", sectionName: "Corporate Governance", label: "Declaration of criminal/regulatory sanctions", objective: "Confirm no undisclosed criminal or regulatory sanctions against the entity, directors or PSCs. Note self-declaration obtained.", riskRating: "Medium", frequency: "Onboarding + Annual" },
+
+  // Section 2: Permissions Oversight
+  { checkId: "s2_c1", sectionId: "s2", sectionName: "Permissions Oversight", label: "FCA authorisation & permissions (including AR status)", objective: "Confirm FCA authorisation status. Note FCA reference number, whether directly authorised or appointed representative, AR principal if applicable, and all relevant permissions.", riskRating: "High", frequency: "Quarterly + Alert" },
+  { checkId: "s2_c2", sectionId: "s2", sectionName: "Permissions Oversight", label: "Competence — role-based training & competence matrix (SAF + lender-specific)", objective: "Confirm that all relevant staff have completed required training. Note SAF completion, lender-specific competence requirements, and any outstanding training.", riskRating: "High", frequency: "Annual" },
+  { checkId: "s2_c3", sectionId: "s2", sectionName: "Permissions Oversight", label: "SMF allocation for oversight touchpoints (who, when, scope)", objective: "Confirm that a Senior Manager Function (SMF) holder has been allocated with responsibility for compliance oversight. Note who, their scope, and when last reviewed.", riskRating: "Medium", frequency: "Annual + Alert" },
+  { checkId: "s2_c4", sectionId: "s2", sectionName: "Permissions Oversight", label: "Cross-reference Companies House / website / director names / trading names", objective: "Confirm that director names, trading names and registered details are consistent across Companies House, the FCA register and the dealer's website.", riskRating: "Medium", frequency: "Annual" },
+
+  // Section 3: Sales Process
+  { checkId: "s3_c1", sectionId: "s3", sectionName: "Sales Process", label: "Pre-contract disclosure provided before agreement", objective: "Confirm that the dealer provides all required pre-contract disclosures to customers before any finance agreement is signed. Note the process and any evidence.", riskRating: "High", frequency: "Per Application" },
+  { checkId: "s3_c2", sectionId: "s3", sectionName: "Sales Process", label: "Affordability / eligibility checks (per lender policy)", objective: "Confirm that the dealer carries out affordability and eligibility checks in line with the lender's policy before submitting applications. Note the process used.", riskRating: "High", frequency: "Per Application" },
+
+  // Section 4: Consumer Duty
+  { checkId: "s4_c1", sectionId: "s4", sectionName: "Consumer Duty", label: "Fair value benchmarking (APR vs aggregated benchmark)", objective: "Confirm that the dealer actively benchmarks the APR offered to customers against an aggregated market benchmark. Note how this is done and how often it is reviewed.", riskRating: "High", frequency: "Quarterly" },
+  { checkId: "s4_c2", sectionId: "s4", sectionName: "Consumer Duty", label: "Products and services — consumer outcomes", objective: "Confirm that the dealer's product and service offering is designed to meet the needs of their target customer base and delivers good outcomes. Note any concerns.", riskRating: "High", frequency: "Quarterly" },
+  { checkId: "s4_c3", sectionId: "s4", sectionName: "Consumer Duty", label: "Consumer understanding", objective: "Confirm that customers are given sufficient, clear information to make informed decisions. Note how the dealer ensures customer understanding at point of sale.", riskRating: "High", frequency: "Quarterly" },
+  { checkId: "s4_c4", sectionId: "s4", sectionName: "Consumer Duty", label: "Consumer support", objective: "Confirm that the dealer provides adequate post-sale support to customers, including accessible contact routes and timely responses to queries or issues.", riskRating: "High", frequency: "Monthly" },
+  { checkId: "s4_c5", sectionId: "s4", sectionName: "Consumer Duty", label: "Vulnerability identification & treatment", objective: "Confirm that the dealer has processes to identify and appropriately support vulnerable customers at application and throughout the customer journey.", riskRating: "High", frequency: "Per Application & Quarterly" },
+
+  // Section 5: Financial Crime & Fraud
+  { checkId: "s5_c1", sectionId: "s5", sectionName: "Financial Crime & Fraud", label: "KYC / AML — KYC/IDV completed", objective: "Confirm that Know Your Customer and Identity Verification checks are completed for all relevant individuals. Note the process and any third-party tools used.", riskRating: "Medium", frequency: "Per Application" },
+  { checkId: "s5_c2", sectionId: "s5", sectionName: "Financial Crime & Fraud", label: "Sanctions / PEP screening at application", objective: "Confirm that sanctions and PEP screening is conducted at application stage for all relevant parties. Note when last run and the outcome.", riskRating: "Medium", frequency: "Per Application" },
+  { checkId: "s5_c3", sectionId: "s5", sectionName: "Financial Crime & Fraud", label: "Device / IP geolocation anomaly monitoring", objective: "Confirm that the dealer or their lending platform monitors for device and IP geolocation anomalies at application. Note how this is monitored.", riskRating: "Medium", frequency: "Per Application" },
+  { checkId: "s5_c4", sectionId: "s5", sectionName: "Financial Crime & Fraud", label: "Velocity / patterning (multiple applications per customer/device/email)", objective: "Confirm that monitoring is in place for application velocity patterns that may indicate fraud — multiple applications from same customer, device or email address.", riskRating: "Medium", frequency: "AML / KYC monitoring" },
+  { checkId: "s5_c5", sectionId: "s5", sectionName: "Financial Crime & Fraud", label: "Bank detail / payout mismatch", objective: "Confirm that controls are in place to detect mismatches between bank details submitted on application and payout destination. Note the process.", riskRating: "Medium", frequency: "AML / KYC monitoring" },
+  { checkId: "s5_c6", sectionId: "s5", sectionName: "Financial Crime & Fraud", label: "Application data integrity (OCR vs keyed; cloning fingerprint)", objective: "Confirm that application data integrity checks are in place — including OCR vs manually keyed data comparison and detection of cloned or fraudulent application fingerprints.", riskRating: "Medium", frequency: "Fraud Indicators monitoring" },
+
+  // Section 6: Financial Promotions
+  { checkId: "s6_c1", sectionId: "s6", sectionName: "Financial Promotions", label: "Website compliance — clear, fair and not misleading (incl. APR display, privacy policy & cookie management)", objective: "Review the dealer's website for FCA-compliant financial promotions. Confirm APR is clearly displayed, risk warnings are present, no misleading claims are made, privacy policy is current, and cookie consent is correctly implemented.", riskRating: "Medium", frequency: "Risk Based" },
+  { checkId: "s6_c2", sectionId: "s6", sectionName: "Financial Promotions", label: "Social media monitoring for financial promotion posts", objective: "Review the dealer's social media presence for any posts that constitute financial promotions. Confirm these are compliant — clear, fair and not misleading, with appropriate disclosures.", riskRating: "Medium", frequency: "Risk Based" },
+
+  // Section 7: Communications & Complaints
+  { checkId: "s7_c1", sectionId: "s7", sectionName: "Communications & Complaints", label: "Use of alternative channels — monitored & retained", objective: "Confirm that the dealer monitors and retains records of customer communications across all channels, including email, phone, SMS and any messaging tools used in the sales process.", riskRating: "Medium", frequency: "Monthly" },
+  { checkId: "s7_c2", sectionId: "s7", sectionName: "Communications & Complaints", label: "Complaints volume benchmarking vs customer sentiment score", objective: "Confirm that the dealer tracks complaint volumes and benchmarks these against customer sentiment indicators. Note how complaints are recorded and what the current volume/trend is.", riskRating: "High", frequency: "Monthly" },
+  { checkId: "s7_c3", sectionId: "s7", sectionName: "Communications & Complaints", label: "Root cause analysis & remediation tracking", objective: "Confirm that the dealer conducts root cause analysis on complaints and tracks remediation actions to completion. Note the process and any recent examples.", riskRating: "High", frequency: "Monthly" },
+  { checkId: "s7_c4", sectionId: "s7", sectionName: "Communications & Complaints", label: "Complaints questionnaire completed", objective: "Confirm that the dealer has completed the TCG complaints questionnaire. Note date completed and any material findings from the questionnaire.", riskRating: "High", frequency: "Risk Based" },
+
+  // Section 8: Conduct Oversight
+  { checkId: "s8_c1", sectionId: "s8", sectionName: "Conduct Oversight", label: "Arrears / forbearance referral patterning (dealer-level trends)", objective: "Confirm that the dealer is aware of and engaged with arrears and forbearance referral processes. Note any observed trends in dealer-level arrears referral patterns and how these are managed.", riskRating: "Medium", frequency: "Trigger-based" },
+];
+
+export const TOTAL_CHECKS = CHECK_DEFS.length; // 29
 
 // ── Builders ─────────────────────────────────────────────────
 
 type FindingEntry = { finding: string; by: string; at: string };
 
-function buildPreScreenChecks(
-  answers: Partial<Record<string, FindingEntry>>
-): Record<string, PreScreenCheck> {
-  const checks: Record<string, PreScreenCheck> = {};
-  for (const def of PRE_SCREEN_DEFS) {
-    const a = answers[def.key];
-    checks[def.key] = {
-      checkId: def.id,
-      label: def.label,
+const DEFAULT_FINDINGS: Record<string, string> = {
+  s1_c1: "Company confirmed active on Companies House. No dissolution notices.",
+  s1_c2: "Trading name consistent across FCA register, ICO and website.",
+  s1_c3: "Directors and PSCs identified. No changes in last 24 months.",
+  s1_c4: "No sanctions hits. No adverse media. PEP check clear for all directors.",
+  s1_c5: "Self-declaration obtained. No undisclosed sanctions.",
+  s2_c1: "FCA authorisation confirmed. Permissions include credit broking.",
+  s2_c2: "SAF training completed. Lender-specific competence confirmed.",
+  s2_c3: "SMF holder allocated for compliance oversight. Scope and review date confirmed.",
+  s2_c4: "Director names and trading names consistent across CH, FCA and website.",
+  s3_c1: "Pre-contract disclosures provided before agreement. Process confirmed.",
+  s3_c2: "Affordability checks conducted per lender policy. Process confirmed.",
+  s4_c1: "APR benchmarked against aggregated market data quarterly.",
+  s4_c2: "Product offering meets target customer base needs. No concerns.",
+  s4_c3: "Customers given clear information at point of sale. Process confirmed.",
+  s4_c4: "Post-sale support accessible. Contact routes confirmed.",
+  s4_c5: "Vulnerability identification process in place at application and ongoing.",
+  s5_c1: "KYC/IDV completed for all relevant individuals.",
+  s5_c2: "Sanctions and PEP screening conducted at application stage.",
+  s5_c3: "Device and IP monitoring in place via lending platform.",
+  s5_c4: "Application velocity monitoring active. No anomalies noted.",
+  s5_c5: "Bank detail mismatch controls confirmed in place.",
+  s5_c6: "OCR vs keyed data checks and cloning detection in place.",
+  s6_c1: "Website reviewed. APR displayed. Risk warnings present. Privacy policy current.",
+  s6_c2: "Social media reviewed. No non-compliant financial promotions found.",
+  s7_c1: "Alternative channels monitored and retained.",
+  s7_c2: "Complaints volume tracked and benchmarked against sentiment.",
+  s7_c3: "Root cause analysis conducted on complaints. Remediation tracked.",
+  s7_c4: "Complaints questionnaire completed. No material findings.",
+  s8_c1: "Arrears referral patterns reviewed. No concerning dealer-level trends.",
+};
+
+function buildChecks(answers: Record<string, FindingEntry>): PreScreenCheck[] {
+  return CHECK_DEFS.map(def => {
+    const a = answers[def.checkId];
+    return {
+      ...def,
       answered: !!a,
       finding: a?.finding || "",
       answeredBy: a?.by || null,
       answeredAt: a?.at || null,
     };
+  });
+}
+
+function allChecksAnswered(by: string, at: string, overrides?: Record<string, string>): Record<string, FindingEntry> {
+  const result: Record<string, FindingEntry> = {};
+  for (const def of CHECK_DEFS) {
+    result[def.checkId] = {
+      finding: overrides?.[def.checkId] || DEFAULT_FINDINGS[def.checkId] || "Confirmed — no issues identified.",
+      by,
+      at,
+    };
   }
-  return checks;
+  return result;
+}
+
+function partialChecks(checkIds: string[], by: string, at: string, findings?: Record<string, string>): Record<string, FindingEntry> {
+  const result: Record<string, FindingEntry> = {};
+  for (const id of checkIds) {
+    result[id] = {
+      finding: findings?.[id] || DEFAULT_FINDINGS[id] || "Confirmed — no issues identified.",
+      by,
+      at,
+    };
+  }
+  return result;
 }
 
 function buildPolicies(
@@ -114,26 +209,22 @@ function buildPolicies(
     .map((p) => {
       const a = map.get(p.id);
       return {
-        policyId: p.id,
-        name: p.name,
-        category: p.category,
-        dealerHasIt: a ? a.has : null,
-        notes: a?.notes || "",
-        answeredBy: a?.by || null,
-        answeredAt: a?.at || null,
+        policyId: p.id, name: p.name, category: p.category,
+        dealerHasIt: a ? a.has : null, notes: a?.notes || "",
+        answeredBy: a?.by || null, answeredAt: a?.at || null,
       };
     });
 }
 
 function buildCompletion(
-  checks: Record<string, PreScreenCheck>,
+  checks: PreScreenCheck[],
   policies: OnboardingPolicy[],
   detailsComplete: boolean,
   completedBy?: string,
   completedAt?: string,
   readyToTransfer = false
 ): CompletionStatus {
-  const allChecks = Object.values(checks).every((c) => c.answered);
+  const allChecks = checks.every((c) => c.answered);
   const allPolicies = policies.every((p) => p.dealerHasIt !== null && p.notes.trim() !== "");
   const complete = allChecks && allPolicies && detailsComplete;
   return {
@@ -147,11 +238,8 @@ function buildCompletion(
   };
 }
 
-// Shorthand for generating N answered policies from masterPolicyList
 function quickPolicies(
-  count: number,
-  by: string,
-  atBase: string,
+  count: number, by: string, atBase: string,
   excludeInsurance = false,
   overrides: { id: string; has: boolean; notes: string }[] = []
 ): OnboardingPolicy[] {
@@ -162,48 +250,13 @@ function quickPolicies(
   return list.map((p, i) => {
     const ovr = overrideMap.get(p.id);
     if (ovr) {
-      return {
-        policyId: p.id, name: p.name, category: p.category,
-        dealerHasIt: ovr.has, notes: ovr.notes,
-        answeredBy: by, answeredAt: atBase,
-      };
+      return { policyId: p.id, name: p.name, category: p.category, dealerHasIt: ovr.has, notes: ovr.notes, answeredBy: by, answeredAt: atBase };
     }
     if (i < count) {
-      return {
-        policyId: p.id, name: p.name, category: p.category,
-        dealerHasIt: true, notes: "Confirmed held.",
-        answeredBy: by, answeredAt: atBase,
-      };
+      return { policyId: p.id, name: p.name, category: p.category, dealerHasIt: true, notes: "Confirmed held.", answeredBy: by, answeredAt: atBase };
     }
-    return {
-      policyId: p.id, name: p.name, category: p.category,
-      dealerHasIt: null, notes: "",
-      answeredBy: null, answeredAt: null,
-    };
+    return { policyId: p.id, name: p.name, category: p.category, dealerHasIt: null, notes: "", answeredBy: null, answeredAt: null };
   });
-}
-
-// Full 8-check answers helper (all answered by same person)
-function allChecksAnswered(by: string, atBase: string, overrides: Partial<Record<string, string>> = {}): Partial<Record<string, FindingEntry>> {
-  const defaults: Record<string, string> = {
-    legalEntityStatus: "Company confirmed active on Companies House. Directors and PSCs on record.",
-    tradingNameAlignment: "Trading name consistent across FCA register, ICO and website.",
-    directorsAndPSCs: "Directors identified and confirmed. No undisclosed changes in last 24 months.",
-    fcaAuthorisation: "Confirmed directly authorised. Permissions include credit broking.",
-    sanctionsAndAml: "No sanctions hits. No adverse media identified. PEP check clear.",
-    creditAndFinancialStanding: "CreditSafe score acceptable. No CCJs on company record.",
-    websiteAndMarketingCheck: "Website reviewed. APR visible on finance pages.",
-    dndCheck: "Checked against TCG and lender DND lists. No matches found.",
-  };
-  const result: Partial<Record<string, FindingEntry>> = {};
-  for (const def of PRE_SCREEN_DEFS) {
-    result[def.key] = {
-      finding: overrides[def.key] || defaults[def.key],
-      by,
-      at: atBase,
-    };
-  }
-  return result;
 }
 
 // ── Seeder Applications ──────────────────────────────────────
@@ -211,41 +264,43 @@ function allChecksAnswered(by: string, atBase: string, overrides: Partial<Record
 const TG = "Tom Griffiths";
 const AO = "Amara Osei";
 
-// app001 — Stage 2 In Progress, 7/8 checks done, 18/22 policies
-const app001checks = buildPreScreenChecks({
-  ...allChecksAnswered(TG, "2026-02-18T10:15:00", {
-    legalEntityStatus: "Company confirmed active on Companies House. Incorporated 14 Mar 2018. 2 directors, 1 PSC on record.",
-    tradingNameAlignment: "Trading name 'Fordham Motors' consistent across FCA register, ICO and website homepage.",
-    directorsAndPSCs: "Lee Fordham (Director / PSC) and Rachel Fordham (Director) identified. No undisclosed changes in last 24 months.",
-    fcaAuthorisation: "Confirmed directly authorised under FCA ref 812344. Permissions include credit broking and insurance distribution.",
-    sanctionsAndAml: "No sanctions hits. No adverse media identified. PEP check clear for both directors.",
-    creditAndFinancialStanding: "CreditSafe score 74/100. No CCJs on company record. Filed accounts to Nov 2024 show solvent position.",
-    dndCheck: "Checked against TCG platform DND list and Apex Motor Finance DND list. No matches found.",
-  }),
-  websiteAndMarketingCheck: undefined, // Not yet answered
-});
-// Remove the undefined entry
-delete app001checks.websiteAndMarketingCheck;
-const app001checksFixed = buildPreScreenChecks(
-  (() => {
-    const a = allChecksAnswered(TG, "2026-02-18T10:15:00", {
-      legalEntityStatus: "Company confirmed active on Companies House. Incorporated 14 Mar 2018. 2 directors, 1 PSC on record.",
-      tradingNameAlignment: "Trading name 'Fordham Motors' consistent across FCA register, ICO and website homepage.",
-      directorsAndPSCs: "Lee Fordham (Director / PSC) and Rachel Fordham (Director) identified. No undisclosed changes in last 24 months.",
-      fcaAuthorisation: "Confirmed directly authorised under FCA ref 812344. Permissions include credit broking and insurance distribution.",
-      sanctionsAndAml: "No sanctions hits. No adverse media identified. PEP check clear for both directors.",
-      creditAndFinancialStanding: "CreditSafe score 74/100. No CCJs on company record. Filed accounts to Nov 2024 show solvent position.",
-      dndCheck: "Checked against TCG platform DND list and Apex Motor Finance DND list. No matches found.",
-    });
-    delete a.websiteAndMarketingCheck;
-    return a;
-  })()
-);
+// Section IDs for partial builders
+const S1 = ["s1_c1", "s1_c2", "s1_c3", "s1_c4", "s1_c5"];
+const S2 = ["s2_c1", "s2_c2", "s2_c3", "s2_c4"];
+const S3 = ["s3_c1", "s3_c2"];
+const S4 = ["s4_c1", "s4_c2", "s4_c3", "s4_c4", "s4_c5"];
+const S5 = ["s5_c1", "s5_c2", "s5_c3", "s5_c4", "s5_c5", "s5_c6"];
+const S6 = ["s6_c1", "s6_c2"];
+const S7 = ["s7_c1", "s7_c2", "s7_c3", "s7_c4"];
+const S8 = ["s8_c1"];
 
 export const seederApplications: OnboardingApplication[] = [
-  // app001 — Stage 2, In Progress, 7/8 checks, 18/26 policies
+  // app001 — Stage 2, In Progress, 26/29 checks, 18/26 policies
   (() => {
-    const checks = app001checksFixed;
+    const checks = buildChecks({
+      ...allChecksAnswered(TG, "2026-02-18T10:15:00", {
+        s1_c1: "Company confirmed active on Companies House. Incorporated 14 Mar 2018. 2 directors, 1 PSC on record.",
+        s1_c2: "Trading name 'Fordham Motors' consistent across FCA register, ICO and website homepage.",
+        s1_c3: "Lee Fordham (Director / PSC) and Rachel Fordham (Director) identified. No undisclosed changes in last 24 months.",
+        s1_c4: "No sanctions hits. No adverse media identified. PEP check clear for both directors.",
+        s2_c1: "Confirmed directly authorised under FCA ref 812344. Permissions include credit broking and insurance distribution.",
+        s5_c5: "Bank detail controls in place. Payout mismatch detection confirmed via lender platform.",
+      }),
+      // Remove 3 unanswered
+      ...(() => { const r: Record<string, FindingEntry> = {}; delete r.s6_c2; delete r.s7_c3; delete r.s8_c1; return r; })(),
+    });
+    // Actually need to remove 3 checks. Let me do it properly:
+    const answers = allChecksAnswered(TG, "2026-02-18T10:15:00", {
+      s1_c1: "Company confirmed active on Companies House. Incorporated 14 Mar 2018. 2 directors, 1 PSC on record.",
+      s1_c2: "Trading name 'Fordham Motors' consistent across FCA register, ICO and website homepage.",
+      s1_c3: "Lee Fordham (Director / PSC) and Rachel Fordham (Director) identified. No undisclosed changes in last 24 months.",
+      s1_c4: "No sanctions hits. No adverse media identified. PEP check clear for both directors.",
+      s2_c1: "Confirmed directly authorised under FCA ref 812344. Permissions include credit broking and insurance distribution.",
+    });
+    delete answers.s6_c2;
+    delete answers.s7_c3;
+    delete answers.s8_c1;
+    const chks = buildChecks(answers);
     const pols = quickPolicies(18, TG, "2026-02-20T11:00:00");
     return {
       id: "app001", appRef: "APP-001-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
@@ -256,22 +311,22 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: true, requestingLender: "l001", requestingLenderName: "Apex Motor Finance Ltd",
       initiatedBy: TG, initiatedDate: "2026-02-18T09:00:00", assignedTo: TG,
       lastUpdated: "2026-02-24T14:30:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-07",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
-      notes: "Dealer has been responsive. Website check still outstanding. 18/26 policies confirmed.",
+      notes: "26/29 checks done. Social media, root cause analysis and conduct oversight checks outstanding.",
       history: [
         { date: "2026-02-18T09:00:00", action: "Application created", user: TG },
-        { date: "2026-02-18T10:50:00", action: "7 of 8 pre-screen checks completed — website check outstanding", user: TG },
+        { date: "2026-02-18T10:50:00", action: "26 of 29 checks completed — 3 outstanding", user: TG },
         { date: "2026-02-20T14:00:00", action: "Stage 2 started — policy framework in progress", user: TG },
         { date: "2026-02-24T14:30:00", action: "Note added: Dealer chased re outstanding policies", user: TG },
       ],
     };
   })(),
 
-  // app002 — Stage 2, In Progress, all checks, all policies
+  // app002 — Stage 2, In Progress, all 29 checks, all policies (insurance excluded)
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-16T09:00:00"));
+    const chks = buildChecks(allChecksAnswered(AO, "2026-02-16T09:00:00"));
     const pols = quickPolicies(22, AO, "2026-02-28T16:00:00", true);
     return {
       id: "app002", appRef: "APP-002-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
@@ -282,21 +337,21 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: false, requestingLender: "l002", requestingLenderName: "Meridian Vehicle Finance Ltd",
       initiatedBy: AO, initiatedDate: "2026-02-15T11:00:00", assignedTo: AO,
       lastUpdated: "2026-02-28T16:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-05",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true, AO, "2026-02-28T16:00:00"),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true, AO, "2026-02-28T16:00:00"),
       dndClear: true, platformDndClear: true,
-      notes: "All pre-screen checks and policies complete. Ready for review.",
+      notes: "All checks and policies complete. Ready for review.",
       history: [
         { date: "2026-02-15T11:00:00", action: "Application created", user: AO },
-        { date: "2026-02-16T09:00:00", action: "All 8 pre-screen checks completed", user: AO },
+        { date: "2026-02-16T09:00:00", action: "All 29 checks completed", user: AO },
         { date: "2026-02-28T16:00:00", action: "All policies confirmed — onboarding complete", user: AO },
       ],
     };
   })(),
 
-  // app003 — Complete and Ready to Transfer
+  // app003 — Ready to Transfer
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-11T14:00:00"));
+    const chks = buildChecks(allChecksAnswered(TG, "2026-02-11T14:00:00"));
     const pols = quickPolicies(22, TG, "2026-02-25T16:00:00");
     return {
       id: "app003", appRef: "APP-003-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
@@ -307,13 +362,13 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: true, requestingLender: "l001", requestingLenderName: "Apex Motor Finance Ltd",
       initiatedBy: TG, initiatedDate: "2026-02-10T08:30:00", assignedTo: TG,
       lastUpdated: "2026-03-01T10:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-04",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true, TG, "2026-03-01T10:00:00", true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true, TG, "2026-03-01T10:00:00", true),
       dndClear: true, platformDndClear: true,
       notes: "All sections verified. Marked as ready to transfer to lender.",
       history: [
         { date: "2026-02-10T08:30:00", action: "Application created", user: TG },
-        { date: "2026-02-11T14:00:00", action: "All pre-screen checks completed", user: TG },
+        { date: "2026-02-11T14:00:00", action: "All 29 checks completed", user: TG },
         { date: "2026-02-25T16:00:00", action: "All policies confirmed", user: TG },
         { date: "2026-03-01T10:00:00", action: "Marked as ready to transfer", user: TG },
       ],
@@ -322,7 +377,7 @@ export const seederApplications: OnboardingApplication[] = [
 
   // app004 — Draft, nothing started
   (() => {
-    const checks = buildPreScreenChecks({});
+    const chks = buildChecks({});
     const pols = quickPolicies(0, "", "");
     return {
       id: "app004", appRef: "APP-004-2026", stage: 1, status: "Draft" as OnboardingAppStatus,
@@ -333,20 +388,23 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: null, requestingLender: "l003", requestingLenderName: "Broadstone Motor Credit Plc",
       initiatedBy: "System", initiatedDate: "2026-03-03T08:00:00", assignedTo: "Unassigned",
       lastUpdated: "2026-03-03T08:00:00", lastUpdatedBy: "System", targetCompletionDate: "2026-03-20",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, false),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, false),
       dndClear: true, platformDndClear: true,
       notes: "New application — not yet started",
       history: [{ date: "2026-03-03T08:00:00", action: "Application created by lender request", user: "System" }],
     };
   })(),
 
-  // app005 — Stage 1, In Progress, 2/8 checks answered
+  // app005 — Stage 1, In Progress, 5/29 checks (Corporate Governance section only)
   (() => {
-    const checks = buildPreScreenChecks({
-      legalEntityStatus: { finding: "Company confirmed active. Incorporated 2015. 1 director, 1 PSC.", by: AO, at: "2026-03-03T11:00:00" },
-      tradingNameAlignment: { finding: "Trading name consistent across FCA and website.", by: AO, at: "2026-03-03T11:15:00" },
-    });
+    const chks = buildChecks(partialChecks(S1, AO, "2026-03-03T11:00:00", {
+      s1_c1: "Company confirmed active. Incorporated 2015. 1 director, 1 PSC.",
+      s1_c2: "Trading name consistent across FCA and website.",
+      s1_c3: "Single director identified. No changes in 24 months.",
+      s1_c4: "No sanctions hits. PEP check clear.",
+      s1_c5: "Self-declaration obtained.",
+    }));
     const pols = quickPolicies(0, "", "", true);
     return {
       id: "app005", appRef: "APP-005-2026", stage: 1, status: "In Progress" as OnboardingAppStatus,
@@ -357,20 +415,20 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: false, requestingLender: "l001", requestingLenderName: "Apex Motor Finance Ltd",
       initiatedBy: AO, initiatedDate: "2026-03-01T10:00:00", assignedTo: AO,
       lastUpdated: "2026-03-03T11:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-14",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
-      notes: "Pre-screen checks in progress — 2 of 8 completed",
+      notes: "Corporate Governance section completed — 5/29 checks answered",
       history: [
         { date: "2026-03-01T10:00:00", action: "Application created", user: AO },
-        { date: "2026-03-03T11:00:00", action: "2 pre-screen checks completed", user: AO },
+        { date: "2026-03-03T11:00:00", action: "Corporate Governance checks completed (5/29)", user: AO },
       ],
     };
   })(),
 
-  // app006 — Stage 2, In Progress, all checks, 14/22 policies
+  // app006 — Stage 2, In Progress, all 29 checks, 14/22 policies
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-13T11:00:00"));
+    const chks = buildChecks(allChecksAnswered(TG, "2026-02-13T11:00:00"));
     const pols = quickPolicies(14, TG, "2026-03-02T15:00:00");
     return {
       id: "app006", appRef: "APP-006-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
@@ -381,13 +439,13 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: true, requestingLender: "l004", requestingLenderName: "Northern Rock Motor Finance Ltd",
       initiatedBy: TG, initiatedDate: "2026-02-12T09:00:00", assignedTo: TG,
       lastUpdated: "2026-03-02T15:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-10",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
       notes: "Missing AML and GDPR policies — chasing dealer",
       history: [
         { date: "2026-02-12T09:00:00", action: "Application created", user: TG },
-        { date: "2026-02-13T11:00:00", action: "All pre-screen checks completed", user: TG },
+        { date: "2026-02-13T11:00:00", action: "All 29 checks completed", user: TG },
         { date: "2026-03-02T15:00:00", action: "Chased dealer for outstanding policies", user: TG },
       ],
     };
@@ -395,7 +453,7 @@ export const seederApplications: OnboardingApplication[] = [
 
   // app007 — Ready to Transfer
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-06T10:00:00"));
+    const chks = buildChecks(allChecksAnswered(AO, "2026-02-06T10:00:00"));
     const pols = quickPolicies(22, AO, "2026-02-20T14:00:00", true);
     return {
       id: "app007", appRef: "APP-007-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
@@ -406,28 +464,30 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: false, requestingLender: "l002", requestingLenderName: "Meridian Vehicle Finance Ltd",
       initiatedBy: AO, initiatedDate: "2026-02-05T08:00:00", assignedTo: AO,
       lastUpdated: "2026-03-01T09:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-05",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true, AO, "2026-03-01T09:00:00", true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true, AO, "2026-03-01T09:00:00", true),
       dndClear: true, platformDndClear: true,
       notes: "Full pack received — all information gathered. Marked ready to transfer.",
       history: [
         { date: "2026-02-05T08:00:00", action: "Application created", user: AO },
-        { date: "2026-02-06T10:00:00", action: "All pre-screen checks completed", user: AO },
+        { date: "2026-02-06T10:00:00", action: "All 29 checks completed", user: AO },
         { date: "2026-02-20T14:00:00", action: "All policies confirmed", user: AO },
         { date: "2026-03-01T09:00:00", action: "Marked as ready to transfer", user: AO },
       ],
     };
   })(),
 
-  // app008 — Stage 1, In Progress, 5/8 checks (some with concerning findings)
+  // app008 — Stage 1, In Progress, 15/29 checks (Corporate Gov + Permissions + Sales + s4_c1)
   (() => {
-    const checks = buildPreScreenChecks({
-      legalEntityStatus: { finding: "Company active. Incorporated 2012. 2 directors.", by: TG, at: "2026-02-25T09:30:00" },
-      tradingNameAlignment: { finding: "Trading name consistent.", by: TG, at: "2026-02-25T09:35:00" },
-      directorsAndPSCs: { finding: "Paul Simmons (Director/PSC) and Mary Simmons (Director). No changes in 24 months.", by: TG, at: "2026-02-25T09:40:00" },
-      fcaAuthorisation: { finding: "FCA permissions unclear — need to confirm scope of credit broking permission. Follow-up call arranged.", by: TG, at: "2026-03-02T10:00:00" },
-      sanctionsAndAml: { finding: "Director surname match flagged on sanctions screening. Manual review confirms false positive — common surname.", by: TG, at: "2026-03-02T10:30:00" },
-    });
+    const chks = buildChecks(partialChecks(
+      [...S1, ...S2, ...S3, "s4_c1"],
+      TG, "2026-02-25T09:30:00",
+      {
+        s1_c3: "Paul Simmons (Director/PSC) and Mary Simmons (Director). No changes in 24 months.",
+        s2_c1: "FCA permissions unclear — need to confirm scope of credit broking permission. Follow-up call arranged.",
+        s1_c4: "Director surname match flagged on sanctions screening. Manual review confirms false positive — common surname.",
+      }
+    ));
     const pols = quickPolicies(0, "", "");
     return {
       id: "app008", appRef: "APP-008-2026", stage: 1, status: "In Progress" as OnboardingAppStatus,
@@ -438,20 +498,20 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: false, requestingLender: "l003", requestingLenderName: "Broadstone Motor Credit Plc",
       initiatedBy: TG, initiatedDate: "2026-02-25T09:00:00", assignedTo: TG,
       lastUpdated: "2026-03-02T10:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-12",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
       notes: "FCA permissions need confirming. Sanctions flag was false positive.",
       history: [
         { date: "2026-02-25T09:00:00", action: "Application created", user: TG },
-        { date: "2026-03-02T10:00:00", action: "5 pre-screen checks completed — FCA and sanctions findings recorded", user: TG },
+        { date: "2026-03-02T10:00:00", action: "12 checks completed — FCA and sanctions findings recorded", user: TG },
       ],
     };
   })(),
 
   // app009 — Draft
   (() => {
-    const checks = buildPreScreenChecks({});
+    const chks = buildChecks({});
     const pols = quickPolicies(0, "", "");
     return {
       id: "app009", appRef: "APP-009-2026", stage: 1, status: "Draft" as OnboardingAppStatus,
@@ -462,17 +522,17 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: null, requestingLender: "l001", requestingLenderName: "Apex Motor Finance Ltd",
       initiatedBy: "System", initiatedDate: "2026-03-04T08:00:00", assignedTo: "Unassigned",
       lastUpdated: "2026-03-04T08:00:00", lastUpdatedBy: "System", targetCompletionDate: "2026-03-21",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, false),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, false),
       dndClear: true, platformDndClear: true,
       notes: "Lender requested this morning",
       history: [{ date: "2026-03-04T08:00:00", action: "Application created by lender request", user: "System" }],
     };
   })(),
 
-  // app010 — Stage 2, In Progress, all checks, 20/22 policies
+  // app010 — Stage 2, In Progress, all 29 checks, 20/22 policies
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-15T14:00:00"));
+    const chks = buildChecks(allChecksAnswered(AO, "2026-02-15T14:00:00"));
     const pols = quickPolicies(20, AO, "2026-03-03T14:00:00");
     return {
       id: "app010", appRef: "APP-010-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
@@ -483,21 +543,21 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: true, requestingLender: "l003", requestingLenderName: "Broadstone Motor Credit Plc",
       initiatedBy: AO, initiatedDate: "2026-02-14T10:00:00", assignedTo: AO,
       lastUpdated: "2026-03-03T14:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-08",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
       notes: "One insurance policy outstanding",
       history: [
         { date: "2026-02-14T10:00:00", action: "Application created", user: AO },
-        { date: "2026-02-15T14:00:00", action: "All pre-screen checks completed", user: AO },
-        { date: "2026-03-03T14:00:00", action: "20/22 policies confirmed — 1 insurance doc outstanding", user: AO },
+        { date: "2026-02-15T14:00:00", action: "All 29 checks completed", user: AO },
+        { date: "2026-03-03T14:00:00", action: "20/22 policies confirmed", user: AO },
       ],
     };
   })(),
 
   // app011 — Ready to Transfer
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-04T11:00:00"));
+    const chks = buildChecks(allChecksAnswered(TG, "2026-02-04T11:00:00"));
     const pols = quickPolicies(22, TG, "2026-02-22T15:00:00");
     return {
       id: "app011", appRef: "APP-011-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
@@ -508,13 +568,13 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: true, requestingLender: "l001", requestingLenderName: "Apex Motor Finance Ltd",
       initiatedBy: TG, initiatedDate: "2026-02-03T09:00:00", assignedTo: TG,
       lastUpdated: "2026-03-02T16:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-05",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true, TG, "2026-03-02T16:00:00", true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true, TG, "2026-03-02T16:00:00", true),
       dndClear: true, platformDndClear: true,
       notes: "All clear — marked ready to transfer",
       history: [
         { date: "2026-02-03T09:00:00", action: "Application created", user: TG },
-        { date: "2026-02-04T11:00:00", action: "All pre-screen checks completed", user: TG },
+        { date: "2026-02-04T11:00:00", action: "All 29 checks completed", user: TG },
         { date: "2026-02-22T15:00:00", action: "All policies confirmed", user: TG },
         { date: "2026-03-02T16:00:00", action: "Marked as ready to transfer", user: TG },
       ],
@@ -523,10 +583,15 @@ export const seederApplications: OnboardingApplication[] = [
 
   // app012 — Archived (FCA authorisation lapsed)
   (() => {
-    const checks = buildPreScreenChecks({
-      legalEntityStatus: { finding: "Company active on Companies House.", by: TG, at: "2026-02-12T10:00:00" },
-      fcaAuthorisation: { finding: "FCA authorisation LAPSED — firm no longer authorised as of Jan 2026. Cannot proceed until resolved.", by: TG, at: "2026-02-12T10:30:00" },
-    });
+    const chks = buildChecks(partialChecks(
+      ["s1_c1", "s1_c2", "s2_c1"],
+      TG, "2026-02-12T10:00:00",
+      {
+        s1_c1: "Company active on Companies House.",
+        s1_c2: "Trading name consistent.",
+        s2_c1: "FCA authorisation LAPSED — firm no longer authorised as of Jan 2026. Cannot proceed until resolved.",
+      }
+    ));
     const pols = quickPolicies(0, "", "", true);
     return {
       id: "app012", appRef: "APP-012-2026", stage: 1, status: "Archived" as OnboardingAppStatus,
@@ -537,8 +602,8 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: false, requestingLender: "l002", requestingLenderName: "Meridian Vehicle Finance Ltd",
       initiatedBy: TG, initiatedDate: "2026-02-10T09:00:00", assignedTo: TG,
       lastUpdated: "2026-02-20T14:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-01",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
       notes: "FCA authorisation lapsed — dealer unable to proceed.",
       archiveReason: "FCA authorisation lapsed — dealer unable to proceed",
@@ -550,9 +615,9 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app013 — Stage 2, In Progress, all checks, 16/22 policies
+  // app013 — Stage 2, In Progress, all 29 checks, 16/22 policies (no insurance)
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-18T14:00:00"));
+    const chks = buildChecks(allChecksAnswered(AO, "2026-02-18T14:00:00"));
     const pols = quickPolicies(16, AO, "2026-03-03T09:00:00", true);
     return {
       id: "app013", appRef: "APP-013-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
@@ -563,13 +628,13 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: false, requestingLender: "l004", requestingLenderName: "Northern Rock Motor Finance Ltd",
       initiatedBy: AO, initiatedDate: "2026-02-17T09:00:00", assignedTo: AO,
       lastUpdated: "2026-03-03T09:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-12",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
       notes: "Waiting on T&C policy and BCP",
       history: [
         { date: "2026-02-17T09:00:00", action: "Application created", user: AO },
-        { date: "2026-02-18T14:00:00", action: "All pre-screen checks completed", user: AO },
+        { date: "2026-02-18T14:00:00", action: "All 29 checks completed", user: AO },
         { date: "2026-03-03T09:00:00", action: "16/22 policies confirmed — chasing T&C and BCP", user: AO },
       ],
     };
@@ -577,7 +642,7 @@ export const seederApplications: OnboardingApplication[] = [
 
   // app014 — Draft
   (() => {
-    const checks = buildPreScreenChecks({});
+    const chks = buildChecks({});
     const pols = quickPolicies(0, "", "");
     return {
       id: "app014", appRef: "APP-014-2026", stage: 1, status: "Draft" as OnboardingAppStatus,
@@ -588,17 +653,17 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: null, requestingLender: "l001", requestingLenderName: "Apex Motor Finance Ltd",
       initiatedBy: "System", initiatedDate: "2026-03-02T08:00:00", assignedTo: "Unassigned",
       lastUpdated: "2026-03-02T08:00:00", lastUpdatedBy: "System", targetCompletionDate: "2026-03-18",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, false),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, false),
       dndClear: true, platformDndClear: true,
       notes: "Awaiting Companies House number from lender",
       history: [{ date: "2026-03-02T08:00:00", action: "Application created by lender request", user: "System" }],
     };
   })(),
 
-  // app015 — Stage 2, In Progress, all checks, 19/26 policies
+  // app015 — Stage 2, In Progress, all 29 checks, 19/26 policies
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-12T11:00:00"));
+    const chks = buildChecks(allChecksAnswered(TG, "2026-02-12T11:00:00"));
     const pols = quickPolicies(19, TG, "2026-03-03T16:00:00");
     return {
       id: "app015", appRef: "APP-015-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
@@ -609,26 +674,25 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: true, requestingLender: "l003", requestingLenderName: "Broadstone Motor Credit Plc",
       initiatedBy: TG, initiatedDate: "2026-02-11T09:00:00", assignedTo: TG,
       lastUpdated: "2026-03-03T16:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-07",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
       notes: "Near complete — chasing 2 docs",
       history: [
         { date: "2026-02-11T09:00:00", action: "Application created", user: TG },
-        { date: "2026-02-12T11:00:00", action: "All pre-screen checks completed", user: TG },
+        { date: "2026-02-12T11:00:00", action: "All 29 checks completed", user: TG },
         { date: "2026-03-03T16:00:00", action: "19/26 policies confirmed — 2 final policies being chased", user: TG },
       ],
     };
   })(),
 
-  // app016 — Stage 1, In Progress, 6/8 checks (financial standing finding)
+  // app016 — Stage 1, In Progress, 19/29 checks (S1-S4 + S5 partial)
   (() => {
-    const partial = allChecksAnswered(AO, "2026-03-03T12:00:00", {
-      creditAndFinancialStanding: "CreditSafe score 48/100. Below typical threshold. No CCJs but thin credit file. Lender should be aware.",
-    });
-    delete partial.websiteAndMarketingCheck;
-    delete partial.dndCheck;
-    const checks = buildPreScreenChecks(partial);
+    const chks = buildChecks(partialChecks(
+      [...S1, ...S2, ...S3, ...S4, "s5_c1", "s5_c2", "s5_c3", "s5_c4"],
+      AO, "2026-03-03T12:00:00",
+      { s1_c1: "CreditSafe score 48/100. Below typical threshold. No CCJs but thin credit file. Lender should be aware." }
+    ));
     const pols = quickPolicies(0, "", "", true);
     return {
       id: "app016", appRef: "APP-016-2026", stage: 1, status: "In Progress" as OnboardingAppStatus,
@@ -639,20 +703,20 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: false, requestingLender: "l001", requestingLenderName: "Apex Motor Finance Ltd",
       initiatedBy: AO, initiatedDate: "2026-02-28T10:00:00", assignedTo: AO,
       lastUpdated: "2026-03-03T12:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-14",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
       notes: "CreditSafe score 48 — finding recorded for lender awareness",
       history: [
         { date: "2026-02-28T10:00:00", action: "Application created", user: AO },
-        { date: "2026-03-03T12:00:00", action: "6 pre-screen checks completed — financial standing finding recorded", user: AO },
+        { date: "2026-03-03T12:00:00", action: "20 checks completed — financial standing finding recorded", user: AO },
       ],
     };
   })(),
 
   // app017 — Ready to Transfer
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-02T14:00:00"));
+    const chks = buildChecks(allChecksAnswered(TG, "2026-02-02T14:00:00"));
     const pols = quickPolicies(22, TG, "2026-02-20T16:00:00");
     return {
       id: "app017", appRef: "APP-017-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
@@ -663,22 +727,22 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: true, requestingLender: "l002", requestingLenderName: "Meridian Vehicle Finance Ltd",
       initiatedBy: TG, initiatedDate: "2026-02-01T09:00:00", assignedTo: TG,
       lastUpdated: "2026-03-01T15:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-04",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true, TG, "2026-03-01T15:00:00", true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true, TG, "2026-03-01T15:00:00", true),
       dndClear: true, platformDndClear: true,
-      notes: "Insurance products confirmed — all information gathered. Marked ready to transfer.",
+      notes: "Insurance products confirmed — all information gathered.",
       history: [
         { date: "2026-02-01T09:00:00", action: "Application created", user: TG },
-        { date: "2026-02-02T14:00:00", action: "All pre-screen checks completed", user: TG },
+        { date: "2026-02-02T14:00:00", action: "All 29 checks completed", user: TG },
         { date: "2026-02-20T16:00:00", action: "All policies confirmed", user: TG },
         { date: "2026-03-01T15:00:00", action: "Marked as ready to transfer", user: TG },
       ],
     };
   })(),
 
-  // app018 — Stage 2, In Progress, all checks, 12/22 policies
+  // app018 — Stage 2, In Progress, all 29 checks, 12/22 policies (no insurance)
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-20T14:00:00"));
+    const chks = buildChecks(allChecksAnswered(AO, "2026-02-20T14:00:00"));
     const pols = quickPolicies(12, AO, "2026-03-03T10:00:00", true);
     return {
       id: "app018", appRef: "APP-018-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
@@ -689,14 +753,13 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: false, requestingLender: "l003", requestingLenderName: "Broadstone Motor Credit Plc",
       initiatedBy: AO, initiatedDate: "2026-02-19T09:00:00", assignedTo: AO,
       lastUpdated: "2026-03-03T10:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-14",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
       notes: "Slow to respond — chased twice",
       history: [
         { date: "2026-02-19T09:00:00", action: "Application created", user: AO },
-        { date: "2026-02-20T14:00:00", action: "All pre-screen checks completed", user: AO },
-        { date: "2026-02-28T09:00:00", action: "First chase sent", user: AO },
+        { date: "2026-02-20T14:00:00", action: "All 29 checks completed", user: AO },
         { date: "2026-03-03T10:00:00", action: "Second chase sent — 12/22 policies complete", user: AO },
       ],
     };
@@ -704,7 +767,7 @@ export const seederApplications: OnboardingApplication[] = [
 
   // app019 — Draft
   (() => {
-    const checks = buildPreScreenChecks({});
+    const chks = buildChecks({});
     const pols = quickPolicies(0, "", "");
     return {
       id: "app019", appRef: "APP-019-2026", stage: 1, status: "Draft" as OnboardingAppStatus,
@@ -715,17 +778,17 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: null, requestingLender: "l001", requestingLenderName: "Apex Motor Finance Ltd",
       initiatedBy: "System", initiatedDate: "2026-03-04T07:00:00", assignedTo: "Unassigned",
       lastUpdated: "2026-03-04T07:00:00", lastUpdatedBy: "System", targetCompletionDate: "2026-03-21",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, false),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, false),
       dndClear: true, platformDndClear: true,
       notes: "Just created",
       history: [{ date: "2026-03-04T07:00:00", action: "Application created", user: "System" }],
     };
   })(),
 
-  // app020 — Stage 2, In Progress, all checks, 21/26 policies
+  // app020 — Stage 2, In Progress, all 29 checks, 21/26 policies
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-09T11:00:00"));
+    const chks = buildChecks(allChecksAnswered(TG, "2026-02-09T11:00:00"));
     const pols = quickPolicies(21, TG, "2026-03-03T17:00:00");
     return {
       id: "app020", appRef: "APP-020-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
@@ -736,21 +799,21 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: true, requestingLender: "l004", requestingLenderName: "Northern Rock Motor Finance Ltd",
       initiatedBy: TG, initiatedDate: "2026-02-08T09:00:00", assignedTo: TG,
       lastUpdated: "2026-03-03T17:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-06",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
       notes: "Final policy docs arriving tomorrow",
       history: [
         { date: "2026-02-08T09:00:00", action: "Application created", user: TG },
-        { date: "2026-02-09T11:00:00", action: "All pre-screen checks completed", user: TG },
+        { date: "2026-02-09T11:00:00", action: "All 29 checks completed", user: TG },
         { date: "2026-03-03T17:00:00", action: "21/26 policies confirmed — final docs expected", user: TG },
       ],
     };
   })(),
 
-  // app021 — Stage 1, all checks done, policies not started
+  // app021 — Stage 1, all 29 checks done, policies not started
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-03-04T09:00:00"));
+    const chks = buildChecks(allChecksAnswered(AO, "2026-03-04T09:00:00"));
     const pols = quickPolicies(0, "", "", true);
     return {
       id: "app021", appRef: "APP-021-2026", stage: 1, status: "In Progress" as OnboardingAppStatus,
@@ -761,26 +824,31 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: false, requestingLender: "l002", requestingLenderName: "Meridian Vehicle Finance Ltd",
       initiatedBy: AO, initiatedDate: "2026-02-26T10:00:00", assignedTo: AO,
       lastUpdated: "2026-03-04T09:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-12",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
-      notes: "All pre-screen checks complete — moving to policies",
+      notes: "All checks complete — moving to policies",
       history: [
         { date: "2026-02-26T10:00:00", action: "Application created", user: AO },
-        { date: "2026-03-04T09:00:00", action: "All pre-screen checks completed", user: AO },
+        { date: "2026-03-04T09:00:00", action: "All 29 checks completed", user: AO },
       ],
     };
   })(),
 
   // app022 — Archived (Director sanctions match confirmed)
   (() => {
-    const checks = buildPreScreenChecks({
-      legalEntityStatus: { finding: "Company active.", by: AO, at: "2026-02-14T10:00:00" },
-      tradingNameAlignment: { finding: "Names consistent.", by: AO, at: "2026-02-14T10:10:00" },
-      directorsAndPSCs: { finding: "Brian Cole (sole director/PSC).", by: AO, at: "2026-02-14T10:15:00" },
-      fcaAuthorisation: { finding: "Authorised. Permissions correct.", by: AO, at: "2026-02-14T10:20:00" },
-      sanctionsAndAml: { finding: "SANCTIONS FLAG CONFIRMED — Director Brian Cole appears on OFSI consolidated list. Verified match. This finding has been escalated to the requesting lender.", by: AO, at: "2026-02-16T10:00:00" },
-    });
+    const chks = buildChecks(partialChecks(
+      ["s1_c1", "s1_c2", "s1_c3", "s1_c4", "s2_c1", "s2_c2", "s2_c3", "s2_c4", "s5_c1", "s5_c2"],
+      AO, "2026-02-14T10:00:00",
+      {
+        s1_c1: "Company active.",
+        s1_c2: "Names consistent.",
+        s1_c3: "Brian Cole (sole director/PSC).",
+        s1_c4: "SANCTIONS FLAG CONFIRMED — Director Brian Cole appears on OFSI consolidated list. Verified match. Finding escalated to requesting lender.",
+        s2_c1: "Authorised. Permissions correct.",
+        s5_c2: "Sanctions match confirmed at application screening level.",
+      }
+    ));
     const pols = quickPolicies(0, "", "", true);
     return {
       id: "app022", appRef: "APP-022-2026", stage: 1, status: "Archived" as OnboardingAppStatus,
@@ -791,8 +859,8 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: false, requestingLender: "l001", requestingLenderName: "Apex Motor Finance Ltd",
       initiatedBy: AO, initiatedDate: "2026-02-14T09:00:00", assignedTo: AO,
       lastUpdated: "2026-02-22T11:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-01",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: false, platformDndClear: true,
       notes: "Director sanctions match confirmed — archived following DND check",
       archiveReason: "Director sanctions match confirmed — archived following DND check",
@@ -804,9 +872,9 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app023 — Stage 2, In Progress, all checks, 15/22 policies
+  // app023 — Stage 2, In Progress, all 29 checks, 15/22 policies (no insurance)
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-14T11:00:00"));
+    const chks = buildChecks(allChecksAnswered(TG, "2026-02-14T11:00:00"));
     const pols = quickPolicies(15, TG, "2026-03-03T13:00:00", true);
     return {
       id: "app023", appRef: "APP-023-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
@@ -817,21 +885,21 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: false, requestingLender: "l001", requestingLenderName: "Apex Motor Finance Ltd",
       initiatedBy: TG, initiatedDate: "2026-02-13T09:00:00", assignedTo: TG,
       lastUpdated: "2026-03-03T13:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-10",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
       notes: "No insurance products — 22 policies applicable. 15 confirmed.",
       history: [
         { date: "2026-02-13T09:00:00", action: "Application created", user: TG },
-        { date: "2026-02-14T11:00:00", action: "All pre-screen checks completed", user: TG },
+        { date: "2026-02-14T11:00:00", action: "All 29 checks completed", user: TG },
         { date: "2026-03-03T13:00:00", action: "15/22 policies confirmed", user: TG },
       ],
     };
   })(),
 
-  // app024 — Complete, Ready to Transfer
+  // app024 — Ready to Transfer
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-05T11:00:00"));
+    const chks = buildChecks(allChecksAnswered(AO, "2026-02-05T11:00:00"));
     const pols = quickPolicies(22, AO, "2026-02-24T16:00:00");
     return {
       id: "app024", appRef: "APP-024-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
@@ -842,22 +910,22 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: true, requestingLender: "l003", requestingLenderName: "Broadstone Motor Credit Plc",
       initiatedBy: AO, initiatedDate: "2026-02-04T09:00:00", assignedTo: AO,
       lastUpdated: "2026-03-02T14:00:00", lastUpdatedBy: AO, targetCompletionDate: "2026-03-05",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true, AO, "2026-03-02T14:00:00", true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true, AO, "2026-03-02T14:00:00", true),
       dndClear: true, platformDndClear: true,
       notes: "All sections complete. Marked ready to transfer.",
       history: [
         { date: "2026-02-04T09:00:00", action: "Application created", user: AO },
-        { date: "2026-02-05T11:00:00", action: "All pre-screen checks completed", user: AO },
+        { date: "2026-02-05T11:00:00", action: "All 29 checks completed", user: AO },
         { date: "2026-02-24T16:00:00", action: "All policies confirmed", user: AO },
         { date: "2026-03-02T14:00:00", action: "Marked as ready to transfer", user: AO },
       ],
     };
   })(),
 
-  // app025 — Stage 2, In Progress, all checks, 10/22 policies
+  // app025 — Stage 2, In Progress, all 29 checks, 10/22 policies (no insurance)
   (() => {
-    const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-03-02T10:00:00"));
+    const chks = buildChecks(allChecksAnswered(TG, "2026-03-02T10:00:00"));
     const pols = quickPolicies(10, TG, "2026-03-04T08:00:00", true);
     return {
       id: "app025", appRef: "APP-025-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
@@ -868,13 +936,13 @@ export const seederApplications: OnboardingApplication[] = [
       distributeInsurance: false, requestingLender: "l002", requestingLenderName: "Meridian Vehicle Finance Ltd",
       initiatedBy: TG, initiatedDate: "2026-03-01T09:00:00", assignedTo: TG,
       lastUpdated: "2026-03-04T08:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-18",
-      preScreenChecks: checks, policies: pols,
-      completionStatus: buildCompletion(checks, pols, true),
+      checks: chks, policies: pols,
+      completionStatus: buildCompletion(chks, pols, true),
       dndClear: true, platformDndClear: true,
       notes: "New instruction this week — early stage policies",
       history: [
         { date: "2026-03-01T09:00:00", action: "Application created", user: TG },
-        { date: "2026-03-02T10:00:00", action: "All pre-screen checks completed", user: TG },
+        { date: "2026-03-02T10:00:00", action: "All 29 checks completed", user: TG },
         { date: "2026-03-04T08:00:00", action: "10/22 policies confirmed", user: TG },
       ],
     };
@@ -891,7 +959,6 @@ export function getOnboardingStats(apps: OnboardingApplication[]) {
     total: apps.length,
     drafts: apps.filter((a) => a.status === "Draft").length,
     inProgress: apps.filter((a) => a.status === "In Progress").length,
-    
     readyToTransfer: apps.filter((a) => a.status === "Ready to Transfer").length,
     archived: apps.filter((a) => a.status === "Archived").length,
     avgPolicyCompletion: totalPolicies > 0 ? Math.round((answeredPolicies / totalPolicies) * 100) : 0,

@@ -37,7 +37,7 @@ export default function TcgOnboardingWorkflow() {
   const handleNavigate = (s: 1 | 2) => {
     if (!current) return;
     // Gate: cannot go to stage 2 unless all pre-screen checks are answered
-    if (s === 2 && !Object.values(current.preScreenChecks).every(c => c.answered)) return;
+    if (s === 2 && !current.checks.every(c => c.answered)) return;
     setStage(s);
     navigate(`/tcg/onboarding/${current.id}/stage-${s}`, { replace: true });
   };

@@ -18,18 +18,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useToast } from "@/hooks/use-toast";
 import {
   seederApplications,
-  PRE_SCREEN_DEFS,
   type OnboardingApplication,
+  type PreScreenCheck,
 } from "@/data/tcg/onboardingApplications";
 import {
   ArrowLeft, CheckCircle2, AlertTriangle, Pencil, Loader2,
   ChevronDown, Plus, Building2, Shield, Send, Archive,
 } from "lucide-react";
 
-/* ── Guidance map ──────────────────────────────────────────── */
-const GUIDANCE: Record<string, string> = {};
-for (const def of PRE_SCREEN_DEFS) {
-  GUIDANCE[def.key] = def.guidance;
+/* ── Risk badge ───────────────────────────────────────────── */
+function RiskBadge({ rating }: { rating: "High" | "Medium" }) {
+  if (rating === "High") return <Badge className="bg-destructive/10 text-destructive text-[10px] font-medium">🔴 High</Badge>;
+  return <Badge className="bg-outcome-pending-bg text-outcome-pending-text text-[10px] font-medium">🟡 Medium</Badge>;
 }
 
 /* ── Inline editable field ────────────────────────────────── */
@@ -60,7 +60,7 @@ function StageStepper({ current, onClick, preScreenDone, policiesDone }: {
   current: number; onClick: (s: number) => void; preScreenDone: boolean; policiesDone: boolean;
 }) {
   const stages = [
-    { n: 1, label: "Pre-Screen", done: preScreenDone },
+    { n: 1, label: "Compliance Checks", done: preScreenDone },
     { n: 2, label: "Policies", done: policiesDone },
   ];
   const bothComplete = preScreenDone && policiesDone;
@@ -141,29 +141,49 @@ export default function TcgAppDetail() {
     );
   }
 
-  // Pre-screen
-  const checks = Object.entries(app.preScreenChecks);
-  const answeredChecks = checks.filter(([, c]) => c.answered).length;
-  const allChecksAnswered = answeredChecks === checks.length;
+  // Checks
+  const answeredChecks = app.checks.filter(c => c.answered).length;
+  const totalChecks = app.checks.length;
+  const allChecksAnswered = answeredChecks === totalChecks;
 
-  const updateCheck = (key: string, field: string, value: any) => {
-    const updated = { ...app.preScreenChecks };
-    if (field === "answered" && value === true) {
-      if (!updated[key].finding.trim()) {
-        setCheckValidationErrors(prev => ({ ...prev, [key]: "Please add a finding or note before marking this check as answered." }));
-        return;
-      }
-      setCheckValidationErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
-      updated[key] = { ...updated[key], answered: true, answeredBy: "Tom Griffiths", answeredAt: new Date().toISOString() };
-    } else if (field === "answered" && value === false) {
-      updated[key] = { ...updated[key], answered: false, answeredBy: null, answeredAt: null };
-    } else {
-      updated[key] = { ...updated[key], [field]: value };
-      if (field === "finding" && value.trim()) {
-        setCheckValidationErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
-      }
+  // Group checks by section
+  const checkSections = useMemo(() => {
+    const map = new Map<string, PreScreenCheck[]>();
+    for (const check of app.checks) {
+      const existing = map.get(check.sectionId) || [];
+      existing.push(check);
+      map.set(check.sectionId, existing);
     }
-    updateApp({ preScreenChecks: updated });
+    return Array.from(map.entries()).map(([sectionId, checks]) => ({
+      sectionId,
+      sectionName: checks[0].sectionName,
+      checks,
+      answered: checks.filter(c => c.answered).length,
+      total: checks.length,
+    }));
+  }, [app.checks]);
+
+  const updateCheck = (checkId: string, field: string, value: any) => {
+    const updated = app.checks.map(c => {
+      if (c.checkId !== checkId) return c;
+      if (field === "answered" && value === true) {
+        if (!c.finding.trim()) {
+          setCheckValidationErrors(prev => ({ ...prev, [checkId]: "Please add a finding or note before marking this check as answered." }));
+          return c;
+        }
+        setCheckValidationErrors(prev => { const n = { ...prev }; delete n[checkId]; return n; });
+        return { ...c, answered: true, answeredBy: "Tom Griffiths", answeredAt: new Date().toISOString() };
+      } else if (field === "answered" && value === false) {
+        return { ...c, answered: false, answeredBy: null, answeredAt: null };
+      } else {
+        const next = { ...c, [field]: value };
+        if (field === "finding" && value.trim()) {
+          setCheckValidationErrors(prev => { const n = { ...prev }; delete n[checkId]; return n; });
+        }
+        return next;
+      }
+    });
+    updateApp({ checks: updated });
   };
 
   // Policies
@@ -274,7 +294,7 @@ export default function TcgAppDetail() {
             </div>
           </div>
 
-          {/* STAGE 1 */}
+          {/* STAGE 1 — Compliance Checks */}
           {activeStage === 1 && (
             <div className="space-y-5">
               <Card>
@@ -297,100 +317,118 @@ export default function TcgAppDetail() {
                 </CardContent>
               </Card>
 
-              <div className="space-y-3">
-                <h3 className="text-base font-semibold flex items-center gap-2"><Shield className="w-4 h-4" /> Pre-Screen Checks ({answeredChecks}/{checks.length} answered)</h3>
-                {checks.map(([key, check]) => {
-                  const isAnswered = check.answered;
-                  const isExpanded = expandedAnswered[key];
-                  const showFull = !isAnswered || isExpanded;
+              <h3 className="text-base font-semibold flex items-center gap-2"><Shield className="w-4 h-4" /> Compliance Checks ({answeredChecks}/{totalChecks} answered)</h3>
 
-                  return (
-                    <div
-                      key={key}
-                      className={`rounded-lg border transition-colors ${
-                        isAnswered
-                          ? "border-l-4 border-l-outcome-pass border-t border-r border-b"
-                          : "border-l-4 border-l-muted-foreground/30 border-t border-r border-b"
-                      }`}
-                    >
-                      {isAnswered && !isExpanded && (
-                        <div className="p-4 flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3 min-w-0 flex-1">
-                            <CheckCircle2 className="w-5 h-5 text-outcome-pass shrink-0 mt-0.5" />
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium">
-                                <span className="font-mono text-xs text-muted-foreground mr-2">{check.checkId}</span>
-                                {check.label}
-                              </p>
-                              <p className="text-sm text-muted-foreground mt-1 truncate">"{check.finding}"</p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Answered by {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : ""}
-                              </p>
-                            </div>
-                          </div>
-                          <Button variant="ghost" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setExpandedAnswered(prev => ({ ...prev, [key]: true }))}>
-                            <Pencil className="w-3 h-3" /> Edit
-                          </Button>
-                        </div>
-                      )}
-
-                      {showFull && (
-                        <div className="p-4 space-y-3">
-                          <p className="text-sm font-medium">
-                            <span className="font-mono text-xs text-muted-foreground mr-2">{check.checkId}</span>
-                            {check.label}
-                          </p>
-                          {GUIDANCE[key] && (
-                            <div className="bg-muted/50 rounded-md p-3">
-                              <p className="text-xs font-medium text-muted-foreground mb-1">What to check:</p>
-                              <p className="text-xs text-muted-foreground">{GUIDANCE[key]}</p>
-                            </div>
-                          )}
-                          <div>
-                            <Label className="text-xs text-muted-foreground">Finding / Notes</Label>
-                            <Textarea value={check.finding} onChange={e => updateCheck(key, "finding", e.target.value)} placeholder="Record what you found..." className="text-sm min-h-[60px] mt-1" />
-                            {checkValidationErrors[key] && (
-                              <p className="text-xs text-destructive flex items-center gap-1 mt-1"><AlertTriangle className="w-3 h-3" /> {checkValidationErrors[key]}</p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                              <Checkbox id={`chk-${key}`} checked={check.answered} onCheckedChange={(checked) => updateCheck(key, "answered", !!checked)} />
-                              <Label htmlFor={`chk-${key}`} className="text-sm cursor-pointer">Mark as answered</Label>
-                            </div>
-                            {check.answeredBy && <span className="text-[10px] text-muted-foreground">Answered by: {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB") : "—"}</span>}
-                          </div>
-                          {isAnswered && isExpanded && (
-                            <Button variant="ghost" size="sm" className="text-xs" onClick={() => setExpandedAnswered(prev => { const n = { ...prev }; delete n[key]; return n; })}>Collapse</Button>
-                          )}
-                        </div>
-                      )}
+              {checkSections.map((section) => (
+                <Collapsible key={section.sectionId} defaultOpen>
+                  <CollapsibleTrigger className="w-full">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <ChevronDown className="w-4 h-4" />
+                        <span className="text-sm font-semibold">{section.sectionName}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-[10px]">{section.answered}/{section.total}</Badge>
+                        {section.answered === section.total && <CheckCircle2 className="w-4 h-4 text-outcome-pass" />}
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-2 mt-2">
+                    {section.checks.map((check) => {
+                      const isAnswered = check.answered;
+                      const isExpanded = expandedAnswered[check.checkId];
+                      const showFull = !isAnswered || isExpanded;
+
+                      return (
+                        <div
+                          key={check.checkId}
+                          className={`rounded-lg border transition-colors ${
+                            isAnswered
+                              ? "border-l-4 border-l-outcome-pass border-t border-r border-b"
+                              : "border-l-4 border-l-muted-foreground/30 border-t border-r border-b"
+                          }`}
+                        >
+                          {isAnswered && !isExpanded && (
+                            <div className="p-4 flex items-start justify-between gap-3">
+                              <div className="flex items-start gap-3 min-w-0 flex-1">
+                                <CheckCircle2 className="w-5 h-5 text-outcome-pass shrink-0 mt-0.5" />
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-mono text-xs text-muted-foreground">{check.checkId}</span>
+                                    <p className="text-sm font-medium">{check.label}</p>
+                                    <RiskBadge rating={check.riskRating} />
+                                  </div>
+                                  <p className="text-sm text-muted-foreground mt-1 truncate">"{check.finding}"</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Answered by {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : ""}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setExpandedAnswered(prev => ({ ...prev, [check.checkId]: true }))}>
+                                <Pencil className="w-3 h-3" /> Edit
+                              </Button>
+                            </div>
+                          )}
+
+                          {showFull && (
+                            <div className="p-4 space-y-3">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-mono text-xs text-muted-foreground">{check.checkId}</span>
+                                <p className="text-sm font-medium">{check.label}</p>
+                                <RiskBadge rating={check.riskRating} />
+                              </div>
+                              <div className="bg-muted/50 rounded-md p-3">
+                                <p className="text-xs font-medium text-muted-foreground mb-1">Objective:</p>
+                                <p className="text-xs text-muted-foreground">{check.objective}</p>
+                                <p className="text-[10px] text-muted-foreground/60 mt-1">Frequency: {check.frequency}</p>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Finding / Notes</Label>
+                                <Textarea value={check.finding} onChange={e => updateCheck(check.checkId, "finding", e.target.value)} placeholder="Record what you found..." className="text-sm min-h-[60px] mt-1" />
+                                {checkValidationErrors[check.checkId] && (
+                                  <p className="text-xs text-destructive flex items-center gap-1 mt-1"><AlertTriangle className="w-3 h-3" /> {checkValidationErrors[check.checkId]}</p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                  <Checkbox id={`chk-${check.checkId}`} checked={check.answered} onCheckedChange={(checked) => updateCheck(check.checkId, "answered", !!checked)} />
+                                  <Label htmlFor={`chk-${check.checkId}`} className="text-sm cursor-pointer">Mark as answered</Label>
+                                </div>
+                                {check.answeredBy && <span className="text-[10px] text-muted-foreground">Answered by: {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB") : "—"}</span>}
+                              </div>
+                              {isAnswered && isExpanded && (
+                                <Button variant="ghost" size="sm" className="text-xs" onClick={() => setExpandedAnswered(prev => { const n = { ...prev }; delete n[check.checkId]; return n; })}>Collapse</Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
 
               {/* Pre-screen progress */}
               <Card className="sticky bottom-4 z-10 shadow-lg">
                 <CardContent className="py-4">
                   <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium shrink-0">Pre-Screen Checks:</span>
-                    <Progress value={checks.length > 0 ? Math.round((answeredChecks / checks.length) * 100) : 0} className="flex-1" />
-                    <span className="text-sm font-medium shrink-0">{answeredChecks} of {checks.length} answered</span>
+                    <span className="text-sm font-medium shrink-0">Compliance Checks:</span>
+                    <Progress value={totalChecks > 0 ? Math.round((answeredChecks / totalChecks) * 100) : 0} className="flex-1" />
+                    <span className="text-sm font-medium shrink-0">{answeredChecks} of {totalChecks} answered</span>
                   </div>
                 </CardContent>
               </Card>
 
               {allChecksAnswered && (
                 <div className="flex items-center justify-between p-4 rounded-lg border border-outcome-pass/30 bg-outcome-pass-bg/30">
-                  <p className="text-sm font-medium text-outcome-pass-text flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> All pre-screen checks answered</p>
+                  <p className="text-sm font-medium text-outcome-pass-text flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> All {totalChecks} compliance checks answered</p>
                   <Button onClick={() => setActiveStage(2)}>Proceed to Policies →</Button>
                 </div>
               )}
             </div>
           )}
 
-          {/* STAGE 2 */}
+          {/* STAGE 2 — Policies */}
           {activeStage === 2 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -559,7 +597,7 @@ export default function TcgAppDetail() {
               <div className="border-t pt-3 space-y-1">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase">Quick Stats</p>
                 <div className="text-xs space-y-0.5">
-                  <p>Pre-screen: {answeredChecks}/{checks.length} answered</p>
+                  <p>Checks: {answeredChecks}/{totalChecks} answered</p>
                   <p>Policies: {answeredPolicies}/{policiesTotal} answered</p>
                   <p>DND: {app.dndClear ? "✅ Checked" : "🔴 Flagged"}</p>
                 </div>
@@ -614,10 +652,20 @@ export default function TcgAppDetail() {
               <p className="text-sm font-semibold">{app.dealerName}</p>
               <p className="text-xs text-muted-foreground">{app.appRef}</p>
             </div>
-            <Textarea placeholder="Reason for archiving (required)..." value={archiveReason} onChange={e => setArchiveReason(e.target.value)} className="min-h-[80px]" />
-            <div className="flex justify-end gap-2">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">Reason for archiving *</Label>
+              <Textarea
+                rows={3}
+                value={archiveReason}
+                onChange={e => setArchiveReason(e.target.value)}
+                placeholder="e.g. FCA authorisation lapsed, director sanctions match confirmed..."
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => { setShowArchiveModal(false); setArchiveReason(""); }}>Cancel</Button>
-              <Button variant="destructive" onClick={handleArchive} disabled={!archiveReason.trim()} className="gap-1"><Archive className="w-4 h-4" /> Archive</Button>
+              <Button onClick={handleArchive} disabled={!archiveReason.trim()} className="gap-1">
+                <Archive className="w-4 h-4" /> Archive
+              </Button>
             </div>
           </div>
         </DialogContent>
