@@ -396,7 +396,7 @@ export const seederApplications: OnboardingApplication[] = [
     }));
     const pols = quickPolicies(22, TG, "2026-02-25T16:00:00");
     return {
-      id: "app003", appRef: "APP-003-2026", stage: 2, status: "Ready to Transfer" as OnboardingAppStatus,
+      id: "app003", appRef: "APP-003-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
       dealerName: "Highfield Motor Company", tradingName: "Highfield Motors",
       companiesHouseNo: "09451230", website: "https://www.highfieldmotors.co.uk",
       primaryContact: { name: "Richard Price", email: "r.price@highfieldmotors.co.uk", phone: "01633 882100" },
@@ -405,14 +405,14 @@ export const seederApplications: OnboardingApplication[] = [
       initiatedBy: TG, initiatedDate: "2026-02-10T08:30:00", assignedTo: TG,
       lastUpdated: "2026-03-01T10:00:00", lastUpdatedBy: TG, targetCompletionDate: "2026-03-04",
       checks: chks, policies: pols,
-      completionStatus: buildCompletion(chks, pols, true, TG, "2026-03-01T10:00:00", true),
+      completionStatus: buildCompletion(chks, pols, true, TG, "2026-03-01T10:00:00"),
       dndClear: true, platformDndClear: true,
-      notes: "All sections verified. Marked as ready to transfer to lender.",
+      notes: "All sections verified. Onboarding complete.",
       history: [
         { date: "2026-02-10T08:30:00", action: "Application created", user: TG },
         { date: "2026-02-11T14:00:00", action: "All 29 checks completed", user: TG },
         { date: "2026-02-25T16:00:00", action: "All policies confirmed", user: TG },
-        { date: "2026-03-01T10:00:00", action: "Marked as ready to transfer", user: TG },
+        { date: "2026-03-01T10:00:00", action: "Onboarding complete — added to dealer portfolio", user: TG },
       ],
     };
   })(),
