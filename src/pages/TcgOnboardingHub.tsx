@@ -6,23 +6,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Plus, Search, LayoutGrid, List, Clock, AlertTriangle,
-  ArrowRight, ArrowUpDown, ArrowUp, ArrowDown, Download, UserPlus, Users,
+  Plus, Search, LayoutGrid, List, ArrowRight, ArrowUpDown, ArrowUp, ArrowDown, Users, Archive, ChevronDown, Send,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTcgOnboarding } from "@/hooks/useTcgOnboarding";
 import {
-  seederApplications, getOnboardingStats,
+  seederApplications,
   type OnboardingApplication, type OnboardingAppStatus,
 } from "@/data/tcg/onboardingApplications";
-
-function isOverdue(app: OnboardingApplication) {
-  return app.status === "In Progress" && new Date(app.targetCompletionDate) < new Date();
-}
 
 function daysUntilTarget(target: string) {
   const days = Math.ceil((new Date(target).getTime() - Date.now()) / 86400000);
@@ -46,15 +43,16 @@ function statusBadge(status: OnboardingAppStatus) {
     "In Progress": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
     Complete: "bg-outcome-pass-bg text-outcome-pass-text",
     "Ready to Transfer": "bg-primary/20 text-primary",
+    Archived: "bg-muted text-muted-foreground/60",
   };
   return <Badge className={cls[status]}>{status}</Badge>;
 }
 
+/* ── Standard card ──────────────────────────────────────────── */
 function AppCard({ app, onClick }: { app: OnboardingApplication; onClick: () => void }) {
   const answered = app.policies.filter(p => p.dealerHasIt !== null).length;
   const total = app.policies.length;
   const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
-  const overdue = isOverdue(app);
 
   return (
     <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onClick}>
@@ -74,7 +72,6 @@ function AppCard({ app, onClick }: { app: OnboardingApplication; onClick: () => 
         <div className="flex flex-wrap gap-1">
           {preScreenIcon(app)}
           {!app.dndClear && <span className="text-[10px] text-outcome-fail font-medium">🔴 DND flagged</span>}
-          {overdue && <span className="text-[10px] text-outcome-fail font-medium">⏰ Overdue</span>}
         </div>
         <div className="flex justify-end pt-1">
           <Button variant="ghost" size="sm" className="h-6 text-[11px] gap-1 text-primary" onClick={e => { e.stopPropagation(); onClick(); }}>
@@ -86,6 +83,26 @@ function AppCard({ app, onClick }: { app: OnboardingApplication; onClick: () => 
   );
 }
 
+/* ── Ready to Transfer card (green top border + transfer button) ── */
+function ReadyCard({ app, onClick, onTransfer }: { app: OnboardingApplication; onClick: () => void; onTransfer: () => void }) {
+  return (
+    <Card className="cursor-pointer hover:shadow-md transition-shadow border-t-4 border-t-[hsl(var(--outcome-pass))]" onClick={onClick}>
+      <CardContent className="p-3 space-y-2">
+        <p className="text-sm font-semibold leading-tight">{app.dealerName}</p>
+        <p className="text-[11px] text-muted-foreground">{app.appRef} · {app.requestingLenderName.split(" ").slice(0, 2).join(" ")}</p>
+        <Badge className="bg-outcome-pass-bg text-outcome-pass-text text-[10px]">✅ All checks complete</Badge>
+        <div className="flex items-center justify-between text-[11px]">
+          <span className="text-muted-foreground">👤 {app.assignedTo}</span>
+        </div>
+        <Button size="sm" className="w-full gap-1 text-xs mt-1" onClick={e => { e.stopPropagation(); onTransfer(); }}>
+          <Send className="w-3 h-3" /> Mark as Transferred →
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── Main page ──────────────────────────────────────────────── */
 export default function TcgOnboardingHub() {
   const navigate = useNavigate();
   const { startNew } = useTcgOnboarding();
@@ -94,25 +111,43 @@ export default function TcgOnboardingHub() {
   const [search, setSearch] = useState("");
   const [assigneeFilter, setAssigneeFilter] = useState("all");
   const [lenderFilter, setLenderFilter] = useState("all");
-  const [stageFilter, setStageFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortCol, setSortCol] = useState<string>("appRef");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [showArchived, setShowArchived] = useState(false);
+
+  // Transfer modal
+  const [transferApp, setTransferApp] = useState<OnboardingApplication | null>(null);
+  // Archive modal (from hub — optional, mainly lives in detail)
+  const [archiveApp, setArchiveApp] = useState<OnboardingApplication | null>(null);
+  const [archiveReason, setArchiveReason] = useState("");
+  // Local state for transferred/archived apps
+  const [transferredIds, setTransferredIds] = useState<Set<string>>(new Set());
+  const [archivedApps, setArchivedApps] = useState<Map<string, string>>(new Map()); // id -> reason
 
   const handleNew = () => { startNew(); navigate("/tcg/onboarding/new"); };
 
+  const allApps = useMemo(() => {
+    return seederApplications.map(app => {
+      if (transferredIds.has(app.id)) return null; // removed from board
+      if (archivedApps.has(app.id)) return { ...app, status: "Archived" as OnboardingAppStatus };
+      return app;
+    }).filter(Boolean) as OnboardingApplication[];
+  }, [transferredIds, archivedApps]);
+
   const filtered = useMemo(() => {
-    return seederApplications.filter(app => {
+    return allApps.filter(app => {
+      if (!showArchived && app.status === "Archived") return false;
+      if (showArchived && app.status !== "Archived") return false;
       if (search) {
         const q = search.toLowerCase();
         if (!app.dealerName.toLowerCase().includes(q) && !app.appRef.toLowerCase().includes(q)) return false;
       }
       if (assigneeFilter !== "all" && app.assignedTo !== assigneeFilter) return false;
       if (lenderFilter !== "all" && app.requestingLender !== lenderFilter) return false;
-      if (stageFilter !== "all" && String(app.stage) !== stageFilter) return false;
       return true;
     });
-  }, [search, assigneeFilter, lenderFilter, stageFilter]);
+  }, [allApps, search, assigneeFilter, lenderFilter, showArchived]);
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
@@ -149,21 +184,40 @@ export default function TcgOnboardingHub() {
     else setSelectedIds(new Set(sorted.map(a => a.id)));
   }, [sorted, selectedIds.size]);
 
-  const columns = useMemo(() => ({
-    drafts: filtered.filter(a => a.status === "Draft"),
-    stage1: filtered.filter(a => a.status === "In Progress" && a.stage === 1),
-    stage2: filtered.filter(a => a.status === "In Progress" && a.stage === 2),
-    complete: filtered.filter(a => a.status === "Complete"),
-    ready: filtered.filter(a => a.status === "Ready to Transfer"),
-  }), [filtered]);
+  // Board columns (4 columns)
+  const columns = useMemo(() => {
+    const active = filtered.filter(a => a.status !== "Archived");
+    const checksAllAnswered = (a: OnboardingApplication) => Object.values(a.preScreenChecks).every(c => c.answered);
+    return {
+      drafts: active.filter(a => a.status === "Draft"),
+      preScreen: active.filter(a => a.status === "In Progress" && !checksAllAnswered(a)),
+      policies: active.filter(a => (a.status === "In Progress" && checksAllAnswered(a)) || a.status === "Complete"),
+      ready: active.filter(a => a.status === "Ready to Transfer"),
+    };
+  }, [filtered]);
 
-  const active = seederApplications.filter(a => a.status !== "Complete" && a.status !== "Ready to Transfer");
-  const unassigned = seederApplications.filter(a => a.assignedTo === "Unassigned").length;
-  const completeCount = seederApplications.filter(a => a.status === "Complete").length;
-  const avgDays = active.length > 0
-    ? (active.reduce((s, a) => s + (Date.now() - new Date(a.initiatedDate).getTime()) / 86400000, 0) / active.length).toFixed(1) : "0";
+  const activeApps = allApps.filter(a => a.status !== "Archived" && !transferredIds.has(a.id));
+  const activeCount = activeApps.filter(a => a.status !== "Ready to Transfer").length;
+  const readyCount = activeApps.filter(a => a.status === "Ready to Transfer").length;
+  const unassigned = activeApps.filter(a => a.assignedTo === "Unassigned").length;
+  const archivedCount = archivedApps.size;
 
   const openApp = (app: OnboardingApplication) => navigate(`/tcg/onboarding/${app.id}`);
+
+  const handleTransferConfirm = () => {
+    if (!transferApp) return;
+    setTransferredIds(prev => new Set(prev).add(transferApp.id));
+    toast({ title: "✅ Transferred", description: `${transferApp.dealerName} onboarding record is complete and has been added to the dealer directory.` });
+    setTransferApp(null);
+  };
+
+  const handleArchiveConfirm = () => {
+    if (!archiveApp || !archiveReason.trim()) return;
+    setArchivedApps(prev => new Map(prev).set(archiveApp.id, archiveReason.trim()));
+    toast({ title: "Archived", description: `${archiveApp.dealerName} has been archived.` });
+    setArchiveApp(null);
+    setArchiveReason("");
+  };
 
   const lenders = useMemo(() => {
     const map = new Map<string, string>();
@@ -173,10 +227,9 @@ export default function TcgOnboardingHub() {
 
   const columnDefs = [
     { key: "drafts", title: "📋 Draft", subtitle: "Not started", apps: columns.drafts, bg: "bg-muted/40 border-muted-foreground/20" },
-    { key: "stage1", title: "⚙️ Stage 1", subtitle: "Pre-Screen & Details", apps: columns.stage1, bg: "bg-blue-50/60 dark:bg-blue-950/30 border-blue-300/40 dark:border-blue-700/40" },
-    { key: "stage2", title: "📄 Stage 2", subtitle: "Policies", apps: columns.stage2, bg: "bg-[hsl(270_60%_97%)] dark:bg-[hsl(270_30%_12%)] border-[hsl(270_50%_80%)]/40 dark:border-[hsl(270_40%_30%)]/40" },
-    { key: "complete", title: "✅ Complete", subtitle: "All info gathered", apps: columns.complete, bg: "bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300/40 dark:border-emerald-700/40" },
-    { key: "ready", title: "🚀 Ready to Transfer", subtitle: "", apps: columns.ready, bg: "bg-primary/5 border-primary/20" },
+    { key: "preScreen", title: "⚙️ Pre-Screen", subtitle: "Checks & Details", apps: columns.preScreen, bg: "bg-blue-50/60 dark:bg-blue-950/30 border-blue-300/40 dark:border-blue-700/40" },
+    { key: "policies", title: "📄 Policies", subtitle: "Framework", apps: columns.policies, bg: "bg-[hsl(270_60%_97%)] dark:bg-[hsl(270_30%_12%)] border-[hsl(270_50%_80%)]/40 dark:border-[hsl(270_40%_30%)]/40" },
+    { key: "ready", title: "✅ Ready to Transfer", subtitle: "All checks complete", apps: columns.ready, bg: "bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300/40 dark:border-emerald-700/40" },
   ];
 
   return (
@@ -185,7 +238,7 @@ export default function TcgOnboardingHub() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Dealer Onboarding Pipeline</h1>
-            <p className="text-sm text-muted-foreground mt-1">{seederApplications.length} applications across all stages</p>
+            <p className="text-sm text-muted-foreground mt-1">{activeApps.length} active applications across all stages</p>
           </div>
           <div className="flex gap-2">
             <Button onClick={handleNew} className="gap-2"><Plus className="w-4 h-4" /> New Application</Button>
@@ -197,13 +250,13 @@ export default function TcgOnboardingHub() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Card className="border-l-4 border-l-primary"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Total Active</p><p className="text-3xl font-bold text-foreground">{active.length}</p></CardContent></Card>
-          <Card className="border-l-4 border-l-[hsl(var(--outcome-pass))]"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Complete</p><p className="text-3xl font-bold text-foreground">{completeCount}</p></CardContent></Card>
+          <Card className="border-l-4 border-l-primary"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Active</p><p className="text-3xl font-bold text-foreground">{activeCount}</p></CardContent></Card>
+          <Card className="border-l-4 border-l-[hsl(var(--outcome-pass))]"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Ready to Transfer</p><p className="text-3xl font-bold text-foreground">{readyCount}</p></CardContent></Card>
           <Card className={`border-l-4 ${unassigned > 0 ? "border-l-[hsl(var(--outcome-pending))]" : "border-l-muted-foreground/30"}`}><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Unassigned</p><p className="text-3xl font-bold text-foreground">{unassigned} {unassigned > 0 && <span className="text-outcome-pending text-lg">⚠️</span>}</p></CardContent></Card>
-          <Card className="border-l-4 border-l-muted-foreground/30"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Avg Duration</p><p className="text-3xl font-bold text-foreground">{avgDays} <span className="text-base font-normal text-muted-foreground">days</span></p></CardContent></Card>
+          <Card className="border-l-4 border-l-muted-foreground/30"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Archived</p><p className="text-3xl font-bold text-foreground">{archivedCount}</p></CardContent></Card>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
           <div className="relative flex-1 min-w-[200px] max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input placeholder="Search dealer or ref..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
@@ -224,10 +277,47 @@ export default function TcgOnboardingHub() {
               {lenders.map(([id, name]) => (<SelectItem key={id} value={id}>{name.split(" ").slice(0, 2).join(" ")}</SelectItem>))}
             </SelectContent>
           </Select>
+          <Button variant={showArchived ? "default" : "outline"} size="sm" className="gap-1" onClick={() => setShowArchived(!showArchived)}>
+            <Archive className="w-4 h-4" /> {showArchived ? "Hide Archived" : "Show Archived"} <ChevronDown className="w-3 h-3" />
+          </Button>
         </div>
 
-        {view === "board" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3 items-start">
+        {/* Archived view */}
+        {showArchived && (
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Archive className="w-4 h-4" /> Archived Applications</h3>
+              {filtered.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">No archived applications</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ref</TableHead>
+                      <TableHead>Dealer</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Lender</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map(app => (
+                      <TableRow key={app.id}>
+                        <TableCell className="font-mono text-sm">{app.appRef}</TableCell>
+                        <TableCell className="font-medium">{app.dealerName}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{archivedApps.get(app.id) || "—"}</TableCell>
+                        <TableCell className="text-sm">{app.requestingLenderName}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Board view */}
+        {!showArchived && view === "board" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 items-start">
             {columnDefs.map(col => (
               <div key={col.key} className={`rounded-xl border ${col.bg} p-3 space-y-2 min-h-[200px]`}>
                 <div className="pb-2 border-b border-border/50">
@@ -236,14 +326,18 @@ export default function TcgOnboardingHub() {
                 </div>
                 <div className="space-y-2 max-h-[calc(100vh-380px)] overflow-y-auto">
                   {col.apps.length === 0 && <p className="text-xs text-muted-foreground py-6 text-center">No applications</p>}
-                  {col.apps.map(app => <AppCard key={app.id} app={app} onClick={() => openApp(app)} />)}
+                  {col.key === "ready"
+                    ? col.apps.map(app => <ReadyCard key={app.id} app={app} onClick={() => openApp(app)} onTransfer={() => setTransferApp(app)} />)
+                    : col.apps.map(app => <AppCard key={app.id} app={app} onClick={() => openApp(app)} />)
+                  }
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {view === "list" && (
+        {/* List view */}
+        {!showArchived && view === "list" && (
           <Card>
             <CardContent className="p-0">
               <Table>
@@ -274,7 +368,16 @@ export default function TcgOnboardingHub() {
                       <TableCell>{statusBadge(app.status)}</TableCell>
                       <TableCell className="text-sm">{app.assignedTo}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{new Date(app.lastUpdated).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}</TableCell>
-                      <TableCell><Button variant="ghost" size="sm" className="h-7 text-xs" onClick={e => { e.stopPropagation(); openApp(app); }}>Open</Button></TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={e => { e.stopPropagation(); openApp(app); }}>Open</Button>
+                          {app.status === "Ready to Transfer" && (
+                            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={e => { e.stopPropagation(); setTransferApp(app); }}>
+                              <Send className="w-3 h-3" /> Transfer
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -283,6 +386,55 @@ export default function TcgOnboardingHub() {
           </Card>
         )}
       </div>
+
+      {/* Transfer confirmation modal */}
+      <Dialog open={!!transferApp} onOpenChange={open => !open && setTransferApp(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Transfer</DialogTitle>
+            <DialogDescription>
+              Confirm this dealer's onboarding record is complete and ready for the lender to proceed. This will move the dealer to the active dealer directory.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            {transferApp && (
+              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                <p className="text-sm font-semibold">{transferApp.dealerName}</p>
+                <p className="text-xs text-muted-foreground">{transferApp.appRef} · {transferApp.requestingLenderName}</p>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setTransferApp(null)}>Cancel</Button>
+              <Button onClick={handleTransferConfirm} className="gap-1"><Send className="w-4 h-4" /> Confirm Transfer</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Archive modal */}
+      <Dialog open={!!archiveApp} onOpenChange={open => { if (!open) { setArchiveApp(null); setArchiveReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Archive Application</DialogTitle>
+            <DialogDescription>
+              This application will be removed from the pipeline board. Please provide a reason for archiving.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            {archiveApp && (
+              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                <p className="text-sm font-semibold">{archiveApp.dealerName}</p>
+                <p className="text-xs text-muted-foreground">{archiveApp.appRef}</p>
+              </div>
+            )}
+            <Textarea placeholder="Reason for archiving (required)..." value={archiveReason} onChange={e => setArchiveReason(e.target.value)} className="min-h-[80px]" />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setArchiveApp(null); setArchiveReason(""); }}>Cancel</Button>
+              <Button variant="destructive" onClick={handleArchiveConfirm} disabled={!archiveReason.trim()} className="gap-1"><Archive className="w-4 h-4" /> Archive</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
