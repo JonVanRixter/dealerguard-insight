@@ -101,7 +101,7 @@ export default function Onboarding() {
           {[
             { label: "Drafts", value: stats.drafts, icon: FileText, color: "text-muted-foreground" },
             { label: "In Progress", value: stats.inProgress, icon: Loader2, color: "text-blue-600" },
-            { label: "Complete", value: stats.complete, icon: CheckCircle2, color: "text-outcome-pass" },
+            { label: "Ready", value: stats.readyToTransfer, icon: CheckCircle2, color: "text-outcome-pass" },
             { label: "Ready to Transfer", value: stats.readyToTransfer, icon: ArrowRight, color: "text-primary" },
             { label: "Avg Policy %", value: `${stats.avgPolicyCompletion}%`, icon: BarChart3, color: "text-primary" },
           ].map(kpi => (
