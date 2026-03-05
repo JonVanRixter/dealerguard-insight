@@ -308,8 +308,8 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
           </div>
         ) : (
           <div className="flex justify-end">
-            <Button onClick={onContinue} variant="outline" className="gap-2">
-              Save & Continue to Policies
+            <Button onClick={onContinue} variant="outline" className="gap-2" disabled>
+              Complete all pre-screen checks to proceed
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>

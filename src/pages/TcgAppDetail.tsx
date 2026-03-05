@@ -242,7 +242,7 @@ export default function TcgAppDetail() {
               <h1 className="text-2xl font-bold text-foreground">{app.dealerName || "New Application"}</h1>
               <p className="text-sm text-muted-foreground">{app.appRef} · {app.requestingLenderName} · Initiated: {new Date(app.initiatedDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</p>
             </div>
-            <StageStepper current={activeStage} onClick={s => setActiveStage(s)} preScreenDone={allChecksAnswered && detailsComplete} policiesDone={allPoliciesDone} />
+            <StageStepper current={activeStage} onClick={s => { if (s === 2 && !allChecksAnswered) return; setActiveStage(s); }} preScreenDone={allChecksAnswered && detailsComplete} policiesDone={allPoliciesDone} />
             <div className="flex items-center gap-4 text-sm flex-wrap">
               <span>Assigned: <span className="font-medium">{app.assignedTo}</span></span>
               <span>Target: {new Date(app.targetCompletionDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}</span>
