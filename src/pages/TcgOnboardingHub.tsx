@@ -96,14 +96,10 @@ export default function TcgOnboardingHub() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [showArchived, setShowArchived] = useState(false);
 
-  // Transfer modal
-  const [transferApp, setTransferApp] = useState<OnboardingApplication | null>(null);
-  // Archive modal (from hub — optional, mainly lives in detail)
+  // Archive modal
   const [archiveApp, setArchiveApp] = useState<OnboardingApplication | null>(null);
   const [archiveReason, setArchiveReason] = useState("");
-  // Local state for transferred/archived apps
-  const [transferredIds, setTransferredIds] = useState<Set<string>>(new Set());
-  const [archivedApps, setArchivedApps] = useState<Map<string, string>>(new Map()); // id -> reason
+  const [archivedApps, setArchivedApps] = useState<Map<string, string>>(new Map());
 
   const handleNew = () => { startNew(); navigate("/tcg/onboarding/new"); };
 
