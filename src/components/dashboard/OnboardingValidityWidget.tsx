@@ -73,7 +73,7 @@ export function OnboardingValidityWidget() {
         <div className="px-5 pb-3 space-y-2">
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <span>Active: <span className="font-semibold">{pipeline.active}</span></span>
-            <span>Complete: <span className="font-semibold">{pipeline.complete}</span></span>
+            <span>Ready: <span className="font-semibold">{pipeline.ready}</span></span>
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <span className={pipeline.unassigned > 0 ? "text-outcome-pending font-medium" : ""}>
