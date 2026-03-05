@@ -651,9 +651,9 @@ export const seederApplications: OnboardingApplication[] = [
   // app017 — Complete
   (() => {
     const checks = buildPreScreenChecks(allChecksAnswered(TG, "2026-02-02T14:00:00"));
-    const pols = quickPolicies(26, TG, "2026-02-20T16:00:00");
+    const pols = quickPolicies(22, TG, "2026-02-20T16:00:00");
     return {
-      id: "app017", appRef: "APP-017-2026", stage: 3, status: "Complete" as OnboardingAppStatus,
+      id: "app017", appRef: "APP-017-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
       dealerName: "Pennfield Cars Ltd", tradingName: "Pennfield Cars",
       companiesHouseNo: "08901234", website: "https://www.pennfieldcars.co.uk",
       primaryContact: { name: "David Rees", email: "d.rees@pennfield.co.uk", phone: "01792 445500" },
