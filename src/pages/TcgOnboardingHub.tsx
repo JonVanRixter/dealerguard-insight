@@ -325,10 +325,7 @@ export default function TcgOnboardingHub() {
                 </div>
                 <div className="space-y-2 max-h-[calc(100vh-380px)] overflow-y-auto">
                   {col.apps.length === 0 && <p className="text-xs text-muted-foreground py-6 text-center">No applications</p>}
-                  {col.key === "ready"
-                    ? col.apps.map(app => <ReadyCard key={app.id} app={app} onClick={() => openApp(app)} onTransfer={() => setTransferApp(app)} />)
-                    : col.apps.map(app => <AppCard key={app.id} app={app} onClick={() => openApp(app)} />)
-                  }
+                  {col.apps.map(app => <AppCard key={app.id} app={app} onClick={() => openApp(app)} />)}
                 </div>
               </div>
             ))}
