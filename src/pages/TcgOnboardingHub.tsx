@@ -105,11 +105,10 @@ export default function TcgOnboardingHub() {
 
   const allApps = useMemo(() => {
     return seederApplications.map(app => {
-      if (transferredIds.has(app.id)) return null; // removed from board
       if (archivedApps.has(app.id)) return { ...app, status: "Archived" as OnboardingAppStatus };
       return app;
     }).filter(Boolean) as OnboardingApplication[];
-  }, [transferredIds, archivedApps]);
+  }, [archivedApps]);
 
   const filtered = useMemo(() => {
     return allApps.filter(app => {
