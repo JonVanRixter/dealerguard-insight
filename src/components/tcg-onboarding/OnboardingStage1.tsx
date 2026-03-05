@@ -25,9 +25,25 @@ interface Stage1Props {
 
 /* ── Sub-components ─────────────────────────────────────────── */
 
+function CheckIdBadge({ id }: { id: string }) {
+  return (
+    <span className="inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground tracking-wide uppercase border border-border/50">
+      {id.replace("_", ".")}
+    </span>
+  );
+}
+
 function RiskBadge({ rating }: { rating: "High" | "Medium" }) {
-  if (rating === "High") return <Badge className="bg-destructive/10 text-destructive text-[10px] font-medium">🔴 High</Badge>;
-  return <Badge className="bg-outcome-pending-bg text-outcome-pending-text text-[10px] font-medium">🟡 Medium</Badge>;
+  if (rating === "High") return (
+    <Badge className="bg-destructive/10 text-destructive text-[10px] font-medium gap-1.5 px-2 py-0.5">
+      <span className="w-2 h-2 rounded-full bg-destructive inline-block" /> High
+    </Badge>
+  );
+  return (
+    <Badge className="bg-outcome-pending-bg text-outcome-pending-text text-[10px] font-medium gap-1.5 px-2 py-0.5">
+      <span className="w-2 h-2 rounded-full bg-outcome-pending inline-block" /> Medium
+    </Badge>
+  );
 }
 
 function SectionStatusIcon({ answered, total }: { answered: number; total: number }) {
