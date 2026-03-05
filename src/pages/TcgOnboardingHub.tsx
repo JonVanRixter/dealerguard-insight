@@ -250,7 +250,7 @@ export default function TcgOnboardingHub() {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Card className="border-l-4 border-l-primary"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Active</p><p className="text-3xl font-bold text-foreground">{activeCount}</p></CardContent></Card>
-          <Card className="border-l-4 border-l-[hsl(var(--outcome-pass))]"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Ready to Transfer</p><p className="text-3xl font-bold text-foreground">{readyCount}</p></CardContent></Card>
+          <Card className="border-l-4 border-l-[hsl(var(--outcome-pass))]"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Complete</p><p className="text-3xl font-bold text-foreground">{completeCount}</p></CardContent></Card>
           <Card className={`border-l-4 ${unassigned > 0 ? "border-l-[hsl(var(--outcome-pending))]" : "border-l-muted-foreground/30"}`}><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Unassigned</p><p className="text-3xl font-bold text-foreground">{unassigned} {unassigned > 0 && <span className="text-outcome-pending text-lg">⚠️</span>}</p></CardContent></Card>
           <Card className="border-l-4 border-l-muted-foreground/30"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Archived</p><p className="text-3xl font-bold text-foreground">{archivedCount}</p></CardContent></Card>
         </div>
