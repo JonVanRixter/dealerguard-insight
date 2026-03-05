@@ -15,8 +15,9 @@ import {
 } from "@/data/tcg/onboardingApplications";
 import {
   Plus, Search, Clock, CheckCircle2, AlertTriangle,
-  FileText, Users, ArrowRight, BarChart3, Loader2,
+  FileText, Users, ArrowRight, BarChart3, Loader2, ChevronDown,
 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate } from "react-router-dom";
 
 function statusBadge(status: OnboardingAppStatus) {
