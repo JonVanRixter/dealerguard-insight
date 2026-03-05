@@ -24,7 +24,7 @@ function statusBadge(status: OnboardingAppStatus) {
   const map: Record<OnboardingAppStatus, string> = {
     Draft: "bg-muted text-muted-foreground",
     "In Progress": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-    "Ready to Transfer": "bg-primary/20 text-primary",
+    Complete: "bg-outcome-pass-bg text-outcome-pass-text",
     Archived: "bg-muted text-muted-foreground/60",
   };
   return <Badge className={map[status]}>{status}</Badge>;
