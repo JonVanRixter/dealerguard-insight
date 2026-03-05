@@ -196,8 +196,8 @@ export default function TcgOnboardingHub() {
   }, [filtered]);
 
   const activeApps = allApps.filter(a => a.status !== "Archived" && !transferredIds.has(a.id));
-  const activeCount = activeApps.filter(a => a.status !== "Ready to Transfer").length;
-  const readyCount = activeApps.filter(a => a.status === "Ready to Transfer").length;
+  const activeCount = activeApps.filter(a => a.status !== "Complete").length;
+  const completeCount = activeApps.filter(a => a.status === "Complete").length;
   const unassigned = activeApps.filter(a => a.assignedTo === "Unassigned").length;
   const archivedCount = archivedApps.size;
 
