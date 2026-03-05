@@ -252,17 +252,11 @@ export default function TcgAppDetail() {
     const next = [...app.policies];
     const idx = next.findIndex(p => p.policyId === polId);
     if (idx === -1) return;
-    next[idx] = { ...next[idx], [field]: value, answeredBy: "Tom Griffiths", answeredAt: new Date().toISOString() };
+    const val = field === "dealerHasIt"
+      ? value === "yes" ? true : value === "no" ? false : "na"
+      : value;
+    next[idx] = { ...next[idx], [field]: val, answeredBy: "Tom Griffiths", answeredAt: new Date().toISOString() };
     updateApp({ policies: next });
-    if (field === "notes" && (value as string).trim()) {
-      setPolicyValidationErrors(prev => { const n = { ...prev }; delete n[polId]; return n; });
-    }
-    if (field === "dealerHasIt") {
-      const pol = next[idx];
-      if (!pol.notes.trim()) {
-        setPolicyValidationErrors(prev => ({ ...prev, [polId]: "Please add a note before this policy is marked as answered." }));
-      }
-    }
   };
 
   return (
