@@ -38,13 +38,6 @@ function preScreenSummary(app: OnboardingApplication) {
   return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs">{answered}/{total}</Badge>;
 }
 
-function daysUntilTarget(target: string) {
-  const days = Math.ceil((new Date(target).getTime() - Date.now()) / 86400000);
-  if (days < 0) return <span className="text-outcome-fail text-xs font-medium">⏰ {Math.abs(days)}d overdue</span>;
-  if (days <= 3) return <span className="text-outcome-fail text-xs font-medium">🔴 {days}d</span>;
-  if (days <= 7) return <span className="text-outcome-pending text-xs font-medium">🟡 {days}d</span>;
-  return <span className="text-muted-foreground text-xs">{days}d</span>;
-}
 
 function stageBar(app: OnboardingApplication) {
   const answered = app.policies.filter(p => p.dealerHasIt !== null).length;
