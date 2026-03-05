@@ -274,7 +274,7 @@ export const seederApplications: OnboardingApplication[] = [
     const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-16T09:00:00"));
     const pols = quickPolicies(22, AO, "2026-02-28T16:00:00", true);
     return {
-      id: "app002", appRef: "APP-002-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
+      id: "app002", appRef: "APP-002-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
       dealerName: "Kestrel Car Sales Ltd", tradingName: "Kestrel Cars",
       companiesHouseNo: "08124590", website: "https://www.kestrelcars.co.uk",
       primaryContact: { name: "Nina Shah", email: "n.shah@kestrelcars.co.uk", phone: "0117 946 1100" },
