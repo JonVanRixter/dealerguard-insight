@@ -85,7 +85,6 @@ function computeCompletion(
     onboardingComplete: complete,
     completedBy: null,
     completedAt: null,
-    readyToTransfer: false,
   };
 }
 
@@ -157,6 +156,15 @@ export function useTcgOnboarding() {
       if (next.status === "Draft" && (next.dealerName || next.companiesHouseNo)) {
         next.status = "In Progress";
       }
+      // Auto-complete when all checks and policies are done
+      if (next.completionStatus.onboardingComplete && next.status !== "Complete" && next.status !== "Archived") {
+        next.status = "Complete";
+        next.completionStatus = {
+          ...next.completionStatus,
+          completedBy: "Tom Griffiths",
+          completedAt: new Date().toISOString(),
+        };
+      }
       // Debounced persist
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
@@ -172,24 +180,6 @@ export function useTcgOnboarding() {
     updateCurrent({ stage, status: "In Progress" });
   }, [updateCurrent]);
 
-  const markReadyToTransfer = useCallback(() => {
-    setCurrent((prev) => {
-      if (!prev || !prev.completionStatus.onboardingComplete) return prev;
-      const next: OnboardingApplication = {
-        ...prev,
-        status: "Ready to Transfer",
-        completionStatus: {
-          ...prev.completionStatus,
-          readyToTransfer: true,
-          completedBy: "Tom Griffiths",
-          completedAt: new Date().toISOString(),
-        },
-      };
-      setApplications((apps) => apps.map((a) => (a.id === next.id ? next : a)));
-      return next;
-    });
-  }, []);
-
   const checkDuplicate = useCallback((chNumber: string): string | null => {
     if (!chNumber || chNumber.length < 4) return null;
     return null;
@@ -203,7 +193,6 @@ export function useTcgOnboarding() {
     loadApp,
     updateCurrent,
     setStage,
-    markReadyToTransfer,
     checkDuplicate,
     setCurrent,
   };

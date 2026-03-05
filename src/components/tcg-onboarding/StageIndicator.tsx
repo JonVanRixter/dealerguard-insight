@@ -43,7 +43,7 @@ export function StageIndicator({ current, onNavigate, allPreScreenDone, allPolic
       })}
       {bothComplete && (
         <span className="text-sm font-medium text-outcome-pass-text flex items-center gap-1.5 ml-2">
-          🟢 All checks complete — ready to transfer
+          🟢 Complete — added to Dealer Portfolio
         </span>
       )}
     </div>

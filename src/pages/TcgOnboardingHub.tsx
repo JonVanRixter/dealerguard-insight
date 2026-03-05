@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Plus, Search, LayoutGrid, List, ArrowRight, ArrowUpDown, ArrowUp, ArrowDown, Users, Archive, ChevronDown, Send,
+  Plus, Search, LayoutGrid, List, ArrowRight, ArrowUpDown, ArrowUp, ArrowDown, Users, Archive, ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTcgOnboarding } from "@/hooks/useTcgOnboarding";
@@ -41,7 +41,7 @@ function statusBadge(status: OnboardingAppStatus) {
   const cls: Record<OnboardingAppStatus, string> = {
     Draft: "bg-muted text-muted-foreground",
     "In Progress": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-    "Ready to Transfer": "bg-primary/20 text-primary",
+    Complete: "bg-outcome-pass-bg text-outcome-pass-text",
     Archived: "bg-muted text-muted-foreground/60",
   };
   return <Badge className={cls[status]}>{status}</Badge>;
@@ -82,25 +82,6 @@ function AppCard({ app, onClick }: { app: OnboardingApplication; onClick: () => 
   );
 }
 
-/* ── Ready to Transfer card (green top border + transfer button) ── */
-function ReadyCard({ app, onClick, onTransfer }: { app: OnboardingApplication; onClick: () => void; onTransfer: () => void }) {
-  return (
-    <Card className="cursor-pointer hover:shadow-md transition-shadow border-t-4 border-t-[hsl(var(--outcome-pass))]" onClick={onClick}>
-      <CardContent className="p-3 space-y-2">
-        <p className="text-sm font-semibold leading-tight">{app.dealerName}</p>
-        <p className="text-[11px] text-muted-foreground">{app.appRef} · {app.requestingLenderName.split(" ").slice(0, 2).join(" ")}</p>
-        <Badge className="bg-outcome-pass-bg text-outcome-pass-text text-[10px]">✅ All checks complete</Badge>
-        <div className="flex items-center justify-between text-[11px]">
-          <span className="text-muted-foreground">👤 {app.assignedTo}</span>
-        </div>
-        <Button size="sm" className="w-full gap-1 text-xs mt-1" onClick={e => { e.stopPropagation(); onTransfer(); }}>
-          <Send className="w-3 h-3" /> Mark as Transferred →
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
 /* ── Main page ──────────────────────────────────────────────── */
 export default function TcgOnboardingHub() {
   const navigate = useNavigate();
@@ -115,24 +96,19 @@ export default function TcgOnboardingHub() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [showArchived, setShowArchived] = useState(false);
 
-  // Transfer modal
-  const [transferApp, setTransferApp] = useState<OnboardingApplication | null>(null);
-  // Archive modal (from hub — optional, mainly lives in detail)
+  // Archive modal
   const [archiveApp, setArchiveApp] = useState<OnboardingApplication | null>(null);
   const [archiveReason, setArchiveReason] = useState("");
-  // Local state for transferred/archived apps
-  const [transferredIds, setTransferredIds] = useState<Set<string>>(new Set());
-  const [archivedApps, setArchivedApps] = useState<Map<string, string>>(new Map()); // id -> reason
+  const [archivedApps, setArchivedApps] = useState<Map<string, string>>(new Map());
 
   const handleNew = () => { startNew(); navigate("/tcg/onboarding/new"); };
 
   const allApps = useMemo(() => {
     return seederApplications.map(app => {
-      if (transferredIds.has(app.id)) return null; // removed from board
       if (archivedApps.has(app.id)) return { ...app, status: "Archived" as OnboardingAppStatus };
       return app;
     }).filter(Boolean) as OnboardingApplication[];
-  }, [transferredIds, archivedApps]);
+  }, [archivedApps]);
 
   const filtered = useMemo(() => {
     return allApps.filter(app => {
@@ -191,24 +167,17 @@ export default function TcgOnboardingHub() {
       drafts: active.filter(a => a.status === "Draft"),
       preScreen: active.filter(a => a.status === "In Progress" && !checksAllAnswered(a)),
       policies: active.filter(a => a.status === "In Progress" && checksAllAnswered(a)),
-      ready: active.filter(a => a.status === "Ready to Transfer"),
+      complete: active.filter(a => a.status === "Complete"),
     };
   }, [filtered]);
 
-  const activeApps = allApps.filter(a => a.status !== "Archived" && !transferredIds.has(a.id));
-  const activeCount = activeApps.filter(a => a.status !== "Ready to Transfer").length;
-  const readyCount = activeApps.filter(a => a.status === "Ready to Transfer").length;
+  const activeApps = allApps.filter(a => a.status !== "Archived");
+  const activeCount = activeApps.filter(a => a.status !== "Complete").length;
+  const completeCount = activeApps.filter(a => a.status === "Complete").length;
   const unassigned = activeApps.filter(a => a.assignedTo === "Unassigned").length;
   const archivedCount = archivedApps.size;
 
   const openApp = (app: OnboardingApplication) => navigate(`/tcg/onboarding/${app.id}`);
-
-  const handleTransferConfirm = () => {
-    if (!transferApp) return;
-    setTransferredIds(prev => new Set(prev).add(transferApp.id));
-    toast({ title: "✅ Transferred", description: `${transferApp.dealerName} onboarding record is complete and has been added to the dealer directory.` });
-    setTransferApp(null);
-  };
 
   const handleArchiveConfirm = () => {
     if (!archiveApp || !archiveReason.trim()) return;
@@ -228,7 +197,7 @@ export default function TcgOnboardingHub() {
     { key: "drafts", title: "📋 Draft", subtitle: "Not started", apps: columns.drafts, bg: "bg-muted/40 border-muted-foreground/20" },
     { key: "preScreen", title: "⚙️ Pre-Screen", subtitle: "Checks & Details", apps: columns.preScreen, bg: "bg-blue-50/60 dark:bg-blue-950/30 border-blue-300/40 dark:border-blue-700/40" },
     { key: "policies", title: "📄 Policies", subtitle: "Framework", apps: columns.policies, bg: "bg-[hsl(270_60%_97%)] dark:bg-[hsl(270_30%_12%)] border-[hsl(270_50%_80%)]/40 dark:border-[hsl(270_40%_30%)]/40" },
-    { key: "ready", title: "✅ Ready to Transfer", subtitle: "All checks complete", apps: columns.ready, bg: "bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300/40 dark:border-emerald-700/40" },
+    { key: "complete", title: "✅ Complete", subtitle: "Added to dealer portfolio", apps: columns.complete, bg: "bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300/40 dark:border-emerald-700/40" },
   ];
 
   return (
@@ -250,7 +219,7 @@ export default function TcgOnboardingHub() {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Card className="border-l-4 border-l-primary"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Active</p><p className="text-3xl font-bold text-foreground">{activeCount}</p></CardContent></Card>
-          <Card className="border-l-4 border-l-[hsl(var(--outcome-pass))]"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Ready to Transfer</p><p className="text-3xl font-bold text-foreground">{readyCount}</p></CardContent></Card>
+          <Card className="border-l-4 border-l-[hsl(var(--outcome-pass))]"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Complete</p><p className="text-3xl font-bold text-foreground">{completeCount}</p></CardContent></Card>
           <Card className={`border-l-4 ${unassigned > 0 ? "border-l-[hsl(var(--outcome-pending))]" : "border-l-muted-foreground/30"}`}><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Unassigned</p><p className="text-3xl font-bold text-foreground">{unassigned} {unassigned > 0 && <span className="text-outcome-pending text-lg">⚠️</span>}</p></CardContent></Card>
           <Card className="border-l-4 border-l-muted-foreground/30"><CardContent className="p-4 space-y-1"><p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Archived</p><p className="text-3xl font-bold text-foreground">{archivedCount}</p></CardContent></Card>
         </div>
@@ -325,10 +294,7 @@ export default function TcgOnboardingHub() {
                 </div>
                 <div className="space-y-2 max-h-[calc(100vh-380px)] overflow-y-auto">
                   {col.apps.length === 0 && <p className="text-xs text-muted-foreground py-6 text-center">No applications</p>}
-                  {col.key === "ready"
-                    ? col.apps.map(app => <ReadyCard key={app.id} app={app} onClick={() => openApp(app)} onTransfer={() => setTransferApp(app)} />)
-                    : col.apps.map(app => <AppCard key={app.id} app={app} onClick={() => openApp(app)} />)
-                  }
+                  {col.apps.map(app => <AppCard key={app.id} app={app} onClick={() => openApp(app)} />)}
                 </div>
               </div>
             ))}
@@ -368,14 +334,7 @@ export default function TcgOnboardingHub() {
                       <TableCell className="text-sm">{app.assignedTo}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{new Date(app.lastUpdated).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}</TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={e => { e.stopPropagation(); openApp(app); }}>Open</Button>
-                          {app.status === "Ready to Transfer" && (
-                            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={e => { e.stopPropagation(); setTransferApp(app); }}>
-                              <Send className="w-3 h-3" /> Transfer
-                            </Button>
-                          )}
-                        </div>
+                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={e => { e.stopPropagation(); openApp(app); }}>Open</Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -385,30 +344,6 @@ export default function TcgOnboardingHub() {
           </Card>
         )}
       </div>
-
-      {/* Transfer confirmation modal */}
-      <Dialog open={!!transferApp} onOpenChange={open => !open && setTransferApp(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Transfer</DialogTitle>
-            <DialogDescription>
-              Confirm this dealer's onboarding record is complete and ready for the lender to proceed. This will move the dealer to the active dealer directory.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 pt-2">
-            {transferApp && (
-              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                <p className="text-sm font-semibold">{transferApp.dealerName}</p>
-                <p className="text-xs text-muted-foreground">{transferApp.appRef} · {transferApp.requestingLenderName}</p>
-              </div>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setTransferApp(null)}>Cancel</Button>
-              <Button onClick={handleTransferConfirm} className="gap-1"><Send className="w-4 h-4" /> Confirm Transfer</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Archive modal */}
       <Dialog open={!!archiveApp} onOpenChange={open => { if (!open) { setArchiveApp(null); setArchiveReason(""); } }}>

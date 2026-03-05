@@ -425,7 +425,7 @@ function PreScreeningChecks({ dealerName, companyNumber, setCompanyNumber, onFai
 function tcgStatusPill(status: OnboardingAppStatus) {
   const colorClass = status === "Draft" ? "bg-muted text-muted-foreground" :
     status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
-    status === "Ready to Transfer" ? "bg-primary/20 text-primary" :
+    status === "Complete" ? "bg-outcome-pass-bg text-outcome-pass-text" :
     status === "Archived" ? "bg-muted text-muted-foreground/60" :
     "bg-muted text-muted-foreground";
   return <Badge className={colorClass}>{status}</Badge>;
@@ -640,7 +640,7 @@ export default function PreOnboarding() {
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {tcg.applications.filter((a) => a.status !== "Ready to Transfer").map((app) => (
+                                {tcg.applications.filter((a) => a.status !== "Complete").map((app) => (
                                   <TableRow key={app.id}>
                                     <TableCell className="font-mono text-sm">{app.appRef}</TableCell>
                                     <TableCell>{app.dealerName || "—"}</TableCell>
@@ -680,7 +680,7 @@ export default function PreOnboarding() {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {tcg.applications.filter(a => a.status === "Ready to Transfer").map((d) => (
+                              {tcg.applications.filter(a => a.status === "Complete").map((d) => (
                                 <TableRow key={d.id}>
                                   <TableCell className="font-medium">{d.dealerName}</TableCell>
                                   <TableCell className="font-mono text-sm">{d.appRef}</TableCell>

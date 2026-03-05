@@ -23,7 +23,7 @@ import {
 } from "@/data/tcg/onboardingApplications";
 import {
   ArrowLeft, CheckCircle2, AlertTriangle, Pencil, Loader2,
-  ChevronDown, Plus, Building2, Shield, Send, Archive,
+  ChevronDown, Plus, Building2, Shield, Archive,
 } from "lucide-react";
 
 /* ── Check ID badge ────────────────────────────────────────── */
@@ -95,7 +95,7 @@ function StageStepper({ current, onClick, preScreenDone, policiesDone }: {
       ))}
       {bothComplete && (
         <span className="text-sm font-medium text-outcome-pass-text flex items-center gap-1.5 ml-2">
-          🟢 All checks complete
+          🟢 Complete — added to Dealer Portfolio
         </span>
       )}
     </div>
@@ -219,17 +219,6 @@ export default function TcgAppDetail() {
   // Completion
   const detailsComplete = !!(app.dealerName && app.companiesHouseNo && app.tradingName && app.primaryContact.name);
   const onboardingComplete = allChecksAnswered && allPoliciesDone && detailsComplete;
-  const canMarkReady = onboardingComplete && app.status !== "Ready to Transfer";
-
-  const handleMarkReady = () => {
-    updateApp({
-      status: "Ready to Transfer",
-      completionStatus: { ...app.completionStatus, readyToTransfer: true, completedBy: "Tom Griffiths", completedAt: new Date().toISOString(), onboardingComplete: true },
-    });
-    addHistory("Marked as ready to transfer");
-    toast({ title: "✅ Ready to Transfer", description: `${app.dealerName} has been marked as ready to transfer.` });
-    setTimeout(() => navigate("/tcg/onboarding"), 1500);
-  };
 
   const handleAddNote = () => {
     if (!noteText.trim()) return;
@@ -296,22 +285,9 @@ export default function TcgAppDetail() {
               <Badge className={
                 app.status === "Draft" ? "bg-muted text-muted-foreground" :
                 app.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
-                app.status === "Ready to Transfer" ? "bg-outcome-pass-bg text-outcome-pass-text" :
+                app.status === "Complete" ? "bg-outcome-pass-bg text-outcome-pass-text" :
                 "bg-muted text-muted-foreground"
               }>{app.status}</Badge>
-              {saving && <span className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Saving...</span>}
-            </div>
-
-            {/* Action buttons in header */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {canMarkReady && (
-                <Button onClick={handleMarkReady} className="gap-2">
-                  <Send className="w-4 h-4" /> Mark as Ready to Transfer
-                </Button>
-              )}
-              {app.status === "Ready to Transfer" && (
-                <Badge className="bg-outcome-pass-bg text-outcome-pass-text py-1.5 px-3">✅ Already marked ready to transfer</Badge>
-              )}
               <Button variant="outline" size="sm" className="gap-1" onClick={() => { if (noteText.trim()) handleAddNote(); else document.getElementById("note-input")?.focus(); }}>
                 <Plus className="w-3 h-3" /> Add Note
               </Button>
@@ -573,12 +549,11 @@ export default function TcgAppDetail() {
                 </CardContent>
               </Card>
 
-              {onboardingComplete && app.status !== "Ready to Transfer" && (
-                <div className="flex items-center justify-between p-4 rounded-lg border border-outcome-pass/30 bg-outcome-pass-bg/30">
+              {onboardingComplete && (
+                <div className="flex items-center p-4 rounded-lg border border-outcome-pass/30 bg-outcome-pass-bg/30">
                   <p className="text-sm font-medium text-outcome-pass-text flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4" /> All policies answered · Both sections complete
+                    <CheckCircle2 className="w-4 h-4" /> All policies answered · Onboarding complete — added to dealer portfolio
                   </p>
-                  <Button onClick={handleMarkReady} className="gap-2"><Send className="w-4 h-4" /> Mark as Ready to Transfer</Button>
                 </div>
               )}
             </div>
@@ -594,7 +569,7 @@ export default function TcgAppDetail() {
                 <p className="font-mono text-xs text-muted-foreground">{app.appRef}</p>
                 <Badge className={
                   app.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
-                  app.status === "Ready to Transfer" ? "bg-outcome-pass-bg text-outcome-pass-text" :
+                  app.status === "Complete" ? "bg-outcome-pass-bg text-outcome-pass-text" :
                   "bg-muted text-muted-foreground"
                 }>{app.status}</Badge>
                 <p className="text-xs text-muted-foreground">Stage {activeStage} of 2</p>
