@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   seederApplications,
@@ -20,7 +21,7 @@ import {
 } from "@/data/tcg/onboardingApplications";
 import {
   ArrowLeft, CheckCircle2, AlertTriangle, Pencil, Save, Loader2,
-  Search, ChevronDown, ChevronRight, Plus, Building2, Shield, Send,
+  Search, ChevronDown, ChevronRight, Plus, Building2, Shield, Send, Archive,
 } from "lucide-react";
 
 /* ── Inline editable field ────────────────────────────────── */
