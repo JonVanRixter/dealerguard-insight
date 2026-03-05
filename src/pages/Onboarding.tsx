@@ -188,7 +188,7 @@ export default function Onboarding() {
                       <TableHead>Pre-Screen</TableHead>
                       <TableHead>Policies</TableHead>
                       <TableHead>Assigned</TableHead>
-                      <TableHead>Target</TableHead>
+                      
                       <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
