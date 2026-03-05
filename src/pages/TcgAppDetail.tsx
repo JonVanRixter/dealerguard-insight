@@ -524,10 +524,10 @@ export default function TcgAppDetail() {
                           {catPolicies.map(pol => {
                             const polAnswered = isPolicyAnswered(pol);
                             const borderColor = polAnswered
-                              ? pol.dealerHasIt ? "border-l-4 border-l-outcome-pass" : "border-l-4 border-l-outcome-pending"
+                              ? pol.dealerHasIt === true ? "border-l-4 border-l-outcome-pass" : pol.dealerHasIt === false ? "border-l-4 border-l-outcome-pending" : "border-l-4 border-l-muted-foreground"
                               : "border-l-4 border-l-muted-foreground/30";
                             const bgColor = polAnswered
-                              ? pol.dealerHasIt ? "bg-[hsl(140,50%,97%)]" : "bg-[hsl(45,90%,97%)]"
+                              ? pol.dealerHasIt === true ? "bg-[hsl(140,50%,97%)]" : pol.dealerHasIt === false ? "bg-[hsl(45,90%,97%)]" : ""
                               : "";
                             return (
                               <Card key={pol.policyId} className={`ml-4 ${borderColor} ${bgColor}`}>
@@ -538,18 +538,15 @@ export default function TcgAppDetail() {
                                   </div>
                                   <div className="flex items-center gap-3">
                                     <Label className="text-xs text-muted-foreground">Dealer holds this?</Label>
-                                    <RadioGroup value={pol.dealerHasIt === null ? "" : pol.dealerHasIt ? "yes" : "no"} onValueChange={v => updatePolicy(pol.policyId, "dealerHasIt", v === "yes")} className="flex gap-3">
+                                    <RadioGroup value={pol.dealerHasIt === null ? "" : pol.dealerHasIt === "na" ? "na" : pol.dealerHasIt ? "yes" : "no"} onValueChange={v => updatePolicy(pol.policyId, "dealerHasIt", v)} className="flex gap-3">
                                       <div className="flex items-center gap-1"><RadioGroupItem value="yes" id={`${pol.policyId}-yes`} /><Label htmlFor={`${pol.policyId}-yes`} className="text-xs">Yes</Label></div>
                                       <div className="flex items-center gap-1"><RadioGroupItem value="no" id={`${pol.policyId}-no`} /><Label htmlFor={`${pol.policyId}-no`} className="text-xs">No</Label></div>
+                                      <div className="flex items-center gap-1"><RadioGroupItem value="na" id={`${pol.policyId}-na`} /><Label htmlFor={`${pol.policyId}-na`} className="text-xs">N/A</Label></div>
                                     </RadioGroup>
-                                  </div>
-                                  <div>
-                                    <Input className="h-7 text-xs" value={pol.notes} onChange={e => updatePolicy(pol.policyId, "notes", e.target.value)} placeholder="Notes..." />
-                                    {policyValidationErrors[pol.policyId] && <p className="text-[10px] text-destructive mt-0.5">{policyValidationErrors[pol.policyId]}</p>}
                                   </div>
                                   {polAnswered && (
                                     <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                      {pol.dealerHasIt ? <CheckCircle2 className="w-3 h-3 text-outcome-pass" /> : <AlertTriangle className="w-3 h-3 text-outcome-pending" />}
+                                      {pol.dealerHasIt === true ? <CheckCircle2 className="w-3 h-3 text-outcome-pass" /> : pol.dealerHasIt === false ? <AlertTriangle className="w-3 h-3 text-outcome-pending" /> : null}
                                       Answered by {pol.answeredBy} · {pol.answeredAt ? new Date(pol.answeredAt).toLocaleDateString("en-GB") : ""}
                                     </p>
                                   )}
