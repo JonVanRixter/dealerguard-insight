@@ -71,14 +71,14 @@ export interface OnboardingApplication {
 // ── Pre-Screen Definitions ───────────────────────────────────
 
 export const PRE_SCREEN_DEFS = [
-  { key: "legalEntityStatus", id: "ps01", label: "Legal entity status — active/dissolved" },
-  { key: "tradingNameAlignment", id: "ps02", label: "Trading name alignment — FCA, ICO, website" },
-  { key: "directorsAndPSCs", id: "ps03", label: "Directors and PSCs — identities confirmed" },
-  { key: "fcaAuthorisation", id: "ps04", label: "FCA authorisation / AR status confirmed" },
-  { key: "sanctionsAndAml", id: "ps05", label: "Sanctions / AML / adverse media screening" },
-  { key: "creditAndFinancialStanding", id: "ps06", label: "Financial standing — credit and CCJs" },
-  { key: "websiteAndMarketingCheck", id: "ps07", label: "Website and financial promotions review" },
-  { key: "dndCheck", id: "ps08", label: "Do Not Deal — TCG platform and lender DND lists" },
+  { key: "legalEntityStatus", id: "ps01", label: "Legal entity status — active/dissolved", guidance: "Confirm the company is active on Companies House, incorporation date, and that no dissolution or winding-up notice has been filed." },
+  { key: "tradingNameAlignment", id: "ps02", label: "Trading name alignment — FCA, ICO, website", guidance: "Confirm the trading name used on the website and in promotional materials matches the FCA register and ICO registration." },
+  { key: "directorsAndPSCs", id: "ps03", label: "Directors and PSCs — identities confirmed", guidance: "List all current directors and PSC(s). Note any changes in the last 24 months. Confirm identities are consistent across Companies House." },
+  { key: "fcaAuthorisation", id: "ps04", label: "FCA authorisation / AR status confirmed", guidance: "Confirm FCA authorisation status (directly authorised or appointed representative). Note FCA reference number, AR principal if applicable, and relevant permissions." },
+  { key: "sanctionsAndAml", id: "ps05", label: "Sanctions / AML / adverse media screening", guidance: "Confirm no sanctions hits against the company, directors or PSCs. Confirm no adverse media. Note PEP status of directors." },
+  { key: "creditAndFinancialStanding", id: "ps06", label: "Financial standing — credit and CCJs", guidance: "Note CreditSafe or equivalent score. Confirm no CCJs on company record. Note most recent filed accounts and whether trading position appears solvent." },
+  { key: "websiteAndMarketingCheck", id: "ps07", label: "Website and financial promotions review", guidance: "Review website for FCA-compliant financial promotions, APR display, risk warnings, and privacy/cookie compliance." },
+  { key: "dndCheck", id: "ps08", label: "Do Not Deal — TCG platform and lender DND lists", guidance: "Check dealer against TCG platform DND list and the requesting lender's DND list. Note outcome." },
 ] as const;
 
 // ── Builders ─────────────────────────────────────────────────
