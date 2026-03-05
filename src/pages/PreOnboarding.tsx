@@ -672,42 +672,23 @@ export default function PreOnboarding() {
                             <TableHeader>
                               <TableRow>
                                 <TableHead>Dealer</TableHead>
-                                <TableHead>Lenders Using</TableHead>
-                                <TableHead>Valid From</TableHead>
-                                <TableHead>Valid Until</TableHead>
-                                <TableHead>Days Remaining</TableHead>
-                                <TableHead>Renewal Due</TableHead>
+                                <TableHead>Ref</TableHead>
+                                <TableHead>Lender</TableHead>
+                                <TableHead>Completed</TableHead>
+                                <TableHead>Status</TableHead>
                                 <TableHead>Actions</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {tcg.applications.filter(a => a.status === "Ready to Transfer").map((d) => (
+                              {tcg.applications.filter(a => a.status === "Ready to Transfer" || a.status === "Complete").map((d) => (
                                 <TableRow key={d.id}>
-                                  <TableCell className="font-medium">{d.name}</TableCell>
+                                  <TableCell className="font-medium">{d.dealerName}</TableCell>
+                                  <TableCell className="font-mono text-sm">{d.appRef}</TableCell>
+                                  <TableCell>{d.requestingLenderName || "—"}</TableCell>
+                                  <TableCell className="text-sm text-muted-foreground">{d.completionStatus.completedAt ? new Date(d.completionStatus.completedAt).toLocaleDateString("en-GB") : "—"}</TableCell>
+                                  <TableCell>{tcgStatusPill(d.status)}</TableCell>
                                   <TableCell>
-                                    <div className="flex flex-wrap gap-1">
-                                      {d.lendersUsing.map((lid) => (
-                                        <Badge key={lid} variant="secondary" className="text-xs">{getLenderName(lid)}</Badge>
-                                      ))}
-                                    </div>
-                                  </TableCell>
-                                  <TableCell>{d.validFrom || "—"}</TableCell>
-                                  <TableCell>{d.validUntil || "—"}</TableCell>
-                                  <TableCell>{daysRemainingBadge(d.validUntil)}</TableCell>
-                                  <TableCell>
-                                    {d.renewalDue ? (
-                                      <Badge className="bg-outcome-pending-bg text-outcome-pending-text">⚠️ Yes</Badge>
-                                    ) : (
-                                      <span className="text-outcome-pass-text">✅ No</span>
-                                    )}
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex gap-2">
-                                      <Button variant="outline" size="sm" className="gap-1"><Eye className="w-3 h-3" /> View</Button>
-                                      {d.renewalDue && (
-                                        <Button variant="outline" size="sm" className="gap-1"><RefreshCw className="w-3 h-3" /> Renew</Button>
-                                      )}
-                                    </div>
+                                    <Button variant="outline" size="sm" className="gap-1" onClick={() => { tcg.loadApp(d.id); navigate(`/tcg/onboarding/${d.id}`); }}><Eye className="w-3 h-3" /> View</Button>
                                   </TableCell>
                                 </TableRow>
                               ))}
