@@ -242,14 +242,13 @@ export default function TcgAppDetail() {
               <h1 className="text-2xl font-bold text-foreground">{app.dealerName || "New Application"}</h1>
               <p className="text-sm text-muted-foreground">{app.appRef} · {app.requestingLenderName} · Initiated: {new Date(app.initiatedDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</p>
             </div>
-            <StageStepper current={activeStage} onClick={s => setActiveStage(s)} preScreenDone={allChecksAnswered && detailsComplete} policiesDone={allPoliciesDone} />
+            <StageStepper current={activeStage} onClick={s => { if (s === 2 && !allChecksAnswered) return; setActiveStage(s); }} preScreenDone={allChecksAnswered && detailsComplete} policiesDone={allPoliciesDone} />
             <div className="flex items-center gap-4 text-sm flex-wrap">
               <span>Assigned: <span className="font-medium">{app.assignedTo}</span></span>
               <span>Target: {new Date(app.targetCompletionDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}</span>
               <Badge className={
                 app.status === "Draft" ? "bg-muted text-muted-foreground" :
                 app.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
-                app.status === "Complete" ? "bg-outcome-pass-bg text-outcome-pass-text" :
                 app.status === "Ready to Transfer" ? "bg-outcome-pass-bg text-outcome-pass-text" :
                 "bg-muted text-muted-foreground"
               }>{app.status}</Badge>
@@ -538,7 +537,7 @@ export default function TcgAppDetail() {
                 <p className="font-mono text-xs text-muted-foreground">{app.appRef}</p>
                 <Badge className={
                   app.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" :
-                  app.status === "Complete" || app.status === "Ready to Transfer" ? "bg-outcome-pass-bg text-outcome-pass-text" :
+                  app.status === "Ready to Transfer" ? "bg-outcome-pass-bg text-outcome-pass-text" :
                   "bg-muted text-muted-foreground"
                 }>{app.status}</Badge>
                 <p className="text-xs text-muted-foreground">Stage {activeStage} of 2</p>

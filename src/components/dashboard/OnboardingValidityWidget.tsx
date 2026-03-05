@@ -25,17 +25,16 @@ export function OnboardingValidityWidget() {
   }, []);
 
   const pipeline = useMemo(() => {
-    const active = seederApplications.filter(a => a.status !== "Complete" && a.status !== "Ready to Transfer");
-    const complete = seederApplications.filter(a => a.status === "Complete").length;
+    const active = seederApplications.filter(a => a.status !== "Ready to Transfer" && a.status !== "Archived");
+    const readyCount = seederApplications.filter(a => a.status === "Ready to Transfer").length;
     const unassigned = seederApplications.filter(a => a.assignedTo === "Unassigned").length;
     const drafts = seederApplications.filter(a => a.status === "Draft").length;
     const s1 = seederApplications.filter(a => a.status === "In Progress" && a.stage === 1).length;
     const s2 = seederApplications.filter(a => a.status === "In Progress" && a.stage === 2).length;
-    const ready = seederApplications.filter(a => a.status === "Ready to Transfer").length;
     const avgDays = active.length > 0
       ? (active.reduce((s, a) => s + (Date.now() - new Date(a.initiatedDate).getTime()) / 86400000, 0) / active.length).toFixed(1)
       : "0";
-    return { active: active.length, complete, unassigned, avgDays, drafts, s1, s2, ready };
+    return { active: active.length, ready: readyCount, unassigned, avgDays, drafts, s1, s2 };
   }, []);
 
   return (
@@ -74,7 +73,7 @@ export function OnboardingValidityWidget() {
         <div className="px-5 pb-3 space-y-2">
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <span>Active: <span className="font-semibold">{pipeline.active}</span></span>
-            <span>Complete: <span className="font-semibold">{pipeline.complete}</span></span>
+            <span>Ready: <span className="font-semibold">{pipeline.ready}</span></span>
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <span className={pipeline.unassigned > 0 ? "text-outcome-pending font-medium" : ""}>

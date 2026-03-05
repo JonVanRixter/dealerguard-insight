@@ -23,7 +23,6 @@ function statusBadge(status: OnboardingAppStatus) {
   const map: Record<OnboardingAppStatus, string> = {
     Draft: "bg-muted text-muted-foreground",
     "In Progress": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-    Complete: "bg-outcome-pass-bg text-outcome-pass-text",
     "Ready to Transfer": "bg-primary/20 text-primary",
     Archived: "bg-muted text-muted-foreground/60",
   };
@@ -81,7 +80,7 @@ export default function Onboarding() {
     drafts: filtered.filter(a => a.status === "Draft"),
     stage1: filtered.filter(a => a.status === "In Progress" && a.stage === 1),
     stage2: filtered.filter(a => a.status === "In Progress" && a.stage === 2),
-    complete: filtered.filter(a => a.status === "Complete"),
+    complete: filtered.filter(a => a.status === "Ready to Transfer"),
     ready: filtered.filter(a => a.status === "Ready to Transfer"),
   }), [filtered]);
 
@@ -102,7 +101,7 @@ export default function Onboarding() {
           {[
             { label: "Drafts", value: stats.drafts, icon: FileText, color: "text-muted-foreground" },
             { label: "In Progress", value: stats.inProgress, icon: Loader2, color: "text-blue-600" },
-            { label: "Complete", value: stats.complete, icon: CheckCircle2, color: "text-outcome-pass" },
+            { label: "Ready", value: stats.readyToTransfer, icon: CheckCircle2, color: "text-outcome-pass" },
             { label: "Ready to Transfer", value: stats.readyToTransfer, icon: ArrowRight, color: "text-primary" },
             { label: "Avg Policy %", value: `${stats.avgPolicyCompletion}%`, icon: BarChart3, color: "text-primary" },
           ].map(kpi => (

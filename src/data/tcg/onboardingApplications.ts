@@ -2,7 +2,7 @@ import { masterPolicyList } from "./dealerPolicies";
 
 // ── Types ────────────────────────────────────────────────────
 
-export type OnboardingAppStatus = "Draft" | "In Progress" | "Complete" | "Ready to Transfer" | "Archived";
+export type OnboardingAppStatus = "Draft" | "In Progress" | "Ready to Transfer" | "Archived";
 
 export interface PreScreenCheck {
   checkId: string;
@@ -134,7 +134,7 @@ function buildCompletion(
   readyToTransfer = false
 ): CompletionStatus {
   const allChecks = Object.values(checks).every((c) => c.answered);
-  const allPolicies = policies.every((p) => p.dealerHasIt !== null);
+  const allPolicies = policies.every((p) => p.dealerHasIt !== null && p.notes.trim() !== "");
   const complete = allChecks && allPolicies && detailsComplete;
   return {
     allPreScreenChecksAnswered: allChecks,
@@ -274,7 +274,7 @@ export const seederApplications: OnboardingApplication[] = [
     const checks = buildPreScreenChecks(allChecksAnswered(AO, "2026-02-16T09:00:00"));
     const pols = quickPolicies(22, AO, "2026-02-28T16:00:00", true);
     return {
-      id: "app002", appRef: "APP-002-2026", stage: 2, status: "Complete" as OnboardingAppStatus,
+      id: "app002", appRef: "APP-002-2026", stage: 2, status: "In Progress" as OnboardingAppStatus,
       dealerName: "Kestrel Car Sales Ltd", tradingName: "Kestrel Cars",
       companiesHouseNo: "08124590", website: "https://www.kestrelcars.co.uk",
       primaryContact: { name: "Nina Shah", email: "n.shah@kestrelcars.co.uk", phone: "0117 946 1100" },
@@ -891,7 +891,7 @@ export function getOnboardingStats(apps: OnboardingApplication[]) {
     total: apps.length,
     drafts: apps.filter((a) => a.status === "Draft").length,
     inProgress: apps.filter((a) => a.status === "In Progress").length,
-    complete: apps.filter((a) => a.status === "Complete").length,
+    
     readyToTransfer: apps.filter((a) => a.status === "Ready to Transfer").length,
     archived: apps.filter((a) => a.status === "Archived").length,
     avgPolicyCompletion: totalPolicies > 0 ? Math.round((answeredPolicies / totalPolicies) * 100) : 0,

@@ -41,7 +41,6 @@ function statusBadge(status: OnboardingAppStatus) {
   const cls: Record<OnboardingAppStatus, string> = {
     Draft: "bg-muted text-muted-foreground",
     "In Progress": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-    Complete: "bg-outcome-pass-bg text-outcome-pass-text",
     "Ready to Transfer": "bg-primary/20 text-primary",
     Archived: "bg-muted text-muted-foreground/60",
   };
@@ -191,7 +190,7 @@ export default function TcgOnboardingHub() {
     return {
       drafts: active.filter(a => a.status === "Draft"),
       preScreen: active.filter(a => a.status === "In Progress" && !checksAllAnswered(a)),
-      policies: active.filter(a => (a.status === "In Progress" && checksAllAnswered(a)) || a.status === "Complete"),
+      policies: active.filter(a => a.status === "In Progress" && checksAllAnswered(a)),
       ready: active.filter(a => a.status === "Ready to Transfer"),
     };
   }, [filtered]);
@@ -304,7 +303,7 @@ export default function TcgOnboardingHub() {
                       <TableRow key={app.id}>
                         <TableCell className="font-mono text-sm">{app.appRef}</TableCell>
                         <TableCell className="font-medium">{app.dealerName}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{archivedApps.get(app.id) || "—"}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{archivedApps.get(app.id) || app.archiveReason || "—"}</TableCell>
                         <TableCell className="text-sm">{app.requestingLenderName}</TableCell>
                       </TableRow>
                     ))}
