@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { masterPolicyList } from "@/data/tcg/dealerPolicies";
-import { PRE_SCREEN_DEFS } from "@/data/tcg/onboardingApplications";
+import { CHECK_DEFS } from "@/data/tcg/onboardingApplications";
 import type {
   OnboardingApplication,
   OnboardingAppStatus,
@@ -11,6 +11,7 @@ import type {
 
 // Re-export types for consuming components
 export type { OnboardingApplication, OnboardingAppStatus, PreScreenCheck, OnboardingPolicy, CompletionStatus };
+export { CHECK_DEFS };
 
 // ── Blank app builder ─────────────────────────────────────────
 
@@ -25,19 +26,14 @@ function genId(): string {
   return `tcg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function buildEmptyPreScreenChecks(): Record<string, PreScreenCheck> {
-  const checks: Record<string, PreScreenCheck> = {};
-  for (const def of PRE_SCREEN_DEFS) {
-    checks[def.key] = {
-      checkId: def.id,
-      label: def.label,
-      answered: false,
-      finding: "",
-      answeredBy: null,
-      answeredAt: null,
-    };
-  }
-  return checks;
+function buildEmptyChecks(): PreScreenCheck[] {
+  return CHECK_DEFS.map((def) => ({
+    ...def,
+    answered: false,
+    finding: "",
+    answeredBy: null,
+    answeredAt: null,
+  }));
 }
 
 function buildEmptyPolicies(): OnboardingPolicy[] {
@@ -53,11 +49,11 @@ function buildEmptyPolicies(): OnboardingPolicy[] {
 }
 
 function computeCompletion(
-  checks: Record<string, PreScreenCheck>,
+  checks: PreScreenCheck[],
   policies: OnboardingPolicy[],
   app: Partial<OnboardingApplication>
 ): CompletionStatus {
-  const allChecks = Object.values(checks).every((c) => c.answered);
+  const allChecks = checks.every((c) => c.answered);
   const allPolicies = policies.every((p) => p.dealerHasIt !== null && p.notes.trim() !== "");
   const detailsComplete = !!(
     (app as any).dealerName && (app as any).companiesHouseNo && (app as any).tradingName &&
@@ -76,7 +72,7 @@ function computeCompletion(
 }
 
 function createBlankApp(): OnboardingApplication {
-  const checks = buildEmptyPreScreenChecks();
+  const checks = buildEmptyChecks();
   const policies = buildEmptyPolicies();
   return {
     id: genId(),
@@ -98,7 +94,7 @@ function createBlankApp(): OnboardingApplication {
     lastUpdated: new Date().toISOString(),
     lastUpdatedBy: "Tom Griffiths",
     targetCompletionDate: new Date(Date.now() + 17 * 86400000).toISOString().slice(0, 10),
-    preScreenChecks: checks,
+    checks,
     policies,
     completionStatus: computeCompletion(checks, policies, {}),
     dndClear: true,
@@ -136,11 +132,10 @@ export function useTcgOnboarding() {
       if (!prev) return prev;
       const next = { ...prev, ...partial };
       // Recompute completion status
-      const checks = partial.preScreenChecks || next.preScreenChecks;
+      const checks = partial.checks || next.checks;
       const policies = partial.policies || next.policies;
       next.completionStatus = computeCompletion(checks, policies, next);
       // Auto-set status
-      // No auto-status change on completion — user must explicitly mark ready
       if (next.status === "Draft" && (next.dealerName || next.companiesHouseNo)) {
         next.status = "In Progress";
       }
@@ -177,10 +172,8 @@ export function useTcgOnboarding() {
     });
   }, []);
 
-  // Check for duplicate CH number
   const checkDuplicate = useCallback((chNumber: string): string | null => {
     if (!chNumber || chNumber.length < 4) return null;
-    // Could check against existing dealers here
     return null;
   }, []);
 

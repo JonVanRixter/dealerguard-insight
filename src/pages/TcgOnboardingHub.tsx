@@ -186,7 +186,7 @@ export default function TcgOnboardingHub() {
   // Board columns (4 columns)
   const columns = useMemo(() => {
     const active = filtered.filter(a => a.status !== "Archived");
-    const checksAllAnswered = (a: OnboardingApplication) => Object.values(a.preScreenChecks).every(c => c.answered);
+    const checksAllAnswered = (a: OnboardingApplication) => a.checks.every(c => c.answered);
     return {
       drafts: active.filter(a => a.status === "Draft"),
       preScreen: active.filter(a => a.status === "In Progress" && !checksAllAnswered(a)),

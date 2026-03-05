@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { AlertTriangle, ArrowRight, CheckCircle2, Pencil } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { AlertTriangle, ArrowRight, CheckCircle2, ChevronDown, Pencil } from "lucide-react";
 import { StageIndicator } from "@/components/tcg-onboarding/StageIndicator";
-import { PRE_SCREEN_DEFS } from "@/data/tcg/onboardingApplications";
 import type { OnboardingApplication, PreScreenCheck } from "@/hooks/useTcgOnboarding";
 
 interface Stage1Props {
@@ -23,10 +23,9 @@ interface Stage1Props {
   checkDuplicate: (ch: string) => string | null;
 }
 
-// Build a map of check key -> guidance text
-const GUIDANCE: Record<string, string> = {};
-for (const def of PRE_SCREEN_DEFS) {
-  GUIDANCE[def.key] = def.guidance;
+function RiskBadge({ rating }: { rating: "High" | "Medium" }) {
+  if (rating === "High") return <Badge className="bg-destructive/10 text-destructive text-[10px] font-medium">🔴 High</Badge>;
+  return <Badge className="bg-outcome-pending-bg text-outcome-pending-text text-[10px] font-medium">🟡 Medium</Badge>;
 }
 
 export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving, checkDuplicate }: Stage1Props) {
@@ -44,44 +43,58 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
     }
   };
 
-  const checks = Object.entries(app.preScreenChecks);
-  const answeredChecks = checks.filter(([, c]) => c.answered).length;
-  const allChecksAnswered = answeredChecks === checks.length;
-  const checkPct = checks.length > 0 ? Math.round((answeredChecks / checks.length) * 100) : 0;
+  // Group checks by section
+  const sections = useMemo(() => {
+    const map = new Map<string, PreScreenCheck[]>();
+    for (const check of app.checks) {
+      const existing = map.get(check.sectionId) || [];
+      existing.push(check);
+      map.set(check.sectionId, existing);
+    }
+    return Array.from(map.entries()).map(([sectionId, checks]) => ({
+      sectionId,
+      sectionName: checks[0].sectionName,
+      checks,
+      answered: checks.filter(c => c.answered).length,
+      total: checks.length,
+    }));
+  }, [app.checks]);
+
+  const totalChecks = app.checks.length;
+  const answeredChecks = app.checks.filter(c => c.answered).length;
+  const allChecksAnswered = answeredChecks === totalChecks;
+  const checkPct = totalChecks > 0 ? Math.round((answeredChecks / totalChecks) * 100) : 0;
 
   const allPreScreenDone = app.completionStatus.allPreScreenChecksAnswered;
   const allPoliciesDone = app.completionStatus.allPoliciesAnswered;
 
-  const updateCheck = (key: string, field: "answered" | "finding", value: any) => {
-    const updated = { ...app.preScreenChecks };
+  const updateCheck = (checkId: string, field: "answered" | "finding", value: any) => {
+    const updated = app.checks.map(c => {
+      if (c.checkId !== checkId) return c;
 
-    if (field === "answered" && value === true) {
-      // Validate: notes must not be empty
-      if (!updated[key].finding.trim()) {
-        setValidationErrors(prev => ({ ...prev, [key]: "Please add a finding or note before marking this check as answered." }));
-        return;
+      if (field === "answered" && value === true) {
+        if (!c.finding.trim()) {
+          setValidationErrors(prev => ({ ...prev, [checkId]: "Please add a finding or note before marking this check as answered." }));
+          return c;
+        }
+        setValidationErrors(prev => { const n = { ...prev }; delete n[checkId]; return n; });
+        return {
+          ...c,
+          answered: true,
+          answeredBy: "Tom Griffiths",
+          answeredAt: new Date().toISOString(),
+        };
+      } else if (field === "answered" && value === false) {
+        return { ...c, answered: false, answeredBy: null, answeredAt: null };
+      } else {
+        const next = { ...c, [field]: value };
+        if (field === "finding" && value.trim()) {
+          setValidationErrors(prev => { const n = { ...prev }; delete n[checkId]; return n; });
+        }
+        return next;
       }
-      setValidationErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
-      updated[key] = {
-        ...updated[key],
-        answered: true,
-        answeredBy: "Tom Griffiths",
-        answeredAt: new Date().toISOString(),
-      };
-    } else if (field === "answered" && value === false) {
-      updated[key] = { ...updated[key], answered: false, answeredBy: null, answeredAt: null };
-    } else {
-      updated[key] = { ...updated[key], [field]: value };
-      // Clear validation error when user types
-      if (field === "finding" && value.trim()) {
-        setValidationErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
-      }
-    }
-    onUpdate({ preScreenChecks: updated });
-  };
-
-  const handleEditAnswered = (key: string) => {
-    setExpandedAnswered(prev => ({ ...prev, [key]: true }));
+    });
+    onUpdate({ checks: updated });
   };
 
   return (
@@ -90,7 +103,7 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
         <StageIndicator current={1} onNavigate={onNavigate} allPreScreenDone={allPreScreenDone} allPoliciesDone={allPoliciesDone} />
 
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Dealer Details & Pre-Screen Checks</h1>
+          <h1 className="text-2xl font-bold text-foreground">Dealer Details & Compliance Checks</h1>
           <span className="text-sm text-muted-foreground">
             {saving ? "💾 Saving..." : "✅ Saved"}
           </span>
@@ -177,121 +190,138 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
           </CardContent>
         </Card>
 
-        {/* Section B — Pre-Screen Checks */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Pre-Screen Checks</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              Record what you found for each check. Every check needs a finding — this is the record of the work done.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {checks.map(([key, check]) => {
-              const isAnswered = check.answered;
-              const isExpanded = expandedAnswered[key];
-              const showFull = !isAnswered || isExpanded;
+        {/* Section B — Compliance Checks grouped by section */}
+        {sections.map((section) => (
+          <Collapsible key={section.sectionId} defaultOpen>
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="flex flex-row items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <ChevronDown className="w-4 h-4 transition-transform group-data-[state=closed]:-rotate-90" />
+                    {section.sectionName}
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-[10px]">
+                      {section.answered}/{section.total} answered
+                    </Badge>
+                    {section.answered === section.total && (
+                      <CheckCircle2 className="w-4 h-4 text-outcome-pass" />
+                    )}
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-0 space-y-3">
+                  {section.checks.map((check) => {
+                    const isAnswered = check.answered;
+                    const isExpanded = expandedAnswered[check.checkId];
+                    const showFull = !isAnswered || isExpanded;
 
-              return (
-                <div
-                  key={key}
-                  className={`rounded-lg border transition-colors ${
-                    isAnswered
-                      ? "border-l-4 border-l-outcome-pass border-t border-r border-b"
-                      : "border-l-4 border-l-muted-foreground/30 border-t border-r border-b"
-                  }`}
-                >
-                  {/* Compact answered state */}
-                  {isAnswered && !isExpanded && (
-                    <div className="p-4 flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 min-w-0 flex-1">
-                        <CheckCircle2 className="w-5 h-5 text-outcome-pass shrink-0 mt-0.5" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium">
-                            <span className="font-mono text-xs text-muted-foreground mr-2">{check.checkId}</span>
-                            {check.label}
-                          </p>
-                          <p className="text-sm text-muted-foreground mt-1 truncate">
-                            "{check.finding}"
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Answered by {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : ""} {check.answeredAt ? new Date(check.answeredAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : ""}
-                          </p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm" className="gap-1 text-xs shrink-0" onClick={() => handleEditAnswered(key)}>
-                        <Pencil className="w-3 h-3" /> Edit
-                      </Button>
-                    </div>
-                  )}
+                    return (
+                      <div
+                        key={check.checkId}
+                        className={`rounded-lg border transition-colors ${
+                          isAnswered
+                            ? "border-l-4 border-l-outcome-pass border-t border-r border-b"
+                            : "border-l-4 border-l-muted-foreground/30 border-t border-r border-b"
+                        }`}
+                      >
+                        {/* Compact answered state */}
+                        {isAnswered && !isExpanded && (
+                          <div className="p-4 flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 min-w-0 flex-1">
+                              <CheckCircle2 className="w-5 h-5 text-outcome-pass shrink-0 mt-0.5" />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-mono text-xs text-muted-foreground">{check.checkId}</span>
+                                  <p className="text-sm font-medium">{check.label}</p>
+                                  <RiskBadge rating={check.riskRating} />
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1 truncate">
+                                  "{check.finding}"
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Answered by {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : ""} {check.answeredAt ? new Date(check.answeredAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : ""}
+                                </p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setExpandedAnswered(prev => ({ ...prev, [check.checkId]: true }))}>
+                              <Pencil className="w-3 h-3" /> Edit
+                            </Button>
+                          </div>
+                        )}
 
-                  {/* Full expanded state */}
-                  {showFull && (
-                    <div className="p-4 space-y-3">
-                      <p className="text-sm font-medium">
-                        <span className="font-mono text-xs text-muted-foreground mr-2">{check.checkId}</span>
-                        {check.label}
-                      </p>
+                        {/* Full expanded state */}
+                        {showFull && (
+                          <div className="p-4 space-y-3">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono text-xs text-muted-foreground">{check.checkId}</span>
+                              <p className="text-sm font-medium">{check.label}</p>
+                              <RiskBadge rating={check.riskRating} />
+                            </div>
 
-                      {GUIDANCE[key] && (
-                        <div className="bg-muted/50 rounded-md p-3">
-                          <p className="text-xs font-medium text-muted-foreground mb-1">What to check:</p>
-                          <p className="text-xs text-muted-foreground">{GUIDANCE[key]}</p>
-                        </div>
-                      )}
+                            <div className="bg-muted/50 rounded-md p-3">
+                              <p className="text-xs font-medium text-muted-foreground mb-1">Objective — what to check:</p>
+                              <p className="text-xs text-muted-foreground">{check.objective}</p>
+                              <p className="text-[10px] text-muted-foreground/60 mt-1">Frequency: {check.frequency}</p>
+                            </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium">Finding / Notes</Label>
-                        <Textarea
-                          rows={3}
-                          value={check.finding}
-                          onChange={(e) => updateCheck(key, "finding", e.target.value)}
-                          placeholder="Record what you found — who you spoke to, what was confirmed, any issues..."
-                        />
-                        {validationErrors[key] && (
-                          <p className="text-xs text-destructive flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3" /> {validationErrors[key]}
-                          </p>
+                            <div className="space-y-2">
+                              <Label className="text-xs font-medium">Finding / Notes</Label>
+                              <Textarea
+                                rows={3}
+                                value={check.finding}
+                                onChange={(e) => updateCheck(check.checkId, "finding", e.target.value)}
+                                placeholder="Record what you found — who you spoke to, what was confirmed, any issues..."
+                              />
+                              {validationErrors[check.checkId] && (
+                                <p className="text-xs text-destructive flex items-center gap-1">
+                                  <AlertTriangle className="w-3 h-3" /> {validationErrors[check.checkId]}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2">
+                                <Checkbox
+                                  id={`mark-${check.checkId}`}
+                                  checked={check.answered}
+                                  onCheckedChange={(checked) => updateCheck(check.checkId, "answered", !!checked)}
+                                />
+                                <Label htmlFor={`mark-${check.checkId}`} className="text-sm cursor-pointer">Mark as answered</Label>
+                              </div>
+                              {check.answeredBy && (
+                                <span className="text-xs text-muted-foreground">
+                                  Answered by: {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB") : "—"}
+                                </span>
+                              )}
+                            </div>
+
+                            {isAnswered && isExpanded && (
+                              <Button variant="ghost" size="sm" className="text-xs" onClick={() => setExpandedAnswered(prev => { const n = { ...prev }; delete n[check.checkId]; return n; })}>
+                                Collapse
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id={`mark-${key}`}
-                            checked={check.answered}
-                            onCheckedChange={(checked) => updateCheck(key, "answered", !!checked)}
-                          />
-                          <Label htmlFor={`mark-${key}`} className="text-sm cursor-pointer">Mark as answered</Label>
-                        </div>
-                        {check.answeredBy && (
-                          <span className="text-xs text-muted-foreground">
-                            Answered by: {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB") : "—"}
-                          </span>
-                        )}
-                      </div>
-
-                      {isAnswered && isExpanded && (
-                        <Button variant="ghost" size="sm" className="text-xs" onClick={() => setExpandedAnswered(prev => { const n = { ...prev }; delete n[key]; return n; })}>
-                          Collapse
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
+                    );
+                  })}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        ))}
 
         {/* Completion indicator */}
         <Card className="sticky bottom-4 z-10 shadow-lg">
           <CardContent className="py-4">
             <div className="flex items-center gap-4">
-              <span className="text-sm font-medium shrink-0">Pre-Screen Checks:</span>
+              <span className="text-sm font-medium shrink-0">Compliance Checks:</span>
               <Progress value={checkPct} className="flex-1" />
-              <span className="text-sm font-medium shrink-0">{answeredChecks} of {checks.length} answered</span>
-              {checks.length - answeredChecks > 0 && (
-                <Badge className="bg-outcome-pending-bg text-outcome-pending-text">{checks.length - answeredChecks} remaining</Badge>
+              <span className="text-sm font-medium shrink-0">{answeredChecks} of {totalChecks} answered</span>
+              {totalChecks - answeredChecks > 0 && (
+                <Badge className="bg-outcome-pending-bg text-outcome-pending-text">{totalChecks - answeredChecks} remaining</Badge>
               )}
             </div>
           </CardContent>
@@ -300,7 +330,7 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
         {allChecksAnswered ? (
           <div className="flex items-center justify-between p-4 rounded-lg border border-outcome-pass/30 bg-outcome-pass-bg/30">
             <p className="text-sm font-medium text-outcome-pass-text flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4" /> All pre-screen checks answered
+              <CheckCircle2 className="w-4 h-4" /> All {totalChecks} compliance checks answered
             </p>
             <Button onClick={onContinue} className="gap-2">
               Proceed to Policies <ArrowRight className="w-4 h-4" />
@@ -309,7 +339,7 @@ export function OnboardingStage1({ app, onUpdate, onContinue, onNavigate, saving
         ) : (
           <div className="flex justify-end">
             <Button onClick={onContinue} variant="outline" className="gap-2" disabled>
-              Complete all pre-screen checks to proceed
+              Complete all checks to proceed
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
