@@ -81,8 +81,7 @@ export default function Onboarding() {
     drafts: filtered.filter(a => a.status === "Draft"),
     stage1: filtered.filter(a => a.status === "In Progress" && a.stage === 1),
     stage2: filtered.filter(a => a.status === "In Progress" && a.stage === 2),
-    complete: filtered.filter(a => a.status === "Ready to Transfer"),
-    ready: filtered.filter(a => a.status === "Ready to Transfer"),
+    complete: filtered.filter(a => a.status === "Complete"),
   }), [filtered]);
 
   const openApp = (app: OnboardingApplication) => navigate(`/tcg/onboarding/${app.id}`);
