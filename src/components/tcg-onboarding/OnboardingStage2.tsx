@@ -108,10 +108,9 @@ export function OnboardingStage2({ app, onUpdate, onBack, onContinue, onNavigate
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[300px]">Policy Name</TableHead>
-                    <TableHead className="w-[100px]">Holds Policy</TableHead>
-                    <TableHead>Notes</TableHead>
-                    <TableHead className="w-[80px]">Answered</TableHead>
+                     <TableHead className="w-[300px]">Policy Name</TableHead>
+                     <TableHead className="w-[140px]">Holds Policy</TableHead>
+                     <TableHead className="w-[80px]">Answered</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
