@@ -772,7 +772,7 @@ export const seederApplications: OnboardingApplication[] = [
     };
   })(),
 
-  // app022 — Stage 1, In Progress (was Rejected — sanctions, now just a finding)
+  // app022 — Archived (Director sanctions match confirmed)
   (() => {
     const checks = buildPreScreenChecks({
       legalEntityStatus: { finding: "Company active.", by: AO, at: "2026-02-14T10:00:00" },
@@ -783,7 +783,7 @@ export const seederApplications: OnboardingApplication[] = [
     });
     const pols = quickPolicies(0, "", "", true);
     return {
-      id: "app022", appRef: "APP-022-2026", stage: 1, status: "In Progress" as OnboardingAppStatus,
+      id: "app022", appRef: "APP-022-2026", stage: 1, status: "Archived" as OnboardingAppStatus,
       dealerName: "Clearway Cars Ltd", tradingName: "Clearway Cars",
       companiesHouseNo: "09012345", website: "https://www.clearwaycars.co.uk",
       primaryContact: { name: "Brian Cole", email: "b.cole@clearway.co.uk", phone: "020 7946 8800" },
@@ -794,11 +794,12 @@ export const seederApplications: OnboardingApplication[] = [
       preScreenChecks: checks, policies: pols,
       completionStatus: buildCompletion(checks, pols, true),
       dndClear: false, platformDndClear: true,
-      notes: "Director sanctions flag confirmed — finding recorded for lender",
+      notes: "Director sanctions match confirmed — archived following DND check",
+      archiveReason: "Director sanctions match confirmed — archived following DND check",
       history: [
         { date: "2026-02-14T09:00:00", action: "Application created", user: AO },
         { date: "2026-02-16T10:00:00", action: "Sanctions flag confirmed on director — finding recorded", user: AO },
-        { date: "2026-02-22T11:00:00", action: "Lender notified of sanctions finding", user: AO },
+        { date: "2026-02-22T11:00:00", action: "Application archived — director sanctions match confirmed", user: AO },
       ],
     };
   })(),
