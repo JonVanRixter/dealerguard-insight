@@ -406,7 +406,7 @@ export default function TcgAppDetail() {
                           {showFull && (
                             <div className="p-4 space-y-3">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-mono text-xs text-muted-foreground">{check.checkId}</span>
+                                <CheckIdBadge id={check.checkId} />
                                 <p className="text-sm font-medium">{check.label}</p>
                                 <RiskBadge rating={check.riskRating} />
                               </div>
