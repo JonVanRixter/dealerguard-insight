@@ -140,21 +140,11 @@ function CheckCard({
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id={`mark-${check.checkId}`}
-                checked={check.answered}
-                onCheckedChange={(checked) => onUpdateCheck(check.checkId, "answered", !!checked)}
-              />
-              <Label htmlFor={`mark-${check.checkId}`} className="text-sm cursor-pointer">Mark as answered</Label>
-            </div>
-            {check.answeredBy && (
-              <span className="text-xs text-muted-foreground">
-                Answered by: {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB") : "—"}
-              </span>
-            )}
-          </div>
+          {check.answeredBy && (
+            <span className="text-xs text-muted-foreground">
+              Answered by: {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB") : "—"}
+            </span>
+          )}
 
           {isAnswered && isExpanded && (
             <Button variant="ghost" size="sm" className="text-xs" onClick={() => onToggleExpand(check.checkId, false)}>

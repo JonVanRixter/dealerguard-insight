@@ -391,13 +391,7 @@ export default function TcgAppDetail() {
                                   <p className="text-xs text-destructive flex items-center gap-1 mt-1"><AlertTriangle className="w-3 h-3" /> {checkValidationErrors[check.checkId]}</p>
                                 )}
                               </div>
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                  <Checkbox id={`chk-${check.checkId}`} checked={check.answered} onCheckedChange={(checked) => updateCheck(check.checkId, "answered", !!checked)} />
-                                  <Label htmlFor={`chk-${check.checkId}`} className="text-sm cursor-pointer">Mark as answered</Label>
-                                </div>
-                                {check.answeredBy && <span className="text-[10px] text-muted-foreground">Answered by: {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB") : "—"}</span>}
-                              </div>
+                              {check.answeredBy && <div className="flex items-center gap-3"><span className="text-[10px] text-muted-foreground">Answered by: {check.answeredBy} · {check.answeredAt ? new Date(check.answeredAt).toLocaleDateString("en-GB") : "—"}</span></div>}
                               {isAnswered && isExpanded && (
                                 <Button variant="ghost" size="sm" className="text-xs" onClick={() => setExpandedAnswered(prev => { const n = { ...prev }; delete n[check.checkId]; return n; })}>Collapse</Button>
                               )}
