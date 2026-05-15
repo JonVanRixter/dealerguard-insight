@@ -19,9 +19,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [demoMode, setDemoMode] = useState(false);
+  const [demoMode, setDemoMode] = useState<boolean>(() => {
+    try { return sessionStorage.getItem("demoMode") === "true"; } catch { return false; }
+  });
 
-  const enterDemoMode = () => setDemoMode(true);
+  const enterDemoMode = () => {
+    try { sessionStorage.setItem("demoMode", "true"); } catch {}
+    setDemoMode(true);
+  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
